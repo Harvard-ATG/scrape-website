@@ -77,7 +77,9 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # Patterns excluded for scraping Harvard academic pages for advising info
     r"^event/",
     r"^people/",
+    r"^people$",
     r"^news/",
+    r"^news$",
     r"^search",
 ]
 
