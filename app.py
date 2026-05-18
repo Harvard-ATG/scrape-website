@@ -74,6 +74,11 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/comments/",
     r"/page/\d+",
     r"/cdn-cgi/",
+    # Patterns excluded for scraping Harvard academic pages for advising info
+    r"^event/",
+    r"^people/",
+    r"^news/",
+    r"^search",
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
@@ -108,12 +113,19 @@ def _strip_tracking_params(url: str,
 
 
 def _url_excluded(url: str, patterns: list[re.Pattern]) -> bool:
-    """True iff any compiled regex pattern matches *url*.
+    """True iff any compiled regex pattern matches the path of *url*.
 
     Empty *patterns* list means nothing is excluded (returns False).
+
+    Searches the path only, removing initial `/`, so that a pattern r"^event/"
+    matches and excludes pages like domain.example/event/old-event, but not
+    domain.example/advising/event
     """
+    if not patterns:
+        return False
+    path = urlparse(url).path.lstrip('/')
     for pat in patterns:
-        if pat.search(url):
+        if pat.search(path):
             return True
     return False
 
