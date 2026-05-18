@@ -342,8 +342,12 @@ class URLStore:
         self.conn = sqlite3.connect(str(db_path), isolation_level=None)
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA synchronous=NORMAL")
-        self.conn.execute("CREATE TABLE IF NOT EXISTS visited (url TEXT PRIMARY KEY)")
+        self.conn.execute("CREATE TABLE IF NOT EXISTS visited (url TEXT PRIMARY KEY, status_code INTEGER)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS downloaded_files (hash TEXT PRIMARY KEY)")
+        try:
+            self.conn.execute("ALTER TABLE visited ADD COLUMN status_code INTEGER")
+        except sqlite3.OperationalError:
+            pass  # column already exists
         self.conn.execute("CREATE TABLE IF NOT EXISTS queue (url TEXT PRIMARY KEY)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS stats (key TEXT PRIMARY KEY, value TEXT)")
         # In-memory cache for fast lookups
@@ -383,6 +387,9 @@ class URLStore:
     def has_file_hash(self, file_hash: str) -> bool:
         row = self.conn.execute("SELECT 1 FROM downloaded_files WHERE hash=?", (file_hash,)).fetchone()
         return row is not None
+
+    def update_status(self, url: str, status_code: int):
+        self.conn.execute("UPDATE visited SET status_code=? WHERE url=?", (status_code, url))
 
     def add_file_hash(self, file_hash: str):
         try:
@@ -691,6 +698,8 @@ class WebsiteScraper:
                 await asyncio.sleep(CONFIG['delay_between_requests'])
 
                 content, content_type, content_kind, status = await self.fetch_with_retry(url)
+
+                self.url_store.update_status(url, status)
 
                 if content_kind == 'file':
                     if len(content) > CONFIG['max_file_size']:
