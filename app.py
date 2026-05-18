@@ -8,7 +8,7 @@ import sqlite3
 import logging
 import json
 from urllib.parse import urlparse, urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from urllib.request import urlopen, Request
 from urllib.error import URLError
 from pathlib import Path
@@ -119,7 +119,8 @@ def _url_excluded(url: str, patterns: list[re.Pattern]) -> bool:
 
 
 def _fetch_sitemap_urls(host: str, scheme: str = "https",
-                        timeout: int = 10, max_urls: int = 5000) -> list[str]:
+                        timeout: int = 10, max_urls: int = 5000,
+                        logger: logging.Logger | None = None) -> list[str]:
     """Best-effort sitemap discovery.
 
     Tries ``{scheme}://{host}/sitemap.xml`` then
@@ -130,15 +131,38 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
 
     Uses only stdlib (``urllib`` + ``xml.etree``) — no new deps.
     """
+    log = logger or logging.getLogger(__name__)
     # Common XML namespace used in sitemaps
     ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
+    sitemaps_dir = Path('data') / host / 'sitemaps'
+    sitemaps_dir.mkdir(parents=True, exist_ok=True)
+
+    def _save(url: str, data: bytes):
+        filename = urlparse(url).path.rstrip('/').split('/')[-1] or 'sitemap.xml'
+        filepath = sitemaps_dir / filename
+        counter = 1
+        while filepath.exists():
+            stem, suffix = filepath.stem, filepath.suffix
+            filepath = sitemaps_dir / f"{stem}_{counter}{suffix}"
+            counter += 1
+        filepath.write_bytes(data)
+        log.info(f"Sitemap: saved {url} → {filepath}")
+
     def _get(url: str) -> bytes | None:
+        log.info(f"Sitemap: fetching {url}")
+        t0 = datetime.now()
         try:
             req = Request(url, headers={"User-Agent": CONFIG["user_agent"]})
             with urlopen(req, timeout=timeout) as resp:
-                return resp.read()
-        except Exception:
+                data = resp.read()
+            elapsed = (datetime.now() - t0).total_seconds()
+            log.info(f"Sitemap: fetched {url} ({len(data)} bytes) in {elapsed:.2f}s")
+            _save(url, data)
+            return data
+        except Exception as e:
+            elapsed = (datetime.now() - t0).total_seconds()
+            log.info(f"Sitemap: failed to fetch {url} after {elapsed:.2f}s — {e}")
             return None
 
     def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
@@ -160,8 +184,10 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
             if not urls:
                 for elem in root.iter():
                     local = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
-                    if local == "loc" and elem.text:
-                        urls.append(elem.text.strip())
+                    if local == "loc" and elem.text and elem.getparent() is not None:
+                        parent_local = elem.getparent().tag.split("}")[-1]
+                        if parent_local == tag:  # Should use the tag parameter here
+                            urls.append(elem.text.strip())
         return urls
 
     seen: set[str] = set()
@@ -176,24 +202,34 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
         # Check for sitemap index (contains <sitemap> elements)
         sub_sitemaps = _parse_locs(data, tag="sitemap")
         if sub_sitemaps:
-            for sub_url in sub_sitemaps:
+            log.info(f"Sitemap: {sitemap_url} is a sitemap index with {len(sub_sitemaps)} sub-sitemaps")
+            for i, sub_url in enumerate(sub_sitemaps, 1):
+                log.info(f"Sitemap: fetching sub-sitemap {i}/{len(sub_sitemaps)}: {sub_url}")
                 sub_data = _get(sub_url)
                 if sub_data:
-                    for loc in _parse_locs(sub_data, tag="url"):
+                    locs = _parse_locs(sub_data, tag="url")
+                    log.info(f"Sitemap: {sub_url} yielded {len(locs)} URLs (total so far: {len(result) + len(locs)})")
+                    for loc in locs:
                         if loc not in seen:
                             seen.add(loc)
                             result.append(loc)
                             if len(result) >= max_urls:
+                                log.info(f"Sitemap: reached max_urls cap ({max_urls}), stopping early")
                                 return result
 
         # Also parse direct <url><loc> entries
-        for loc in _parse_locs(data, tag="url"):
+        direct_locs = _parse_locs(data, tag="url")
+        if direct_locs:
+            log.info(f"Sitemap: {sitemap_url} contains {len(direct_locs)} direct URL entries")
+        for loc in direct_locs:
             if loc not in seen:
                 seen.add(loc)
                 result.append(loc)
                 if len(result) >= max_urls:
+                    log.info(f"Sitemap: reached max_urls cap ({max_urls}), stopping early")
                     return result
 
+    log.info(f"Sitemap: discovery complete, {len(result)} total URLs found")
     return result
 
 
@@ -724,6 +760,7 @@ class WebsiteScraper:
             parsed_start = urlparse(self.start_url)
             sitemap_urls = _fetch_sitemap_urls(
                 self.base_domain, scheme=parsed_start.scheme or "https",
+                logger=self.logger,
             )
             if sitemap_urls:
                 added = 0
