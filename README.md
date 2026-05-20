@@ -38,7 +38,7 @@ uv sync
 ### Scrape a single website
 
 ```bash
-uv run python app.py https://example.com/
+uv run scrape-website https://example.com/
 ```
 
 This crawls every page on `example.com`, saving HTML pages, extracted text, and any linked documents.
@@ -58,7 +58,7 @@ https://blog.example.com/
 Then run:
 
 ```bash
-uv run python app.py --file urls.txt
+uv run scrape-website --file urls.txt
 ```
 
 All domains run concurrently. Each domain gets its own output directory under `data/`.
@@ -66,7 +66,7 @@ All domains run concurrently. Each domain gets its own output directory under `d
 You can also combine a URL argument with a file:
 
 ```bash
-uv run python app.py https://example.com/ --file more-urls.txt
+uv run scrape-website https://example.com/ --file more-urls.txt
 ```
 
 ### Retry failed URLs
@@ -74,7 +74,7 @@ uv run python app.py https://example.com/ --file more-urls.txt
 Failed URLs are automatically saved to `data/<domain>/logs/failed_urls.txt` after each run. Retry them with:
 
 ```bash
-uv run python app.py --retry data/example.com/logs/failed_urls.txt
+uv run scrape-website --retry data/example.com/logs/failed_urls.txt
 ```
 
 ### Resume after crash
@@ -84,20 +84,20 @@ The scraper automatically checkpoints its queue and stats to SQLite every 30 sec
 To force a clean start (ignoring any saved checkpoint):
 
 ```bash
-uv run python app.py https://example.com/ --fresh
+uv run scrape-website https://example.com/ --fresh
 ```
 
 ### Tuning options
 
 ```bash
 # Throttle to 20 concurrent requests with a 0.5s delay (be polite)
-uv run python app.py https://example.com/ --concurrency 20 --delay 0.5
+uv run scrape-website https://example.com/ --concurrency 20 --delay 0.5
 
 # Increase timeout for slow servers
-uv run python app.py https://example.com/ --timeout 60
+uv run scrape-website https://example.com/ --timeout 60
 
 # All options together
-uv run python app.py https://example.com/ --concurrency 50 --timeout 60 --delay 0.25
+uv run scrape-website https://example.com/ --concurrency 50 --timeout 60 --delay 0.25
 ```
 
 | Flag | Default | Description |
@@ -121,10 +121,10 @@ Three features are **on by default** and improve crawl quality on most sites:
 
 ```bash
 # Add a custom exclude pattern (appended to defaults)
-uv run python app.py https://blog.example.com/ --exclude-pattern '/category/'
+uv run scrape-website https://blog.example.com/ --exclude-pattern '/category/'
 
 # Use only your own patterns (no defaults)
-uv run python app.py https://blog.example.com/ --no-default-excludes --exclude-pattern '/archive/'
+uv run scrape-website https://blog.example.com/ --no-default-excludes --exclude-pattern '/archive/'
 ```
 
 Default patterns: `/tag/`, `/author/`, `/feed/`, `/print/`, `?print=`, `/comments/`, `/page/\d+`, `/cdn-cgi/`.
@@ -133,15 +133,51 @@ Default patterns: `/tag/`, `/author/`, `/feed/`, `/print/`, `?print=`, `/comment
 
 ```bash
 # Opt out (keep all query params as-is)
-uv run python app.py https://example.com/ --no-strip-tracking-params
+uv run scrape-website https://example.com/ --no-strip-tracking-params
 ```
 
 **Sitemap seeding** — fetches `sitemap.xml` (and sitemap index files) to discover pages that might not be linked from the homepage:
 
 ```bash
 # Opt out
-uv run python app.py https://example.com/ --no-use-sitemap
+uv run scrape-website https://example.com/ --no-use-sitemap
 ```
+
+## Programmatic API
+
+The package can be imported and driven from your own code:
+
+```python
+import asyncio
+from scrape_website import WebsiteScraper
+
+async def main():
+    scraper = WebsiteScraper(
+        "https://example.com/",
+        concurrency=50,
+        timeout=60,
+        delay=0.25,
+        exclude_patterns=[r"/tag/", r"/author/"],
+    )
+    await scraper.run()
+
+asyncio.run(main())
+```
+
+`WebsiteScraper` accepts all the same knobs as the CLI:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `start_url` | required | Starting URL |
+| `fresh` | `False` | Ignore saved checkpoint and start fresh |
+| `exclude_patterns` | built-in list | List of regex strings to exclude URLs |
+| `strip_tracking_params` | `True` | Strip `utm_*`, `fbclid`, etc. from URLs |
+| `use_sitemap` | `True` | Seed queue from `sitemap.xml` |
+| `concurrency` | `100` | Max concurrent requests |
+| `timeout` | `30` | Request timeout in seconds |
+| `delay` | `0.1` | Delay between requests in seconds |
+
+Output is written to `data/<domain>/` relative to the working directory, same as the CLI.
 
 ## Output structure
 
@@ -172,7 +208,7 @@ Deduplication is **per-page only**: `trafilatura`'s repetition cache is reset be
 ## Example
 
 ```
-% python app.py 'https://privsec.harvard.edu'
+% uv run scrape-website 'https://privsec.harvard.edu'
 Output directory: data/privsec.harvard.edu
 Starting domain: privsec.harvard.edu
 Max concurrent requests: 100

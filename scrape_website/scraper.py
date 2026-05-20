@@ -392,9 +392,20 @@ class WebsiteScraper:
     def __init__(self, start_url: str, fresh: bool = False,
                  exclude_patterns: list[str] | None = None,
                  strip_tracking_params: bool = True,
-                 use_sitemap: bool = True):
+                 use_sitemap: bool = True,
+                 concurrency: int | None = None,
+                 timeout: int | None = None,
+                 delay: float | None = None):
         self.start_url = start_url
         self.base_domain = self.extract_domain(start_url)
+
+        # Apply per-instance config overrides before anything reads CONFIG
+        if concurrency is not None:
+            CONFIG['max_concurrent'] = concurrency
+        if timeout is not None:
+            CONFIG['timeout'] = timeout
+        if delay is not None:
+            CONFIG['delay_between_requests'] = delay
 
         # Crawl-quality knobs
         self.strip_tracking_params = strip_tracking_params
@@ -806,7 +817,7 @@ class WebsiteScraper:
             self.logger.info(f"Denied URLs logged to: {self.logs_dir / 'access_denied.txt'}")
         if self.failed_urls:
             self.logger.info(f"Failed URLs logged to: {self.logs_dir / 'failed_urls.txt'}")
-            self.logger.info(f"  Retry with: uv run python app.py --retry {self.logs_dir / 'failed_urls.txt'}")
+            self.logger.info(f"  Retry with: scrape-website --retry {self.logs_dir / 'failed_urls.txt'}")
         self.logger.info("=" * 80)
 
         # Cleanup
@@ -910,7 +921,3 @@ async def main():
                 if not scraper.url_store.contains(normalized):
                     scraper.urls_to_visit.append(normalized)
             tg.create_task(scraper.run())
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
