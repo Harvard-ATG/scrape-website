@@ -61,7 +61,7 @@ Then run:
 uv run scrape-website --file urls.txt
 ```
 
-All domains run concurrently. Each domain gets its own output directory under `data/`.
+All domains run concurrently. Each domain gets its own output directory under `data/` (or the path set with `--output-dir`).
 
 You can also combine a URL argument with a file:
 
@@ -71,7 +71,7 @@ uv run scrape-website https://example.com/ --file more-urls.txt
 
 ### Retry failed URLs
 
-Failed URLs are automatically saved to `data/<domain>/logs/failed_urls.txt` after each run. Retry them with:
+Failed URLs are automatically saved to `<output-dir>/<domain>/logs/failed_urls.txt` after each run. Retry them with:
 
 ```bash
 uv run scrape-website --retry data/example.com/logs/failed_urls.txt
@@ -105,6 +105,7 @@ uv run scrape-website https://example.com/ --concurrency 50 --timeout 60 --delay
 | `--concurrency` | `100` | Max concurrent requests |
 | `--timeout` | `30` | Request timeout in seconds |
 | `--delay` | `0.1` | Delay between requests in seconds |
+| `--output-dir`, `-o` | `data/` | Root directory for output; each domain gets a subdirectory |
 | `--file`, `-f` | — | File with URLs to scrape (one per line) |
 | `--retry`, `-r` | — | File with failed URLs to retry |
 | `--fresh` | — | Ignore saved checkpoint and start fresh |
@@ -176,8 +177,9 @@ asyncio.run(main())
 | `concurrency` | `100` | Max concurrent requests |
 | `timeout` | `30` | Request timeout in seconds |
 | `delay` | `0.1` | Delay between requests in seconds |
+| `output_dir` | `"data"` | Root directory for output; domain is appended as a subdirectory |
 
-Output is written to `data/<domain>/` relative to the working directory, same as the CLI.
+Output is written to `<output_dir>/<domain>/` relative to the working directory (default: `data/<domain>/`).
 
 ## Output structure
 

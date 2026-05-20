@@ -395,7 +395,8 @@ class WebsiteScraper:
                  use_sitemap: bool = True,
                  concurrency: int | None = None,
                  timeout: int | None = None,
-                 delay: float | None = None):
+                 delay: float | None = None,
+                 output_dir: str | Path | None = None):
         self.start_url = start_url
         self.base_domain = self.extract_domain(start_url)
 
@@ -435,7 +436,7 @@ class WebsiteScraper:
         }
 
         # Setup directories
-        self.base_dir = Path('data') / self.base_domain
+        self.base_dir = Path(output_dir) / self.base_domain if output_dir else Path('data') / self.base_domain
         self.pages_dir = self.base_dir / 'pages'
         self.text_dir = self.base_dir / 'text'
         self.files_dir = self.base_dir / 'files'
@@ -856,6 +857,8 @@ def parse_args():
                         help=f"Request timeout in seconds (default: {CONFIG['timeout']})")
     parser.add_argument('--delay', type=float, default=CONFIG['delay_between_requests'],
                         help=f"Delay between requests in seconds (default: {CONFIG['delay_between_requests']})")
+    parser.add_argument('--output-dir', '-o', default=None,
+                        help='Root directory for output (default: data/). Output goes to <output-dir>/<domain>/.')
     parser.add_argument('--fresh', action='store_true',
                         help='Ignore any saved checkpoint and start fresh')
     parser.add_argument('--exclude-pattern', action='append', default=None,
@@ -914,6 +917,7 @@ async def main():
                 exclude_patterns=exclude_patterns,
                 strip_tracking_params=args.strip_tracking_params,
                 use_sitemap=args.use_sitemap,
+                output_dir=args.output_dir,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:
