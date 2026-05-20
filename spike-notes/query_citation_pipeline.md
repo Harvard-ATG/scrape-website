@@ -2,7 +2,7 @@
 
 How a student's question becomes a cited response in harvard-ea, and where the gaps are.
 
-> **Visual companion:** For architecture diagrams and step-by-step visuals, see [`/architecture_and_citations.html`](/architecture_and_citations.html)
+> **Visual companion:** For architecture diagrams and step-by-step visuals, see [`slides/architecture_and_citations.html`](slides/architecture_and_citations.html)
 
 ---
 

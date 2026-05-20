@@ -414,21 +414,31 @@ tr:hover td {
 <body>
 
 <!-- Navigation -->
-<!-- Navigation -->
 <nav>
   <h2>APO Bot Pipeline</h2>
+
   <a href="#pipeline"><span class="nav-number">1</span> Pipeline Overview</a>
+
+  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Scraper</div>
   <a href="#scraper-overview-intro"><span class="nav-number">2</span> Scraper Overview</a>
   <a href="#scraper-issues"><span class="nav-number">3</span> Scraper Issues</a>
   <a href="#proposed-architecture"><span class="nav-number">4</span> Proposed Architecture</a>
   <a href="#scraper"><span class="nav-number">5</span> Scraper Output Formats</a>
+
+  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Vector Store &amp; Chunking</div>
   <a href="#vector-store"><span class="nav-number">6</span> Vector Store</a>
   <a href="#chunking"><span class="nav-number">7</span> How Chunking Works</a>
   <a href="#scenarios"><span class="nav-number">8</span> Three Scenarios</a>
+
+  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Query &amp; Platform</div>
   <a href="#agent-flow"><span class="nav-number">9</span> Agent & Query Flow</a>
   <a href="#model-sees"><span class="nav-number">10</span> What the Model Sees</a>
+
+  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Citations</div>
   <a href="#two-layers"><span class="nav-number">11</span> Citations & V2 Switch</a>
   <a href="#attributes"><span class="nav-number">12</span> File Attributes</a>
+
+  <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Gap &amp; Solutions</div>
   <a href="#the-gap"><span class="nav-number">13</span> The Gap</a>
   <a href="#solutions"><span class="nav-number">14</span> Solutions</a>
   <a href="#url-requirement"><span class="nav-number">15</span> URL in Citations</a>
@@ -439,6 +449,37 @@ tr:hover td {
 
 <h1>Architecture & Citations</h1>
 <p class="subtitle">APO Bot Content Pipeline — Technical Architecture for Mixed Audience</p>
+
+<!-- Executive Summary -->
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%); border-radius: 12px; padding: 32px; margin-bottom: 48px; color: white;">
+  <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.2); font-size: 20px; margin-bottom: 16px;">Executive Summary</h2>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div>
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 8px;">What We Found</div>
+      <ul style="font-size: 14px; line-height: 2; padding-left: 20px; opacity: 0.9;">
+        <li>Platform uses <strong>Responses API</strong> (stateless), not Agents SDK</li>
+        <li><strong>file_search</strong> is a 6-component pipeline (embed &rarr; rank &rarr; generate)</li>
+        <li>Two independent citation creators: <strong>tool logic</strong> (annotations) + <strong>model</strong> (PUA markers)</li>
+        <li>Annotations have <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">file_id</code> but <strong>no URL</strong> &mdash; that&rsquo;s the gap</li>
+      </ul>
+    </div>
+    <div>
+      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 8px;">The Fix</div>
+      <ul style="font-size: 14px; line-height: 2; padding-left: 20px; opacity: 0.9;">
+        <li>Add <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">include=["file_search_call.results"]</code></li>
+        <li>Join <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">search_results</code> to annotations by file_id</li>
+        <li>Populate <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">url</code> + <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">title</code> from attributes</li>
+        <li><strong>~15 lines, zero extra API calls</strong></li>
+      </ul>
+      <div style="margin-top: 12px; padding: 8px 12px; background: rgba(22,163,74,0.2); border-radius: 6px; font-size: 13px;">
+        <strong>Blocking:</strong> S3 FileSync needs IAM credentials &mdash; need integration path from Ventz
+      </div>
+    </div>
+  </div>
+  <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; opacity: 0.7;">
+    <strong>Companion doc:</strong> <a href="query_citation_pipeline.md" style="color: #89b4fa;">query_citation_pipeline.md</a> &mdash; full prose reference with Mermaid diagrams and action items checklist
+  </div>
+</div>
 
 <!-- ============================================================ -->
 <!-- SECTION 1: Pipeline Overview -->
@@ -3669,6 +3710,11 @@ tools = []
   <strong>Not currently used by APO Bot.</strong> Could be added for questions that need full-document context rather than passage retrieval (e.g., &ldquo;summarize this entire handbook&rdquo;). file_search remains the right tool for citation-driven Q&amp;A.
 </div>
 
+<div class="key-rule">
+  <div class="rule-title">Section Takeaway</div>
+  The Responses API is a <strong>stateless container</strong> that orchestrates model + tools per request. file_search runs entirely server-side as a 6-component pipeline. It produces <strong>two independent citation outputs</strong>: annotations (tool logic) and PUA markers (model, V2 only). The platform code only sees the final response &mdash; never the intermediate retrieval.
+</div>
+
 </section>
 
 
@@ -3781,6 +3827,11 @@ undergraduate years<br>
 <span class="keyword">except</span> Exception <span class="keyword">as</span> _cv2_err:
     logger.error(f<span class="string">"V2 citation instructions failed (non-fatal): {_cv2_err}"</span>)</code></pre>
 </details>
+
+<div class="key-rule">
+  <div class="rule-title">Section Takeaway</div>
+  The model sees <strong>only</strong> reference IDs, filenames, and chunk text. No attributes, no URLs (unless embedded in chunk content), no full file. For small files the URL is in chunk 1 &mdash; for large files it&rsquo;s lost. That&rsquo;s why citations work sometimes and fail others.
+</div>
 
 </section>
 
@@ -4089,6 +4140,9 @@ file_citation_annotations = []
 
 <h3>Following a Citation: V2 Pipeline Step by Step</h3>
 
+<details open>
+<summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: var(--chunk1); padding: 8px 0;">Expand: 7-step trace through the V2 post-processor</summary>
+
 <p>Tracing one citation from model output through the entire V2 post-processor to understand exactly how <code>[1]</code> and the Sources panel are built:</p>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
@@ -4213,7 +4267,12 @@ CITATION_STOP = <span class="string">""</span>      <span class="comment"># m
 _SOURCE_ID_TURN_RE = re.compile(r<span class="string">"^turn(\d+)(file|search|news|url|block|image)(\d+)$"</span>)</code></pre>
 </details>
 
+</details><!-- end V2 collapsible -->
+
 <h3>Following a Citation: V1 Pipeline Step by Step</h3>
+
+<details open>
+<summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 0;">Expand: 4-step trace through the V1 post-processor</summary>
 
 <p>When V2 is <strong>off</strong> (the default today), the simpler V1 path runs:</p>
 
@@ -4276,6 +4335,8 @@ _SOURCE_ID_TURN_RE = re.compile(r<span class="string">"^turn(\d+)(file|search|ne
   </div>
 
 </div>
+
+</details><!-- end V1 collapsible -->
 
 <h3>The Annotations Schema (Fixed by OpenAI)</h3>
 
@@ -4854,6 +4915,11 @@ These sessions help students:
 <span class="comment">#   result["url"] = attrs.get("source_url")</span>
 <span class="comment">#   result["title"] = attrs.get("title")</span></code></pre>
 </details>
+
+<div class="key-rule">
+  <div class="rule-title">Section Takeaway</div>
+  Annotations have <code>file_id</code> but no <code>url</code>. Search results (with <code>include</code>) have <code>url</code> in attributes. Both share <code>file_id</code>. The fix is a join &mdash; not an API call, not a redesign. ~15 lines.
+</div>
 
 </section>
 
