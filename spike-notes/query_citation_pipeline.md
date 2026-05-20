@@ -2,6 +2,76 @@
 
 How a student's question becomes a cited response in harvard-ea, and where the gaps are.
 
+> **Visual companion:** For architecture diagrams and step-by-step visuals, see [`/architecture_and_citations.html`](/architecture_and_citations.html)
+
+---
+
+## TL;DR
+
+- **harvard-ea uses the Responses API** (stateless, assembled per-request), not the OpenAI Agents SDK — despite calling everything an "agent"
+- **file_search is a server-side pipeline** (embedding → keyword search → ranker → vector store → tool logic) that produces two independent citation outputs: **annotations[]** (tool infrastructure) and **PUA markers** (model-generated, V2 only)
+- **The gap:** annotations have `file_id` but no `url`; attributes have `source_url` but aren't in annotations. Citations can't link back to source pages.
+- **The fix (~15 lines):** Add `include=["file_search_call.results"]` to `responses.create()`, join search_results to annotations by `file_id` → populate `url`. Zero extra API calls.
+- **Blocking question:** S3 FileSync requires IAM credentials — can Ventz provide an alternative integration point?
+
+---
+
+## Action Items (for Ventz)
+
+- [ ] **Confirm `include` returns attributes** — verify with our vector store that `search_results[].attributes` contains custom fields
+- [ ] **Agree on custom attributes** — can we add `source_url`, `domain`, `title` in `sync_engine.py`? Or separate PR needed?
+- [ ] **S3 auth path** — IAM role setup, or alternative integration point that avoids key/secret?
+- [ ] **~15 line PR** — add `include` param + join in `_resolve_source_id()`. Can we submit this?
+- [ ] **Manifest in prompt** — acceptable to add ~200 tokens (filename→URL mapping) as a stopgap?
+
+---
+
+## Architecture Overview
+
+```mermaid
+flowchart LR
+    Q[Student Query] --> PRE[Pre-Processing<br/>DynamoDB → tools + prompt]
+    PRE --> API[responses.create<br/>Responses API]
+    
+    subgraph API_BOX[" Responses API Container "]
+        direction TB
+        MODEL[GPT-5.1<br/>orchestrates + generates]
+        FS[Tool: file_search<br/>embed → rank → chunks<br/>produces annotations]
+        WS[Tool: web_search<br/>produces url_citations]
+        MCP_T[Tool: MCP<br/>remote servers]
+    end
+    
+    API --> POST[Post-Processing<br/>Citation Resolver<br/>PUA → numbered refs]
+    POST --> OUT[Student sees<br/>answer + sources + references]
+```
+
+```mermaid
+flowchart TD
+    subgraph V2[" V2 Citation Pipeline "]
+        direction TB
+        S1[1. Model emits PUA markers<br/>START cite DELIM turn0file0 DELIM Block5 STOP]
+        S2[2. extract_citations<br/>→ source_id + locator]
+        S3[3. _process_with_markers<br/>→ assign citation number by first appearance]
+        S4[4. _resolve_source_id<br/>→ regex parse turn0file0 → kind=file, idx=0]
+        S5[5. Array lookup<br/>→ ann_files idx → file_id + filename]
+        S6[6. Build source object<br/>→ url: None, title: None ← THE GAP]
+        S7[7. Replace PUA with numbered ref in text]
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
+    end
+```
+
+```mermaid
+flowchart LR
+    subgraph FIX[" The Fix: Join by file_id "]
+        direction TB
+        ANN[annotations<br/>file_id + filename + index<br/>NO url, NO title]
+        SR[search_results<br/>file_id + attributes<br/>source_url ✓ title ✓]
+        MERGED[Merged Citation<br/>file_id + filename + url + title + locator]
+        ANN -->|file_id bridge| MERGED
+        SR -->|file_id bridge| MERGED
+    end
+```
+
 ---
 
 ## 1. Responses API (Not the Agents SDK)
@@ -323,8 +393,9 @@ Requires: `source_url` set as a custom attribute at upload time.
 1. **Does `include` return attributes in search_results?** Docs say yes — need to verify with our vector store.
 2. **Response size increase:** Does `include` add significant payload? (chunk content is already processed by the model, this just makes it visible to our code too)
 3. **Setting custom attributes:** Can we add `source_url`, `domain`, `title` to the attribute dict in `sync_engine.py:351-368`? Or does this need a separate PR/discussion?
-4. **Code interpreter relevance:** Any use cases where students need full-document answers (summaries, table extraction) that file_search chunks can't serve?
-5. **Manifest in prompt approach:** Is it acceptable to add ~200 tokens to every prompt for the filename→URL mapping? Trade-off vs platform code change.
+4. **S3 auth for FileSync:** Currently requires AWS access key + secret. Can Ventz provide an alternative integration point that avoids IAM setup? (e.g., pre-signed URLs, platform upload API, shared bucket with cross-account access already configured). If IAM is required: who creates the role, what permissions scope, how are credentials rotated?
+5. **Code interpreter relevance:** Any use cases where students need full-document answers (summaries, table extraction) that file_search chunks can't serve?
+6. **Manifest in prompt approach:** Is it acceptable to add ~200 tokens to every prompt for the filename→URL mapping? Trade-off vs platform code change.
 
 ---
 
