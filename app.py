@@ -8,7 +8,7 @@ import sqlite3
 import logging
 import json
 from urllib.parse import urlparse, urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
-import xml.etree.ElementTree as ET
+from lxml import etree as ET
 from urllib.request import urlopen, Request
 from urllib.error import URLError
 from pathlib import Path
@@ -74,6 +74,13 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/comments/",
     r"/page/\d+",
     r"/cdn-cgi/",
+    # Patterns excluded for scraping Harvard academic pages for advising info
+    r"^event/",
+    r"^people/",
+    r"^people$",
+    r"^news/",
+    r"^news$",
+    r"^search",
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
@@ -108,18 +115,26 @@ def _strip_tracking_params(url: str,
 
 
 def _url_excluded(url: str, patterns: list[re.Pattern]) -> bool:
-    """True iff any compiled regex pattern matches *url*.
+    """True iff any compiled regex pattern matches the path of *url*.
 
     Empty *patterns* list means nothing is excluded (returns False).
+
+    Searches the path only, removing initial `/`, so that a pattern r"^event/"
+    matches and excludes pages like domain.example/event/old-event, but not
+    domain.example/advising/event
     """
+    if not patterns:
+        return False
+    path = urlparse(url).path.lstrip('/')
     for pat in patterns:
-        if pat.search(url):
+        if pat.search(path):
             return True
     return False
 
 
 def _fetch_sitemap_urls(host: str, scheme: str = "https",
-                        timeout: int = 10, max_urls: int = 5000) -> list[str]:
+                        timeout: int = 10, max_urls: int = 5000,
+                        logger: logging.Logger | None = None) -> list[str]:
     """Best-effort sitemap discovery.
 
     Tries ``{scheme}://{host}/sitemap.xml`` then
@@ -130,15 +145,38 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
 
     Uses only stdlib (``urllib`` + ``xml.etree``) — no new deps.
     """
+    log = logger or logging.getLogger(__name__)
     # Common XML namespace used in sitemaps
     ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
+    sitemaps_dir = Path('data') / host / 'sitemaps'
+    sitemaps_dir.mkdir(parents=True, exist_ok=True)
+
+    def _save(url: str, data: bytes):
+        filename = urlparse(url).path.rstrip('/').split('/')[-1] or 'sitemap.xml'
+        filepath = sitemaps_dir / filename
+        counter = 1
+        while filepath.exists():
+            stem, suffix = filepath.stem, filepath.suffix
+            filepath = sitemaps_dir / f"{stem}_{counter}{suffix}"
+            counter += 1
+        filepath.write_bytes(data)
+        log.info(f"Sitemap: saved {url} → {filepath}")
+
     def _get(url: str) -> bytes | None:
+        log.info(f"Sitemap: fetching {url}")
+        t0 = datetime.now()
         try:
             req = Request(url, headers={"User-Agent": CONFIG["user_agent"]})
             with urlopen(req, timeout=timeout) as resp:
-                return resp.read()
-        except Exception:
+                data = resp.read()
+            elapsed = (datetime.now() - t0).total_seconds()
+            log.info(f"Sitemap: fetched {url} ({len(data)} bytes) in {elapsed:.2f}s")
+            _save(url, data)
+            return data
+        except Exception as e:
+            elapsed = (datetime.now() - t0).total_seconds()
+            log.info(f"Sitemap: failed to fetch {url} after {elapsed:.2f}s — {e}")
             return None
 
     def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
@@ -160,8 +198,10 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
             if not urls:
                 for elem in root.iter():
                     local = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
-                    if local == "loc" and elem.text:
-                        urls.append(elem.text.strip())
+                    if local == "loc" and elem.text and elem.getparent() is not None:
+                        parent_local = elem.getparent().tag.split("}")[-1]
+                        if parent_local == tag:  # Should use the tag parameter here
+                            urls.append(elem.text.strip())
         return urls
 
     seen: set[str] = set()
@@ -176,24 +216,34 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
         # Check for sitemap index (contains <sitemap> elements)
         sub_sitemaps = _parse_locs(data, tag="sitemap")
         if sub_sitemaps:
-            for sub_url in sub_sitemaps:
+            log.info(f"Sitemap: {sitemap_url} is a sitemap index with {len(sub_sitemaps)} sub-sitemaps")
+            for i, sub_url in enumerate(sub_sitemaps, 1):
+                log.info(f"Sitemap: fetching sub-sitemap {i}/{len(sub_sitemaps)}: {sub_url}")
                 sub_data = _get(sub_url)
                 if sub_data:
-                    for loc in _parse_locs(sub_data, tag="url"):
+                    locs = _parse_locs(sub_data, tag="url")
+                    log.info(f"Sitemap: {sub_url} yielded {len(locs)} URLs (total so far: {len(result) + len(locs)})")
+                    for loc in locs:
                         if loc not in seen:
                             seen.add(loc)
                             result.append(loc)
                             if len(result) >= max_urls:
+                                log.info(f"Sitemap: reached max_urls cap ({max_urls}), stopping early")
                                 return result
 
         # Also parse direct <url><loc> entries
-        for loc in _parse_locs(data, tag="url"):
+        direct_locs = _parse_locs(data, tag="url")
+        if direct_locs:
+            log.info(f"Sitemap: {sitemap_url} contains {len(direct_locs)} direct URL entries")
+        for loc in direct_locs:
             if loc not in seen:
                 seen.add(loc)
                 result.append(loc)
                 if len(result) >= max_urls:
+                    log.info(f"Sitemap: reached max_urls cap ({max_urls}), stopping early")
                     return result
 
+    log.info(f"Sitemap: discovery complete, {len(result)} total URLs found")
     return result
 
 
@@ -306,8 +356,12 @@ class URLStore:
         self.conn = sqlite3.connect(str(db_path), isolation_level=None)
         self.conn.execute("PRAGMA journal_mode=WAL")
         self.conn.execute("PRAGMA synchronous=NORMAL")
-        self.conn.execute("CREATE TABLE IF NOT EXISTS visited (url TEXT PRIMARY KEY)")
+        self.conn.execute("CREATE TABLE IF NOT EXISTS visited (url TEXT PRIMARY KEY, status_code INTEGER)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS downloaded_files (hash TEXT PRIMARY KEY)")
+        try:
+            self.conn.execute("ALTER TABLE visited ADD COLUMN status_code INTEGER")
+        except sqlite3.OperationalError:
+            pass  # column already exists
         self.conn.execute("CREATE TABLE IF NOT EXISTS queue (url TEXT PRIMARY KEY)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS stats (key TEXT PRIMARY KEY, value TEXT)")
         # In-memory cache for fast lookups
@@ -347,6 +401,9 @@ class URLStore:
     def has_file_hash(self, file_hash: str) -> bool:
         row = self.conn.execute("SELECT 1 FROM downloaded_files WHERE hash=?", (file_hash,)).fetchone()
         return row is not None
+
+    def update_status(self, url: str, status_code: int):
+        self.conn.execute("UPDATE visited SET status_code=? WHERE url=?", (status_code, url))
 
     def add_file_hash(self, file_hash: str):
         try:
@@ -656,6 +713,8 @@ class WebsiteScraper:
 
                 content, content_type, content_kind, status = await self.fetch_with_retry(url)
 
+                self.url_store.update_status(url, status)
+
                 if content_kind == 'file':
                     if len(content) > CONFIG['max_file_size']:
                         self.logger.debug(f"Skipping large file: {url} ({len(content) / (1024*1024):.2f} MB)")
@@ -724,6 +783,7 @@ class WebsiteScraper:
             parsed_start = urlparse(self.start_url)
             sitemap_urls = _fetch_sitemap_urls(
                 self.base_domain, scheme=parsed_start.scheme or "https",
+                logger=self.logger,
             )
             if sitemap_urls:
                 added = 0
