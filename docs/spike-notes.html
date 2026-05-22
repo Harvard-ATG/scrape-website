@@ -417,6 +417,7 @@ tr:hover td {
 <nav>
   <h2>APO Bot Pipeline</h2>
 
+  <a href="#five-min" style="color: #89b4fa; font-weight: 600;"><span class="nav-number">&bull;</span> 5-Minute Version</a>
   <a href="#pipeline"><span class="nav-number">1</span> Pipeline Overview</a>
 
   <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Scraper</div>
@@ -439,9 +440,9 @@ tr:hover td {
   <a href="#attributes"><span class="nav-number">12</span> File Attributes</a>
 
   <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Gap &amp; Solutions</div>
-  <a href="#the-gap"><span class="nav-number">13</span> The Gap</a>
-  <a href="#solutions"><span class="nav-number">14</span> Solutions</a>
-  <a href="#url-requirement"><span class="nav-number">15</span> URL in Citations</a>
+  <a href="#the-gap"><span class="nav-number">13</span> The Gap (What's Left)</a>
+  <a href="#solutions"><span class="nav-number">14</span> HA Platform Solution</a>
+  <a href="#url-requirement"><span class="nav-number">15</span> Status &amp; Next Steps</a>
 </nav>
 
 <!-- Main Content -->
@@ -451,35 +452,201 @@ tr:hover td {
 <p class="subtitle">APO Bot Content Pipeline — Technical Architecture for Mixed Audience</p>
 
 <!-- Executive Summary -->
-<div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%); border-radius: 12px; padding: 32px; margin-bottom: 48px; color: white;">
-  <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.2); font-size: 20px; margin-bottom: 16px;">Executive Summary</h2>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+<div style="background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%); border-radius: 12px; padding: 32px; margin-bottom: 32px; color: white;">
+  <h2 style="color: white; border-bottom-color: rgba(255,255,255,0.2); font-size: 20px; margin-bottom: 20px;">Executive Summary</h2>
+
+  <!-- Top: What We Found + The Fix -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
     <div>
-      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 8px;">What We Found</div>
-      <ul style="font-size: 14px; line-height: 2; padding-left: 20px; opacity: 0.9;">
-        <li>Platform uses <strong>Responses API</strong> (stateless), not Agents SDK</li>
-        <li><strong>file_search</strong> is a 6-component pipeline (embed &rarr; rank &rarr; generate)</li>
-        <li>Two independent citation creators: <strong>tool logic</strong> (annotations) + <strong>model</strong> (PUA markers)</li>
-        <li>Annotations have <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">file_id</code> but <strong>no URL</strong> &mdash; that&rsquo;s the gap</li>
+      <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 12px; font-weight: 600;">What We Found</div>
+      <ul style="font-size: 14px; line-height: 1.4; padding-left: 20px; opacity: 0.9;">
+        <li style="margin-bottom: 14px;">Platform uses <strong>Responses API</strong> (stateless, uses tools: file_search, web_search, MCP). Not Agents SDK.</li>
+        <li style="margin-bottom: 14px;"><strong>file_search</strong> is a 6-component pipeline (embed &rarr; rank &rarr; generate)</li>
+        <li style="margin-bottom: 14px;">Two independent citation creators: <strong>tool logic</strong> (annotations) + <strong>model</strong> (PUA markers)</li>
+        <li style="margin-bottom: 0;">Annotations have <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">file_id</code> but <strong>no URL</strong> &mdash; that&rsquo;s the gap</li>
       </ul>
     </div>
     <div>
-      <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 8px;">The Fix</div>
-      <ul style="font-size: 14px; line-height: 2; padding-left: 20px; opacity: 0.9;">
-        <li>Add <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">include=["file_search_call.results"]</code></li>
-        <li>Join <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">search_results</code> to annotations by file_id</li>
-        <li>Populate <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">url</code> + <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px;">title</code> from attributes</li>
-        <li><strong>~15 lines, zero extra API calls</strong></li>
+      <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 12px; font-weight: 600;">The Fix <span style="color: #4ade80; font-size: 11px; letter-spacing: 0.5px;">(&#10003; = unlocked by update)</span></div>
+      <ul style="font-size: 14px; line-height: 1.4; padding-left: 20px; opacity: 0.9;">
+        <li style="margin-bottom: 14px;"><span style="color: #4ade80;">&#10003;</span> Add <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">include=["file_search_call.results"]</code></li>
+        <li style="margin-bottom: 14px;"><span style="color: #4ade80;">&#10003;</span> Join <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">search_results</code> to annotations by file_id</li>
+        <li style="margin-bottom: 14px;"><span style="opacity: 0.5;">&#9744;</span> Populate <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">url</code> + <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">title</code> from attributes</li>
+        <li style="margin-bottom: 14px;"><span style="opacity: 0.5;">&#9744;</span> Add <strong>manifest.json</strong> &mdash; set attributes at upload time</li>
+        <li style="margin-bottom: 0;"><strong>~15 lines, zero extra API calls</strong></li>
       </ul>
-      <div style="margin-top: 12px; padding: 8px 12px; background: rgba(22,163,74,0.2); border-radius: 6px; font-size: 13px;">
-        <strong>Blocking:</strong> S3 FileSync needs IAM credentials &mdash; need integration path from Ventz
-      </div>
     </div>
   </div>
+
+  <!-- Divider -->
+  <div style="margin: 24px 0; border-top: 1px solid rgba(255,255,255,0.15);"></div>
+
+  <!-- Bottom: Status callouts -->
+  <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.6; margin-bottom: 12px; font-weight: 600;">Current Status</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+    <div style="padding: 12px 16px; background: rgba(22,163,74,0.2); border-radius: 8px; font-size: 13px;">
+      <strong style="color: #4ade80; display: block; margin-bottom: 4px;">&#10003; Citation Update &mdash; Partially Unlocks Key Feature</strong>
+      <span style="opacity: 0.85;"><code style="background: rgba(255,255,255,0.15); padding: 2px 5px; border-radius: 3px; font-size: 12px;">include</code> + <code style="background: rgba(255,255,255,0.15); padding: 2px 5px; border-radius: 3px; font-size: 12px;">join_file_search_results()</code> are live &mdash; citations get URLs once attributes are set</span>
+    </div>
+    <div style="padding: 12px 16px; background: rgba(251,146,60,0.2); border-radius: 8px; font-size: 13px;">
+      <strong style="color: #fb923c; display: block; margin-bottom: 4px;">Blocker 1 &mdash; Custom Attribute Hydration</strong>
+      <span style="opacity: 0.85;">Attributes (<code style="background: rgba(255,255,255,0.15); padding: 2px 5px; border-radius: 3px; font-size: 12px;">origin_url</code>, <code style="background: rgba(255,255,255,0.15); padding: 2px 5px; border-radius: 3px; font-size: 12px;">domain</code>, <code style="background: rgba(255,255,255,0.15); padding: 2px 5px; border-radius: 3px; font-size: 12px;">title</code>) not set at upload &mdash; need manifest.json + sync_engine.py change</span>
+    </div>
+    <div style="padding: 12px 16px; background: rgba(251,146,60,0.2); border-radius: 8px; font-size: 13px;">
+      <strong style="color: #fb923c; display: block; margin-bottom: 4px;">Blocker 2 &mdash; S3 Sync</strong>
+      <span style="opacity: 0.85;">FileSync requires IAM credentials &mdash; need integration path from Ventz (role, cross-account access, or alternative)</span>
+    </div>
+  </div>
+
   <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 13px; opacity: 0.7;">
     <strong>Companion doc:</strong> <a href="query_citation_pipeline.md" style="color: #89b4fa;">query_citation_pipeline.md</a> &mdash; full prose reference with Mermaid diagrams and action items checklist
   </div>
 </div>
+
+<!-- Update Banner (Collapsible) -->
+<div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; padding: 20px; margin-bottom: 32px;">
+  <details>
+    <summary style="cursor: pointer; list-style: none;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 13px; font-weight: 700; color: #166534;">&#10003; UPDATE &mdash; May 20, 2026</span>
+        <span style="font-size: 11px; color: #166534; opacity: 0.6;">&#9660;</span>
+      </div>
+      <div style="font-size: 16px; font-weight: 700; color: #14532d; margin-top: 4px;">Citations V2 is Now Default &mdash; Unlocks Attributes Access &#127881;</div>
+      <div style="font-size: 12px; color: #166534; opacity: 0.7; margin-top: 6px;">&#9660; Click for update details</div>
+    </summary>
+    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(34,197,94,0.3);">
+      <p style="font-size: 14px; margin: 0; line-height: 1.8; color: #166534;">Since this deck was written, the platform has shipped key changes:</p>
+      <ul style="font-size: 14px; margin: 8px 0 0; padding-left: 20px; line-height: 2; color: #166534;">
+        <li><strong>V2 is now the platform default.</strong> PUA markers + typed schema runs unconditionally &mdash; no env flag, no V1 fallback.</li>
+        <li><strong><code>include</code> is live &mdash; returns attributes.</strong> <code>chat_send_message.py:938</code> passes <code>include=["file_search_call.results"]</code>. Every response now carries file attributes back to platform code (gated off for APIGEE only; APO Bot runs direct to OpenAI &mdash; no issue).</li>
+        <li><strong><code>join_file_search_results()</code> is live &mdash; combines annotations + attributes.</strong> <code>citations.py:412-452</code>. The two pieces needed for a complete citation (file_id from annotations + origin_url from attributes) are now merged by file_id.</li>
+        <li><strong>Only remaining work &mdash; set the attributes at upload time:</strong>
+          <ul style="margin: 4px 0 0; padding-left: 16px; line-height: 1.8;">
+            <li>Scraped .md files: could parse frontmatter for <code>origin_url</code>, <code>domain</code>, <code>title</code></li>
+            <li>PDFs, Word docs, unsupported formats: <strong>no header data to parse</strong> &mdash; content doesn&rsquo;t carry metadata</li>
+            <li>Therefore: <strong>manifest.json</strong> is required regardless &mdash; a single mapping file (filename &rarr; <code>origin_url</code> + <code>domain</code> + <code>title</code>) that covers ALL file types</li>
+            <li>Proposed change: <code>sync_engine.py</code> reads a <strong>manifest.json</strong> at sync start, looks up attributes per file, and merges into the attribute dict before upload</li>
+          </ul>
+        </li>
+      </ul>
+      <p style="font-size: 12px; color: #166534; margin: 12px 0 0; padding-top: 12px; border-top: 1px solid rgba(34,197,94,0.3);">Sections below that reference V1 as active or <code>include</code> as future work are <strong>historical context</strong>. The current ask is: set attributes at upload (via manifest.json or frontmatter parse in sync_engine.py) &mdash; then citations get URLs automatically.</p>
+    </div>
+  </details>
+</div>
+
+<!-- Reading Guide -->
+<div style="background: white; border: 2px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 32px;">
+  <h2 style="font-size: 18px; border: none; margin-bottom: 16px; padding: 0;">Reading Guide</h2>
+  <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">This is a long document. Pick your path:</p>
+  <table style="font-size: 14px; width: 100%;">
+    <tr style="background: #f0fdf4;">
+      <td style="padding: 10px; font-weight: 600; white-space: nowrap;">Just the ask?</td>
+      <td style="padding: 10px;">Exec summary above &rarr; <a href="#url-requirement" style="color: var(--chunk1);">Section 15</a></td>
+      <td style="padding: 10px; color: var(--muted);">~2 min</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; font-weight: 600; white-space: nowrap;">Understand the gap?</td>
+      <td style="padding: 10px;"><a href="#five-min" style="color: var(--chunk1);">5-Minute Version</a> &rarr; <a href="#the-gap" style="color: var(--chunk1);">Section 13</a> &rarr; <a href="#solutions" style="color: var(--chunk1);">Section 14</a></td>
+      <td style="padding: 10px; color: var(--muted);">~10 min</td>
+    </tr>
+    <tr style="background: #f0fdf4;">
+      <td style="padding: 10px; font-weight: 600; white-space: nowrap;">Platform deep-dive?</td>
+      <td style="padding: 10px;"><a href="#agent-flow" style="color: var(--chunk1);">Section 9</a> &rarr; <a href="#two-layers" style="color: var(--chunk1);">Section 11</a> &rarr; <a href="#the-gap" style="color: var(--chunk1);">Section 13</a></td>
+      <td style="padding: 10px; color: var(--muted);">~20 min</td>
+    </tr>
+    <tr>
+      <td style="padding: 10px; font-weight: 600; white-space: nowrap;">Everything?</td>
+      <td style="padding: 10px;">Read sequentially. Sections 2&ndash;5 and 7&ndash;8 are scraper/chunking reference &mdash; skippable on first read.</td>
+      <td style="padding: 10px; color: var(--muted);">~45 min</td>
+    </tr>
+  </table>
+</div>
+
+<!-- 5-Minute Version -->
+<section id="five-min" style="background: white; border: 2px solid var(--chunk1); border-radius: 12px; padding: 32px; margin-bottom: 48px;">
+<h2 style="font-size: 22px; color: var(--chunk1); border-bottom-color: var(--chunk1);">The 5-Minute Version</h2>
+
+<p><strong>APO Bot</strong> is a Harvard AI assistant backed by 100-200 scraped websites in an OpenAI vector store. Students ask questions, the model retrieves relevant chunks, and generates cited answers.</p>
+<p><strong>The problem:</strong> citations don&rsquo;t link back to source pages.</p>
+
+<h3 style="font-size: 16px;">How it works today</h3>
+
+<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin-top: 12px;">
+  <p style="font-size: 13px; color: var(--muted); margin: 0 0 10px;">When a student asks a question:</p>
+  <ol style="font-size: 14px; line-height: 1.5; padding-left: 24px; margin: 0;">
+    <li style="margin-bottom: 10px;"><strong>Query pre-processing:</strong> Platform reads agent config from DynamoDB, builds tools array + system prompt</li>
+    <li style="margin-bottom: 10px;"><strong>Platform calls Responses API:</strong> <code>client.responses.create()</code> with prompt + citations prompt + File-Search Tool + <code>include=["file_search_call.results"]</code></li>
+    <li style="margin-bottom: 10px;"><strong>Tool: File-Search (server-side):</strong> Embeds the query &rarr; searches the vector store &rarr; ranks results &rarr; injects top chunks into model context</li>
+    <li style="margin-bottom: 10px;"><strong>Model generates:</strong> Uses top chunks returned from vector store to write answer, builds a reference list, and emits PUA citation markers (V2 is now default, runs unconditionally)</li>
+    <li style="margin-bottom: 0;"><strong>Response post-processing:</strong> Processes model response, builds inline citations and matching Sources panel</li>
+  </ol>
+</div>
+
+<h3 style="font-size: 16px;">The gap</h3>
+
+<p>The platform now returns <code>search_results</code> with each response and joins them to annotations by <code>file_id</code> &mdash; <strong>but there&rsquo;s nothing to join to.</strong> The vector store supports custom attributes per file (like <code>origin_url</code>), but nobody is setting them at upload time. The join works; the data is empty.</p>
+
+<div style="display: flex; gap: 16px; margin: 20px 0; align-items: center;">
+  <div style="flex: 1; background: #f0fdf4; border: 2px solid var(--success); border-radius: 8px; padding: 16px; text-align: center;">
+    <div style="font-size: 11px; text-transform: uppercase; color: var(--success); font-weight: 700;">annotations[]</div>
+    <div style="font-size: 13px; margin-top: 4px;">file_id, filename, index<br><span style="color: var(--success);">&#10003; available</span></div>
+  </div>
+  <div style="font-size: 20px; color: var(--success);">&xrarr;</div>
+  <div style="flex: 1; background: #f0fdf4; border: 2px solid var(--success); border-radius: 8px; padding: 16px; text-align: center;">
+    <div style="font-size: 11px; text-transform: uppercase; color: var(--success); font-weight: 700;">join by file_id</div>
+    <div style="font-size: 13px; margin-top: 4px;"><code>join_file_search_results()</code><br><span style="color: var(--success);">&#10003; live</span></div>
+  </div>
+  <div style="font-size: 20px; color: var(--muted);">&xrarr;</div>
+  <div style="flex: 1; background: #fef2f2; border: 2px solid var(--danger); border-radius: 8px; padding: 16px; text-align: center;">
+    <div style="font-size: 11px; text-transform: uppercase; color: var(--danger); font-weight: 700;">attributes{}</div>
+    <div style="font-size: 13px; margin-top: 4px;">origin_url, domain, title<br><strong style="color: var(--danger);">not set at upload</strong></div>
+  </div>
+</div>
+
+<h3 style="font-size: 16px;">The fix (only remaining step)</h3>
+
+<p><strong>Goal:</strong> Hydrate custom attributes (<code>origin_url</code>, <code>domain</code>, <code>title</code>) on every file in the vector store at upload time. Once set, the existing platform code picks them up automatically.</p>
+
+<p style="margin-top: 12px;"><strong>Why not just read the file content?</strong></p>
+<ul style="font-size: 14px; line-height: 1.8; padding-left: 24px; list-style: none;">
+  <li><span style="color: var(--success);">&#10003;</span> <strong>Scraped .md files:</strong> Could parse YAML frontmatter for origin_url, domain, title &mdash; this works</li>
+  <li><span style="color: var(--danger);">&#10007;</span> <strong>PDFs, Word docs, other formats:</strong> No frontmatter, no header to parse &mdash; content doesn&rsquo;t carry metadata</li>
+  <li><strong>Therefore:</strong> Reading file content only covers one file type. We need a solution that works for all.</li>
+</ul>
+
+<div style="background: #f0fdf4; border: 2px solid var(--success); border-radius: 8px; padding: 16px 20px; margin-top: 16px;">
+  <div style="font-size: 15px; font-weight: 700; color: var(--success); margin-bottom: 12px;">HA Platform-Based Solution: Hydrate Attributes Using manifest.json</div>
+  <ol style="font-size: 14px; line-height: 2.2; padding-left: 24px; margin: 0;">
+    <li><strong>Scraper produces manifest.json:</strong> A single mapping file (filename &rarr; <code>origin_url</code> + <code>domain</code> + <code>title</code>) that covers ALL file types regardless of format</li>
+    <li><strong>sync_engine.py reads manifest at sync start:</strong> Looks up attributes per file, merges into the attribute dict before upload</li>
+    <li><strong>Done:</strong> The existing <code>include</code> + <code>join_file_search_results()</code> picks up the attributes automatically &mdash; citations get URLs with zero additional code</li>
+  </ol>
+  <p style="font-weight: 600; margin: 12px 0 0; padding-top: 12px; border-top: 1px solid rgba(34,197,94,0.3);">&#127881; Every citation gets a clickable URL. Zero extra API calls. Zero latency cost. Platform code is already in place.</p>
+</div>
+
+<h3 style="font-size: 16px;">What&rsquo;s blocking</h3>
+
+<table style="font-size: 14px;">
+  <tr>
+    <td style="padding: 8px; font-weight: 600; color: var(--danger);">Blocker 1: Attribute Hydration</td>
+    <td style="padding: 8px;">Need <strong>manifest.json</strong> (filename &rarr; origin_url + domain + title) and a small change to <code>sync_engine.py</code> to read it and merge into attributes at upload. <a href="#solutions" style="color: var(--chunk1); font-weight: 600;">See suggested fix &rarr;</a></td>
+  </tr>
+  <tr style="background: #f8f9fa;">
+    <td style="padding: 8px; font-weight: 600; color: var(--danger);">Blocker 2: S3 Sync</td>
+    <td style="padding: 8px;">FileSync needs AWS IAM credentials. Need role setup or alternative integration path from Ventz.</td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; font-weight: 600; color: var(--success);">&#10003; Platform code</td>
+    <td style="padding: 8px;"><code>include</code> param (<code>chat_send_message.py:938</code>) and <code>join_file_search_results()</code> (<code>citations.py:412</code>) are already live. No PR needed.</td>
+  </tr>
+</table>
+
+<div style="margin-top: 24px; padding: 16px 20px; background: #f8fafc; border-left: 4px solid var(--chunk2); border-radius: 4px;">
+  <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--chunk2); font-weight: 700; margin-bottom: 6px;">Alternative Pathway &mdash; Exploratory</div>
+  <p style="font-size: 14px; margin: 0;"><strong>MCP Experiment:</strong> Entirely separate process outside of the HA platform logic &mdash; the response would be handled in its own black box, independent of FileSync, vector store attributes, and the existing citation pipeline. Currently in exploratory phase; not yet defined. The HA Platform-Based Solution is to hydrate attributes using manifest.json (above).</p>
+</div>
+
+</section>
 
 <!-- ============================================================ -->
 <!-- SECTION 1: Pipeline Overview -->
@@ -545,7 +712,7 @@ tr:hover td {
 </div>
 
 <details class="code-ref">
-  <summary>Pipeline trigger — file_search tool configuration <span class="filepath">chat_send_message.py:800-805</span></summary>
+  <summary>Pipeline trigger — file_search tool configuration <span class="filepath">chat_send_message.py:809-814</span></summary>
   <pre><code><span class="comment"># Prepare tools for file search if vector_store_id is available</span>
 tools = []
 <span class="keyword">if</span> vector_store_id:
@@ -584,58 +751,94 @@ tools = []
   </div>
 </div>
 
-<h3>What It Produces (Two Files Per Page)</h3>
+<h3>What It Produces (Three Outputs Per Page)</h3>
+<p style="font-size: 12px; color: var(--muted); font-style: italic;">Click output type for a preview.</p>
 
-<div class="side-by-side">
-  <div class="panel" style="border-top: 4px solid var(--muted);">
-    <h4 style="color: var(--muted);">1. Raw HTML (archive)</h4>
-    <p style="font-size: 13px;">The full HTML page as downloaded. Nav, CSS, scripts, everything. Kept as source material — not uploaded to vector store.</p>
-    <p style="font-size: 12px; color: var(--muted); margin-bottom: 0;"><code>output/html/german.fas.harvard.edu/about.html</code></p>
-  </div>
-  <div class="panel" style="border-top: 4px solid var(--chunk1);">
-    <h4 style="color: var(--chunk1);">2. Extracted Content (uploaded)</h4>
-    <p style="font-size: 13px;">Trafilatura strips nav/chrome and extracts main body text. Scraper adds a 4-line metadata header (Source URL, Domain, Title, Timestamp). This is what goes to S3 and into the vector store.</p>
-    <p style="font-size: 12px; color: var(--muted); margin-bottom: 0;"><code>output/text/german.fas.harvard.edu/about.txt</code></p>
-  </div>
+<div style="display: flex; flex-direction: column; gap: 12px; margin: 24px 0;">
+
+  <details style="background: var(--card-bg); border: 1px solid var(--border); border-top: 4px solid var(--muted); border-radius: 10px; overflow: hidden;">
+    <summary style="padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <span style="font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">1. Raw HTML (archive)</span>
+        <span style="font-size: 12px; color: var(--muted); margin-left: 12px;">Full page as downloaded &mdash; not uploaded</span>
+      </div>
+      <code style="font-size: 11px; color: var(--muted);">data/&lt;domain&gt;/pages/</code>
+    </summary>
+    <div style="padding: 0 20px 16px; border-top: 1px solid var(--border);">
+      <pre style="background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; font-size: 11px; line-height: 1.6; overflow-x: auto; margin-top: 12px;"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;title&gt;Advising | Department of Germanic Languages&lt;/title&gt;
+  &lt;link rel="stylesheet" href="/sites/all/themes/..."&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;nav class="navbar"&gt;...&lt;/nav&gt;
+  &lt;main&gt;
+    &lt;h1&gt;Advising&lt;/h1&gt;
+    &lt;p&gt;The Director of Undergraduate Studies...&lt;/p&gt;
+  &lt;/main&gt;
+  &lt;footer&gt;...&lt;/footer&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    </div>
+  </details>
+
+  <details style="background: var(--card-bg); border: 1px solid var(--border); border-top: 4px solid var(--chunk1); border-radius: 10px; overflow: hidden;">
+    <summary style="padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <span style="font-size: 14px; font-weight: 700; color: var(--chunk1); text-transform: uppercase; letter-spacing: 0.5px;">2. Extracted Content (uploaded)</span>
+        <span style="font-size: 12px; color: var(--muted); margin-left: 12px;">Clean text + YAML frontmatter &rarr; vector store</span>
+      </div>
+      <code style="font-size: 11px; color: var(--muted);">data/&lt;domain&gt;/text/</code>
+    </summary>
+    <div style="padding: 0 20px 16px; border-top: 1px solid var(--border);">
+      <pre style="background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; font-size: 11px; line-height: 1.6; overflow-x: auto; margin-top: 12px;"><code>---
+origin_url: https://german.fas.harvard.edu/advising
+title: Advising | Department of Germanic Languages
+domain: german.fas.harvard.edu
+scraped_at: 2026-05-20T02:00:00Z
+---
+
+# Advising
+
+The Director of Undergraduate Studies (DUS) is the
+primary academic advisor for all German concentrators.
+
+## Office Hours
+
+Monday 2-4pm, Wednesday 10am-12pm
+Barker Center, Room 365</code></pre>
+    </div>
+  </details>
+
+  <details style="background: var(--card-bg); border: 1px solid var(--border); border-top: 4px solid var(--chunk2); border-radius: 10px; overflow: hidden;">
+    <summary style="padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <span style="font-size: 14px; font-weight: 700; color: var(--chunk2); text-transform: uppercase; letter-spacing: 0.5px;">3. Files (documents)</span>
+        <span style="font-size: 12px; color: var(--muted); margin-left: 12px;">PDFs, Word docs &mdash; downloaded as-is, uploaded</span>
+      </div>
+      <code style="font-size: 11px; color: var(--muted);">data/&lt;domain&gt;/files/</code>
+    </summary>
+    <div style="padding: 0 20px 16px; border-top: 1px solid var(--border);">
+      <pre style="background: #1e1e2e; color: #cdd6f4; padding: 16px; border-radius: 8px; font-size: 11px; line-height: 1.6; overflow-x: auto; margin-top: 12px;"><code>[Binary file — downloaded directly]
+
+Examples:
+  concentration-handbook-2025.pdf
+  add-drop-form.docx
+  course-schedule-fall-2026.xlsx
+
+No frontmatter, no metadata headers.
+Origin URL known only from the link that led here.</code></pre>
+    </div>
+  </details>
+
 </div>
 
 <h3>Components & How a Page Flows Through</h3>
 
-<p style="font-size: 14px;">The scraper is a single Python file (<code>app.py</code>, ~700 lines). Click a component tag to expand/collapse its pipeline step.</p>
+<p style="font-size: 14px;">The scraper is a single Python file (<code>app.py</code>, ~700 lines).</p>
+<p style="font-size: 12px; color: var(--muted); font-style: italic;">Click a step header to collapse/expand.</p>
 
-<!-- Component tags (ordered by step, clickable to expand/collapse corresponding step) -->
-<div style="display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0;" id="component-tags">
-  <button onclick="toggleStep('step-1')" class="comp-tag" data-step="step-1" style="display: inline-flex; align-items: center; gap: 6px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 12px;">
-    <span style="width: 20px; height: 20px; background: var(--crimson); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">1</span>
-    <span style="font-weight: 700; color: var(--dark);">asyncio</span>
-    <span style="color: var(--muted); font-size: 10px;">Queue &amp; Scheduling</span>
-  </button>
-  <button onclick="toggleStep('step-2')" class="comp-tag" data-step="step-2" style="display: inline-flex; align-items: center; gap: 6px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 12px;">
-    <span style="width: 20px; height: 20px; background: var(--crimson); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">2</span>
-    <span style="font-weight: 700; color: var(--dark);">aiohttp</span>
-    <span style="color: var(--muted); font-size: 10px;">HTTP Fetch</span>
-  </button>
-  <button onclick="toggleStep('step-3')" class="comp-tag" data-step="step-3" style="display: inline-flex; align-items: center; gap: 6px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 12px;">
-    <span style="width: 20px; height: 20px; background: var(--crimson); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">3</span>
-    <span style="font-weight: 700; color: var(--dark);">lxml</span>
-    <span style="color: var(--muted); font-size: 10px;">Link Extraction</span>
-  </button>
-  <button onclick="toggleStep('step-4')" class="comp-tag" data-step="step-4" style="display: inline-flex; align-items: center; gap: 6px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 12px;">
-    <span style="width: 20px; height: 20px; background: var(--crimson); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">4</span>
-    <span style="font-weight: 700; color: var(--dark);">trafilatura</span>
-    <span style="color: var(--muted); font-size: 10px;">Text Extraction</span>
-  </button>
-  <button onclick="toggleStep('step-5')" class="comp-tag" data-step="step-5" style="display: inline-flex; align-items: center; gap: 6px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 12px;">
-    <span style="width: 20px; height: 20px; background: var(--crimson); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">5</span>
-    <span style="font-weight: 700; color: var(--dark);">aiofiles</span>
-    <span style="color: var(--muted); font-size: 10px;">Save Outputs</span>
-  </button>
-  <button onclick="toggleStep('step-6')" class="comp-tag" data-step="step-6" style="display: inline-flex; align-items: center; gap: 6px; background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 20px; padding: 8px 14px; cursor: pointer; transition: all 0.2s; font-family: inherit; font-size: 12px;">
-    <span style="width: 20px; height: 20px; background: var(--crimson); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">6</span>
-    <span style="font-weight: 700; color: var(--dark);">SQLite</span>
-    <span style="color: var(--muted); font-size: 10px;">State &amp; Recovery</span>
-  </button>
-</div>
 
 <!-- Pipeline steps (collapsible) -->
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 0; margin: 20px 0; overflow: hidden;">
@@ -1311,7 +1514,7 @@ self.base_domain = self.<span class="function">extract_domain</span>(start_url)
   <!-- What the model does with chunk 3 -->
   <div style="background: #fef2f2; border: 1px solid var(--danger); border-radius: 8px; padding: 14px; margin-top: 16px;">
     <p style="font-size: 12px; font-weight: 700; color: var(--danger); margin-bottom: 6px;">What happens when the model retrieves chunk 3:</p>
-    <p style="font-size: 12px; margin-bottom: 0;">The LLM uses surrounding content context + <code style="background: #dbeafe; padding: 1px 4px; border-radius: 3px;">filename</code> (<code>german_fas_harvard_edu__advising_b3c4d5e6.md</code>) to generate citations and references. But <code style="background: #fecaca; padding: 1px 4px; border-radius: 3px;">source_url</code> is <strong>not</strong> a file attribute today &mdash; so there is no URL metadata attached to the chunk. The model improvises a URL from the filename or omits it entirely.</p>
+    <p style="font-size: 12px; margin-bottom: 0;">The LLM uses surrounding content context + <code style="background: #dbeafe; padding: 1px 4px; border-radius: 3px;">filename</code> (<code>german_fas_harvard_edu__advising_b3c4d5e6.md</code>) to generate citations and references. But <code style="background: #fecaca; padding: 1px 4px; border-radius: 3px;">origin_url</code> is <strong>not</strong> a file attribute today &mdash; so there is no URL metadata attached to the chunk. The model improvises a URL from the filename or omits it entirely.</p>
   </div>
 </div>
 
@@ -1352,11 +1555,11 @@ self.base_domain = self.<span class="function">extract_domain</span>(start_url)
 
     <!-- Approach 2: Attribute-based (file_search attributes) -->
     <div style="border: 1px solid var(--border); border-radius: 8px; padding: 14px; background: #f0fdf4;">
-      <p style="font-size: 12px; font-weight: 700; color: var(--success); margin-bottom: 6px;">Option A: <code>source_url</code> as file attribute (set at upload)</p>
+      <p style="font-size: 12px; font-weight: 700; color: var(--success); margin-bottom: 6px;">Option A: <code>origin_url</code> as file attribute (set at upload)</p>
       <div style="font-family: monospace; font-size: 10px; background: white; padding: 8px; border-radius: 4px; line-height: 1.5;">
         <span style="color: var(--muted);">// What model sees per chunk (file_search result):</span><br>
         { <span style="color: var(--success); font-weight: 700;">"attributes"</span>: {<br>
-        &nbsp;&nbsp;<span style="color: var(--success);">"source_url"</span>: "https://german.../advising",<br>
+        &nbsp;&nbsp;<span style="color: var(--success);">"origin_url"</span>: "https://german.../advising",<br>
         &nbsp;&nbsp;<span style="color: var(--success);">"domain"</span>: "german.fas.harvard.edu"<br>
         &nbsp;&nbsp;},<br>
         &nbsp;&nbsp;"chunk_text": "## Senior Thesis\nStudents..." }
@@ -1566,7 +1769,7 @@ s3.put_object(
 
   <div style="background: #fef2f2; border: 2px solid var(--danger); border-radius: 10px; padding: 20px;">
     <p style="font-size: 15px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">3. Platform code modifications &amp; metadata association</p>
-    <p style="font-size: 14px; margin-bottom: 8px;">We have 3 approaches to get <code>source_url</code> into citations (see <a href="#vector-store" style="color: var(--chunk1);">Section 6: Vector Store &amp; Ingestion</a>). Based on the 5/19 meeting, Ventz appears open to making platform changes we need. However, we can only test via the Assistants API directly &mdash; we are not being provided vector store access through the platform UI.</p>
+    <p style="font-size: 14px; margin-bottom: 8px;">We have 3 approaches to get <code>origin_url</code> into citations (see <a href="#vector-store" style="color: var(--chunk1);">Section 6: Vector Store &amp; Ingestion</a>). Based on the 5/19 meeting, Ventz appears open to making platform changes we need. However, we can only test via the Assistants API directly &mdash; we are not being provided vector store access through the platform UI.</p>
     <p style="font-size: 14px; font-weight: 600; margin-bottom: 4px;">Core questions:</p>
     <ul style="font-size: 14px; margin: 0; padding-left: 20px; line-height: 1.8;">
       <li>How do we associate metadata to be used with citations into the data?</li>
@@ -2706,7 +2909,7 @@ file_hash = item.get(<span class="string">'file'</span>, {}).get(<span class="st
       <td style="padding: 6px;"><code>4523.0</code></td>
     </tr>
   </table>
-  <p style="font-size: 12px; color: var(--danger); margin: 12px 0 0; font-weight: 600;">No <code>source_url</code>, <code>domain</code>, or <code>title</code> &mdash; sync engine never parses file content. 10 custom slots remain (OpenAI limit: 16 per file).</p>
+  <p style="font-size: 12px; color: var(--danger); margin: 12px 0 0; font-weight: 600;">No <code>origin_url</code>, <code>domain</code>, or <code>title</code> &mdash; sync engine never parses file content. 10 custom slots remain (OpenAI limit: 16 per file).</p>
 </div>
 
 <details class="code-ref">
@@ -2756,7 +2959,7 @@ file_hash = item.get(<span class="string">'file'</span>, {}).get(<span class="st
     }
     attributes = {k: v <span class="keyword">for</span> k, v <span class="keyword">in</span> attributes.items() <span class="keyword">if</span> v}
 vector_file_id = self.vector_store.<span class="function">upload_file</span>(file_info, content, attributes=attributes)</code></pre>
-  <p style="font-size: 12px; color: var(--muted); margin: 8px 0 0;">Attributes come from DynamoDB source config + FileInfo — never from file content. Custom middleware needed to add <code>source_url</code>.</p>
+  <p style="font-size: 12px; color: var(--muted); margin: 8px 0 0;">Attributes come from DynamoDB source config + FileInfo — never from file content. Custom middleware needed to add <code>origin_url</code>.</p>
 </details>
 
 <h4 style="margin-top: 32px; color: var(--dark); border-bottom: 1px solid var(--border); padding-bottom: 6px;">
@@ -2840,7 +3043,7 @@ vector_file_id = self.vector_store.<span class="function">upload_file</span>(fil
 &nbsp;&nbsp;<span style="color: #89b4fa;">"score"</span>: <span style="color: #fab387;">0.87</span>,<br>
 &nbsp;&nbsp;<span style="color: #89b4fa;">"attributes"</span>: {<br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #89b4fa;">"source_type"</span>: <span style="color: #a6e3a1;">"s3"</span>,<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #89b4fa;">"source_url"</span>: <span style="color: #a6e3a1;">"https://registrar.fas.harvard.edu/academic-calendar"</span>,<span style="color: #6c7086;"> // IF we set this</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #89b4fa;">"origin_url"</span>: <span style="color: #a6e3a1;">"https://registrar.fas.harvard.edu/academic-calendar"</span>,<span style="color: #6c7086;"> // IF we set this</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #89b4fa;">"domain"</span>: <span style="color: #a6e3a1;">"registrar.fas.harvard.edu"</span>,<span style="color: #6c7086;"> // IF we set this</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #89b4fa;">"title"</span>: <span style="color: #a6e3a1;">"Academic Calendar | FAS Registrar"</span>,<span style="color: #6c7086;"> // IF we set this</span><br>
 &nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #89b4fa;">"sync_timestamp"</span>: <span style="color: #a6e3a1;">"2026-05-06T02:15:00Z"</span>,<br>
@@ -2911,7 +3114,7 @@ tools = [{<br>
   </tr>
   <tr style="background: white;">
     <td style="padding: 10px;">Custom attributes target</td>
-    <td style="padding: 10px;"><code>source_url</code>, <code>domain</code>, <code>title</code></td>
+    <td style="padding: 10px;"><code>origin_url</code>, <code>domain</code>, <code>title</code></td>
     <td style="padding: 10px;">Enables citation URL resolution via <code>include</code> parameter + join. 10 custom slots available (6 of 16 used by FileSync auto-attach).</td>
   </tr>
   <tr style="background: #f8f9fa;">
@@ -2943,7 +3146,7 @@ tools = [{<br>
 
   <div style="background: #fef2f2; border: 2px solid var(--danger); border-radius: 10px; padding: 20px;">
     <p style="font-size: 15px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">3. Setting custom attributes: How do we add them?</p>
-    <p style="font-size: 14px; margin-bottom: 0;">Can we add <code>source_url</code>, <code>domain</code>, <code>title</code> to the attribute dict in <code>sync_engine.py</code>? Does this need a separate PR/discussion? Or can we set them post-upload via <code>vector_stores.files.update()</code>? <em>(For Ventz)</em></p>
+    <p style="font-size: 14px; margin-bottom: 0;">Can we add <code>origin_url</code>, <code>domain</code>, <code>title</code> to the attribute dict in <code>sync_engine.py</code>? Does this need a separate PR/discussion? Or can we set them post-upload via <code>vector_stores.files.update()</code>? <em>(For Ventz)</em></p>
   </div>
 
   <div style="background: #fef2f2; border: 2px solid var(--danger); border-radius: 10px; padding: 20px;">
@@ -3496,7 +3699,7 @@ tools = []
       &nbsp;&nbsp;file_id: "file-abc",<br>
       &nbsp;&nbsp;filename: "advising.txt",<br>
       &nbsp;&nbsp;score: 0.92,<br>
-      &nbsp;&nbsp;<strong style="color: var(--success);">attributes: {source_url: "...", domain: "..."}</strong>,<br>
+      &nbsp;&nbsp;<strong style="color: var(--success);">attributes: {origin_url: "...", domain: "..."}</strong>,<br>
       &nbsp;&nbsp;content: [{text: "chunk..."}]<br>
       }]
     </div>
@@ -3840,102 +4043,104 @@ undergraduate years<br>
 <!-- SECTION 11: Citation Layers & The V2 Switch -->
 <!-- ============================================================ -->
 <section id="two-layers">
-<h2>11. Citation Layers &amp; The V2 Switch</h2>
+<h2>11. Citation Layers &amp; The V2 Pipeline</h2>
 
-<p>Citations in harvard-ea are governed by <strong>two environment variable switches</strong> that control pre-processing and post-processing, plus the <strong>agent system prompt</strong> which independently instructs the model to generate its own references. These are three separate mechanisms.</p>
+<div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534;">
+  <strong>&#10003; Updated:</strong> V2 is now the platform default. The env flag and V1 fallback have been removed. V2 runs unconditionally for all agents.
+</div>
 
-<h3>The Two Switches</h3>
+<p>A response contains <strong>three types of citations</strong>:</p>
+<ol style="font-size: 14px; line-height: 2; padding-left: 24px;">
+  <li><strong>Inline citations</strong> &mdash; <code>[1]</code>, <code>[2]</code> markers within the response text (platform-driven, from invisible PUA markers)</li>
+  <li><strong>Sources panel</strong> &mdash; numbered list alongside the response showing filename, block locator, and URL if available. Order matches the inline citations. (platform-driven)</li>
+  <li><strong>References list</strong> &mdash; <code>### References</code> section at the end of the message body (model-driven, from system prompt instructions)</li>
+</ol>
+<p style="margin-top: 24px;">There are <strong>two mechanisms</strong> that produce these citations:</p>
+<ol style="font-size: 14px; line-height: 2; padding-left: 24px;">
+  <li><strong>V2 platform pipeline</strong> &mdash; preprocessor + PUA markers + post-processor. Creates inline citations (#1) and the Sources panel (#2).</li>
+  <li><strong>Core system instruction prompt</strong> &mdash; instructions configured by admin that tell the model to build a references section. Creates the References list (#3).</li>
+</ol>
+
+<h3>The V2 Pipeline (Now Default)</h3>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
 <table>
   <tr style="background: var(--dark); color: white;">
-    <th style="padding: 12px;">Switch</th>
-    <th style="padding: 12px;">Default</th>
+    <th style="padding: 12px;">Component</th>
+    <th style="padding: 12px;">Status</th>
     <th style="padding: 12px;">Controls</th>
     <th style="padding: 12px;">What It Does</th>
   </tr>
   <tr>
     <td style="padding: 10px;"><code>CITATIONS_V2_PREPROCESS</code></td>
-    <td style="padding: 10px;"><strong style="color: var(--danger);">OFF (0)</strong></td>
+    <td style="padding: 10px;"><strong style="color: var(--success);">ON</strong></td>
     <td style="padding: 10px;">Upload / Ingestion</td>
     <td style="padding: 10px;">Stamps <code>[Block&lt;n&gt;]</code> markers into file content before uploading to vector store</td>
   </tr>
   <tr style="background: #f8f9fa;">
-    <td style="padding: 10px;"><code>CITATIONS_V2</code></td>
-    <td style="padding: 10px;"><strong style="color: var(--danger);">OFF (0)</strong></td>
+    <td style="padding: 10px;">V2 Post-processor</td>
+    <td style="padding: 10px;"><strong style="color: var(--success);">ON (unconditional)</strong></td>
     <td style="padding: 10px;">Prompt + Post-processing</td>
-    <td style="padding: 10px;">Appends PUA citation instructions to system prompt <em>and</em> activates V2 post-processor to parse PUA markers into <code>[N]</code> + Sources panel</td>
+    <td style="padding: 10px;">Appends PUA citation instructions to system prompt <em>and</em> parses PUA markers into <code>[N]</code> + Sources panel</td>
   </tr>
 </table>
 </div>
 
-<div class="callout warning">
-  <strong>Both switches are OFF by default</strong>. When off, files upload unchanged (no block markers), no PUA citation instructions are appended to the prompt, and the post-processor uses the legacy V1 path. The only citation behavior active by default is whatever the agent's system prompt says.
+<h3>What V2 Does</h3>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0; border-top: 4px solid var(--success);">
+  <p style="font-size: 14px; font-weight: bold;">Preprocessing (upload):</p>
+  <ul style="font-size: 13px; padding-left: 20px; line-height: 1.8;">
+    <li>A file gets uploaded from S3</li>
+    <li>Before it enters the vector store, the preprocessor splits it on every blank line</li>
+    <li>Each section gets stamped with a <code>[Block&lt;n&gt;]</code> marker (PDFs get <code>[P&lt;n&gt; Block&lt;m&gt;]</code> for page + block)</li>
+    <li>Markers survive chunking because they ride with the text</li>
+    <li>When a chunk is retrieved later, the model can reference exactly which block it came from</li>
+  </ul>
+  <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">System prompt:</p>
+  <ul style="font-size: 13px; padding-left: 20px; line-height: 1.8;">
+    <li>The core system instruction prompt already has a section about citations and how to build a <code>### References</code> section</li>
+    <li>Citations V2 adds a tiny citations prompt on the tail end of the core system instruction prompt + query &mdash; tells the model how to emit invisible citation markers (used to create the inline citations and the Sources panel)</li>
+    <li>What the model returns: the response text with invisible citation markers embedded + a references list</li>
+  </ul>
+  <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">Post-processing:</p>
+  <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
+    <li>Parses PUA markers the model emitted</li>
+    <li>Resolves source IDs against annotations (file_citation + url_citation)</li>
+    <li>Joins annotations to search_results by file_id (<code>join_file_search_results()</code>)</li>
+    <li>Strips all PUA characters from visible output</li>
+    <li>Returns typed citation schema (filename, locator, quote, url &mdash; <em>url populated if attributes are set</em>)</li>
+    <li>Frontend renders Sources panel with block locators</li>
+  </ol>
 </div>
 
-<h3>What Happens: OFF vs ON</h3>
+<h3>Core System Instruction Prompt Citations (Always Active, Independent)</h3>
 
-<div class="side-by-side">
-  <div class="panel" style="border-top: 4px solid var(--danger);">
-    <h4 style="color: var(--danger);">V2 OFF (Current Default)</h4>
-    <p style="font-size: 14px; font-weight: bold;">Preprocessing (upload):</p>
-    <p style="font-size: 13px;">Files pass through unchanged. No <code>[Block]</code> markers injected. Content uploads exactly as the scraper produced it.</p>
-    <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">System prompt:</p>
-    <p style="font-size: 13px;">No PUA citation instructions appended. The model only gets whatever the admin typed in the agent config.</p>
-    <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">Post-processing (V1 path):</p>
-    <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
-      <li>Reads OpenAI's native <code>file_citation</code> annotations</li>
-      <li>Assigns citation numbers by unique filename</li>
-      <li>If model didn't already write <code>*[N]*</code> markers, injects them at annotation positions</li>
-      <li>Returns citation metadata (file_id, filename &mdash; no URL, no locator)</li>
-    </ol>
-  </div>
-  <div class="panel" style="border-top: 4px solid var(--success);">
-    <h4 style="color: var(--success);">V2 ON (Both switches enabled)</h4>
-    <p style="font-size: 14px; font-weight: bold;">Preprocessing (upload):</p>
-    <p style="font-size: 13px;">Each paragraph gets <code>[Block&lt;n&gt;]</code> prefix. PDFs get <code>[P&lt;n&gt; Block&lt;m&gt;]</code>. Markers survive chunking because they ride with the paragraph.</p>
-    <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">System prompt:</p>
-    <p style="font-size: 13px;">Appends detailed PUA citation instructions: "emit <code>&amp;#xE200;cite&amp;#xE202;turn0file0&amp;#xE202;Block5&amp;#xE201;</code>" &mdash; model learns to emit invisible markers after each cited claim.</p>
-    <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">Post-processing (V2 path):</p>
-    <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
-      <li>Parses PUA markers the model emitted</li>
-      <li>Resolves source IDs against annotations (file_citation + url_citation)</li>
-      <li>Strips all PUA characters from visible output</li>
-      <li>Returns typed citation schema (filename, locator, quote, url&mdash;<em>still None for files</em>)</li>
-      <li>Frontend renders Sources panel with block locators</li>
-    </ol>
-  </div>
-</div>
-
-<h3>Layer 3: Agent Prompt Citations (Always Active)</h3>
-
-<p>Regardless of V2 switches, the agent's <strong>system prompt</strong> (written by the admin in the UI) independently instructs the model to generate its own citation format. This is completely separate from the platform machinery.</p>
+<p>Regardless of the V2 pipeline, the <strong>core system instruction prompt</strong> (configured by the admin in the UI) independently instructs the model to generate its own references. This is completely separate from the platform machinery.</p>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0; border-top: 4px solid var(--chunk3);">
-  <h4 style="color: var(--chunk3);">Agent Prompt Citations (Model-Generated)</h4>
-  <p style="font-size: 14px;"><strong>What it produces:</strong> Inline <code>*[1]*</code>, <code>*[2]*</code> + <code>### References</code> section in the message body</p>
-  <p style="font-size: 14px;"><strong>Configured in:</strong> Agent system prompt (admin UI) &mdash; plain English instructions</p>
+  <h4 style="color: var(--chunk3);">Core System Instruction Prompt Citations (Model-Generated)</h4>
+  <p style="font-size: 14px;"><strong>What it produces:</strong> <code>### References</code> section in the message body</p>
+  <p style="font-size: 14px;"><strong>Configured in:</strong> Core system instruction prompt (admin UI) &mdash; plain English instructions</p>
   <p style="font-size: 14px;"><strong>How it works:</strong></p>
   <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
-    <li>System prompt says "cite sources with inline markers"</li>
-    <li>System prompt says "include ### References at end"</li>
+    <li>System prompt tells the model to include a ### References section at the end</li>
     <li>Model reads chunk content and generates reference labels from what it can see</li>
     <li>Model writes URL <em>only if it saw one in the chunk text</em></li>
     <li>References section appears as visible text in the message body</li>
   </ol>
-  <p style="font-size: 13px; color: var(--muted); margin-top: 12px; margin-bottom: 0;"><strong>This is what APO Bot currently relies on.</strong> The V2 switches are off, so the only citations the user sees are what the model generates from the prompt instructions + whatever the V1 post-processor injects.</p>
+  <p style="font-size: 13px; color: var(--muted); margin-top: 12px; margin-bottom: 0;"><strong>Both systems run in parallel:</strong> The V2 pipeline builds inline citations + Sources panel (platform-driven), while the core system instruction prompt produces ### References (model-driven). They are not connected.</p>
 </div>
 
 <div class="key-rule">
-  <div class="rule-title">Summary: Three Independent Mechanisms</div>
+  <div class="rule-title">Summary: Two Independent Mechanisms</div>
   <table style="margin: 0; font-size: 13px;">
-    <tr><td style="padding: 6px 12px;"><strong>1. Preprocessor</strong></td><td style="padding: 6px;">Stamps [Block] markers at upload</td><td style="padding: 6px; color: var(--danger);"><strong>OFF</strong> by default</td><td style="padding: 6px;"><code>CITATIONS_V2_PREPROCESS=1</code></td></tr>
-    <tr><td style="padding: 6px 12px;"><strong>2. Platform post-processor</strong></td><td style="padding: 6px;">Parses PUA markers &rarr; [N] + Sources panel</td><td style="padding: 6px; color: var(--danger);"><strong>OFF</strong> (V1 fallback active)</td><td style="padding: 6px;"><code>CITATIONS_V2=1</code></td></tr>
-    <tr><td style="padding: 6px 12px;"><strong>3. Agent prompt</strong></td><td style="padding: 6px;">Model generates ### References from visible chunk content</td><td style="padding: 6px; color: var(--success);"><strong>ALWAYS ON</strong></td><td style="padding: 6px;">Admin UI text</td></tr>
+    <tr><td style="padding: 6px 12px;"><strong>1. V2 Platform Pipeline</strong></td><td style="padding: 6px;">Preprocessor + PUA markers + post-processor &rarr; [N] + Sources panel</td><td style="padding: 6px; color: var(--success);"><strong>ON</strong> (default)</td></tr>
+    <tr><td style="padding: 6px 12px;"><strong>2. Core system instruction prompt</strong></td><td style="padding: 6px;">Model generates ### References from visible chunk content</td><td style="padding: 6px; color: var(--success);"><strong>ALWAYS ON</strong></td></tr>
   </table>
 </div>
 
-<h3>Real Example: What APO Bot Does Today (V2 OFF)</h3>
+<h3>Real Example: What APO Bot Does Today (V2 ON)</h3>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
   <p style="font-size: 14px; color: var(--muted); margin-bottom: 12px;">Student asks: "Are there formal advising sessions for German students?"</p>
@@ -3962,27 +4167,23 @@ undergraduate years<br>
 
 <div class="callout info">
   <strong>Why this matters for our URL goal</strong><br>
-  The agent prompt (Layer 3) is the only thing currently producing URLs &mdash; and only when they're visible in the chunk text. The platform citation machinery (V1 or V2) never has a URL to offer for file-based sources. Turning V2 ON would give us block-level locators but still wouldn't solve the URL problem &mdash; that requires a code change to either the post-processor or the content itself.
+  The agent prompt is the only thing currently producing URLs &mdash; and only when they're visible in the chunk text. The V2 pipeline gives us block-level locators and the <code>join_file_search_results()</code> join is live &mdash; but <code>url</code> is still None because attributes aren&rsquo;t set at upload. Once manifest.json hydrates <code>origin_url</code>, the Sources panel will have clickable links.
 </div>
 
 <details class="code-ref">
-  <summary>V2 flag check + prompt injection <span class="filepath">chat_send_message.py:892-907</span></summary>
-  <pre><code><span class="comment"># V2 citations: append OpenAI-recommended citation instruction block when</span>
-<span class="comment"># CITATIONS_V2=1 and a retrieval tool is in use. This teaches the model to</span>
-<span class="comment"># emit cite&lt;id&gt; markers that core/citations.py parses.</span>
-<span class="keyword">try</span>:
-    <span class="keyword">from</span> core.citations <span class="keyword">import</span> is_v2_enabled <span class="keyword">as</span> _cv2_enabled, build_citation_instructions <span class="keyword">as</span> _cv2_instructions
-    <span class="keyword">if</span> <span class="function">_cv2_enabled</span>():
-        _has_fs = <span class="function">any</span>(t.get(<span class="string">"type"</span>) == <span class="string">"file_search"</span> <span class="keyword">for</span> t <span class="keyword">in</span> tools)
-        _has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</span>) <span class="keyword">in</span> (<span class="string">"web_search"</span>, <span class="string">"web_search_preview"</span>) <span class="keyword">for</span> t <span class="keyword">in</span> tools)
-        <span class="keyword">if</span> _has_fs <span class="keyword">or</span> _has_ws:
-            prompt = prompt + <span class="function">_cv2_instructions</span>(_has_fs, _has_ws)
-<span class="keyword">except</span> Exception <span class="keyword">as</span> _cv2_err:
-    logger.error(f<span class="string">"V2 citation instructions failed (non-fatal): {_cv2_err}"</span>)</code></pre>
+  <summary>Citation prompt injection (runs unconditionally) <span class="filepath">chat_send_message.py:892-907</span></summary>
+  <pre><code><span class="comment"># V2 citations: append citation instruction block when a retrieval tool</span>
+<span class="comment"># is in use. Teaches the model to emit cite&lt;id&gt; markers that</span>
+<span class="comment"># core/citations.py parses. Runs unconditionally (V1 removed).</span>
+<span class="keyword">from</span> core.citations <span class="keyword">import</span> build_citation_instructions <span class="keyword">as</span> _cv2_instructions
+_has_fs = <span class="function">any</span>(t.get(<span class="string">"type"</span>) == <span class="string">"file_search"</span> <span class="keyword">for</span> t <span class="keyword">in</span> tools)
+_has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</span>) <span class="keyword">in</span> (<span class="string">"web_search"</span>, <span class="string">"web_search_preview"</span>) <span class="keyword">for</span> t <span class="keyword">in</span> tools)
+<span class="keyword">if</span> _has_fs <span class="keyword">or</span> _has_ws:
+    prompt = prompt + <span class="function">_cv2_instructions</span>(_has_fs, _has_ws)</code></pre>
 </details>
 
 <details class="code-ref">
-  <summary>Preprocessor &mdash; block marker injection (only when CITATIONS_V2_PREPROCESS=1) <span class="filepath">source_preprocessor.py:374-381</span></summary>
+  <summary>Preprocessor &mdash; block marker injection <span class="filepath">source_preprocessor.py:374-381</span></summary>
   <pre><code><span class="keyword">def</span> <span class="function">_inject_block_markers</span>(text: str) -> str:
     <span class="string">"""Prefix each paragraph with [Block&lt;n&gt;] for LLM citation locator echoes."""</span>
     paragraphs = <span class="function">_split_paragraphs</span>(text)
@@ -3994,31 +4195,7 @@ undergraduate years<br>
 </details>
 
 <details class="code-ref">
-  <summary>V1 post-processor fallback (what runs today) <span class="filepath">chat_send_message.py:235-310</span></summary>
-  <pre><code><span class="comment"># ----- V1 (original) path &mdash; unchanged behavior -----</span>
-<span class="comment"># Reads OpenAI's native file_citation annotations</span>
-<span class="comment"># Assigns citation numbers by unique filename (order of first appearance)</span>
-<span class="comment"># If model didn't write *[N]* markers, injects them at annotation positions</span>
-<span class="comment"># Returns: [{index, file_id, filename}] &mdash; no url, no locator, no quote</span>
-
-file_citation_annotations = []
-<span class="keyword">for</span> annotation <span class="keyword">in</span> annotations:
-    <span class="keyword">if</span> getattr(annotation, <span class="string">'type'</span>, None) == <span class="string">"file_citation"</span>:
-        file_citation_annotations.append({
-            <span class="string">'file_id'</span>: annotation.file_id,
-            <span class="string">'filename'</span>: annotation.filename,
-            <span class="string">'char_index'</span>: annotation.index
-        })
-
-<span class="comment"># Inject *[N]* markers if model didn't already produce them</span>
-<span class="keyword">if not</span> has_inline_markers:
-    <span class="keyword">for</span> pos <span class="keyword">in</span> sorted(seen_positions.keys(), reverse=True):
-        marker = f<span class="string">" *[{seen_positions[pos]}]*"</span>
-        message_text = message_text[:pos] + marker + message_text[pos:]</code></pre>
-</details>
-
-<details class="code-ref">
-  <summary>V2 post-processor &mdash; resolving source IDs (url is always None for files) <span class="filepath">citations.py:486-539</span></summary>
+  <summary>V2 post-processor &mdash; resolving source IDs (url populated when attributes set) <span class="filepath">citations.py:486-539</span></summary>
   <pre><code><span class="keyword">def</span> <span class="function">_resolve_source_id</span>(source_id, ann_files, ann_urls):
     <span class="string">"""Map a model-emitted source_id (e.g. turn0file0) to its real annotation."""</span>
     m = _SOURCE_ID_TURN_RE.match(source_id)
@@ -4040,7 +4217,7 @@ file_citation_annotations = []
         }</code></pre>
 </details>
 
-<h3>How to Tell: Real Playground Output (V2 is OFF)</h3>
+<h3>How to Tell: Real Playground Output</h3>
 
 <p>From <code>Academic-Technology-Assistant-Playground-2026-05-15</code> &mdash; an actual APO Bot session asking about German advising:</p>
 
@@ -4103,39 +4280,10 @@ file_citation_annotations = []
 </div>
 
 <details class="code-ref">
-  <summary>Flag check &mdash; determines V1 vs V2 path at runtime <span class="filepath">citations.py:83-89</span></summary>
-  <pre><code><span class="keyword">def</span> <span class="function">is_v2_enabled</span>() -> bool:
-    <span class="string">"""Return True iff the V2 citation pipeline is enabled.</span>
-<span class="string"></span>
-<span class="string">    Toggle with: export CITATIONS_V2=1  (any of 1/true/yes/on, case-insensitive).</span>
-<span class="string">    """</span>
-    val = (os.getenv(<span class="string">"CITATIONS_V2"</span>) <span class="keyword">or</span> <span class="string">""</span>).strip().lower()
-    <span class="keyword">return</span> val <span class="keyword">in</span> (<span class="string">"1"</span>, <span class="string">"true"</span>, <span class="string">"yes"</span>, <span class="string">"on"</span>)</code></pre>
-</details>
-
-<details class="code-ref">
-  <summary>Preprocessor flag &mdash; controls [Block] injection at upload <span class="filepath">source_preprocessor.py:100-103</span></summary>
-  <pre><code><span class="keyword">def</span> <span class="function">is_preprocess_enabled</span>() -> bool:
-    <span class="string">"""True iff CITATIONS_V2_PREPROCESS is set to a truthy value."""</span>
-    val = (os.getenv(<span class="string">"CITATIONS_V2_PREPROCESS"</span>) <span class="keyword">or</span> <span class="string">""</span>).strip().lower()
-    <span class="keyword">return</span> val <span class="keyword">in</span> (<span class="string">"1"</span>, <span class="string">"true"</span>, <span class="string">"yes"</span>, <span class="string">"on"</span>)</code></pre>
-</details>
-
-<details class="code-ref">
-  <summary>V1 fallback logic &mdash; what actually runs today <span class="filepath">chat_send_message.py:225-228</span></summary>
-  <pre><code><span class="keyword">try</span>:
-    <span class="keyword">from</span> core.citations <span class="keyword">import</span> is_v2_enabled, process_citations_v2
-    <span class="keyword">if</span> <span class="function">is_v2_enabled</span>():
-        <span class="keyword">return</span> <span class="function">process_citations_v2</span>(message_text, annotations)
-<span class="keyword">except</span> Exception <span class="keyword">as</span> v2_err:
-    logger.error(f<span class="string">"V2 citation processor failed, falling back to V1: {v2_err}"</span>)
-
-<span class="comment"># ----- V1 (original) path below &mdash; THIS IS WHAT RUNS -----</span>
-<span class="comment"># When is_v2_enabled() returns False (the default), execution</span>
-<span class="comment"># skips the return above and falls through to the V1 logic:</span>
-<span class="comment"># - Read file_citation annotations from OpenAI response</span>
-<span class="comment"># - Assign *[N]* markers by unique filename</span>
-<span class="comment"># - Return [{index, file_id, filename}] &mdash; no url, no locator</span></code></pre>
+  <summary>V2 post-processor call (runs unconditionally, no V1 fallback) <span class="filepath">chat_send_message.py:262-291</span></summary>
+  <pre><code><span class="comment"># V2 runs unconditionally &mdash; V1 has been removed</span>
+<span class="keyword">from</span> core.citations <span class="keyword">import</span> process_citations_v2
+<span class="keyword">return</span> <span class="function">process_citations_v2</span>(message_text, annotations, file_search_results)</code></pre>
 </details>
 
 <h3>Following a Citation: V2 Pipeline Step by Step</h3>
@@ -4269,12 +4417,12 @@ _SOURCE_ID_TURN_RE = re.compile(r<span class="string">"^turn(\d+)(file|search|ne
 
 </details><!-- end V2 collapsible -->
 
-<h3>Following a Citation: V1 Pipeline Step by Step</h3>
+<h3 style="color: var(--muted);">Historical: V1 Pipeline (Removed)</h3>
 
-<details open>
-<summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 0;">Expand: 4-step trace through the V1 post-processor</summary>
+<details>
+<summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 0;">&#9660; V1 trace (historical reference only &mdash; this code has been removed)</summary>
 
-<p>When V2 is <strong>off</strong> (the default today), the simpler V1 path runs:</p>
+<p style="color: var(--muted);"><em>V1 was the simpler fallback path that ran when V2 was off. It has since been removed from the codebase.</em></p>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
 
@@ -4558,7 +4706,7 @@ next_num = <span class="number">1</span>
     <th>Impact</th>
   </tr>
   <tr>
-    <td><code style="color: var(--danger);">source_url</code></td>
+    <td><code style="color: var(--danger);">origin_url</code></td>
     <td>Inside file content (header line)</td>
     <td>Not available when chunk doesn't include header</td>
   </tr>
@@ -4576,7 +4724,7 @@ next_num = <span class="number">1</span>
 
 <div class="callout warning">
   <strong>The 6 attributes are about sync infrastructure, not content origin.</strong>
-  They tell you <em>how</em> and <em>when</em> a file was synced — not <em>what</em> it is or <em>where</em> it came from. The 10 empty custom slots are where <code>source_url</code>, <code>domain</code>, and <code>title</code> should live.
+  They tell you <em>how</em> and <em>when</em> a file was synced — not <em>what</em> it is or <em>where</em> it came from. The 10 empty custom slots are where <code>origin_url</code>, <code>domain</code>, and <code>title</code> should live.
 </div>
 
 <h3>Are Attributes Used in Citations?</h3>
@@ -4641,9 +4789,13 @@ vector_file_id = self.vector_store.<span class="function">upload_file</span>(fil
 <!-- SECTION 13: The Gap -->
 <!-- ============================================================ -->
 <section id="the-gap">
-<h2>13. The Gap</h2>
+<h2>13. The Gap (What's Left)</h2>
 
-<p>Putting it all together: there's a structural gap where file attributes <em>exist</em> but don't <em>flow</em> into citations, and content metadata <em>flows</em> but doesn't <em>persist</em> across chunks.</p>
+<div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534;">
+  <strong>&#10003; Platform code is ready:</strong> <code>include=["file_search_call.results"]</code> is passed and <code>join_file_search_results()</code> wires search_results into the post-processor. The remaining gap is that <strong>custom attributes (origin_url, domain, title) aren't set at upload time</strong> — so the join finds nothing to populate.
+</div>
+
+<p>The platform pipeline can now read attributes from the response — but those attribute slots are empty. The data needs to get there.</p>
 
 <h3>The Architecture Gap Visualized</h3>
 
@@ -4657,7 +4809,7 @@ vector_file_id = self.vector_store.<span class="function">upload_file</span>(fil
         file_id: "file-abc123"<br>
         filename: "our-people.txt"<br>
         <span style="background: var(--metadata); padding: 1px 4px; border-radius: 3px;">attributes: { source_type: "s3", ... }</span><br>
-        <span style="color: var(--danger); font-weight: bold;">NO source_url attribute</span><br>
+        <span style="color: var(--danger); font-weight: bold;">NO origin_url attribute</span><br>
         <span style="color: var(--danger); font-weight: bold;">NO domain attribute</span><br>
         <span style="color: var(--danger); font-weight: bold;">NO title attribute</span>
       </div>
@@ -4813,14 +4965,14 @@ These sessions help students:
   </div>
 </div>
 
-<div class="callout info">
-  <strong>The key insight</strong>
-  The post-processor already has <code>file_id</code> for every citation it processes. With <code>include=["file_search_call.results"]</code>, the search results (with attributes) are in the same response. The fix is a <strong>join by file_id</strong> &mdash; not an extra API call.
+<div class="callout success">
+  <strong>The platform join is already live.</strong>
+  <code>include=["file_search_call.results"]</code> is passed and <code>join_file_search_results()</code> bridges annotations to search_results by <code>file_id</code>. Once attributes are set at upload, the <code>url</code> and <code>title</code> fields populate automatically.
 </div>
 
-<h3>The Fix: Join Annotations + Search Results by file_id</h3>
+<h3>How the Join Works (Already Live)</h3>
 
-<p>With the <code>include</code> parameter, both datasets are in the same response. Bridging them requires matching on <code>file_id</code>:</p>
+<p>Both datasets are in the same response. The platform joins them by <code>file_id</code>:</p>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
 
@@ -4855,7 +5007,7 @@ These sessions help students:
         &nbsp;&nbsp;filename: "advising.txt",<br>
         &nbsp;&nbsp;score: 0.92,<br>
         &nbsp;&nbsp;<strong style="color: var(--success);">attributes: {<br>
-        &nbsp;&nbsp;&nbsp;&nbsp;source_url: "https://...",<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;origin_url: "https://...",<br>
         &nbsp;&nbsp;&nbsp;&nbsp;domain: "german.fas...",<br>
         &nbsp;&nbsp;&nbsp;&nbsp;title: "Advising | ..."<br>
         &nbsp;&nbsp;}</strong>,<br>
@@ -4887,38 +5039,27 @@ These sessions help students:
 </div>
 
 <div class="callout success">
-  <strong>Zero extra API calls.</strong> Both <code>annotations</code> and <code>search_results</code> are already in the same response &mdash; we just need to pass <code>include=["file_search_call.results"]</code> to <code>responses.create()</code> and wire the join in <code>_resolve_source_id()</code>.
+  <strong>This join is already live in the platform.</strong> <code>include</code> is passed and <code>join_file_search_results()</code> wires the match. The only missing piece: custom attributes need to be set at upload time (via manifest.json hydration).
 </div>
 
 <details class="code-ref">
-  <summary>Post-processor has file_id but returns url=None <span class="filepath">citations.py:486-525</span></summary>
-  <pre><code><span class="keyword">def</span> <span class="function">_resolve_source_id</span>(source_id, ann_files, ann_urls):
-    <span class="string">"""Map a model-emitted source_id to its real annotation."""</span>
-    m = _SOURCE_ID_TURN_RE.match(source_id)
-    kind = m.group(<span class="number">2</span>)
-    item_idx = <span class="function">int</span>(m.group(<span class="number">3</span>))
+  <summary>Post-processor join (live) &mdash; url populates when attributes exist <span class="filepath">citations.py:486-525</span></summary>
+  <pre><code><span class="comment"># _resolve_source_id() resolves file_id from annotation.</span>
+<span class="comment"># join_file_search_results() then matches by file_id against search_results.</span>
+<span class="comment"># If the file has attributes set, url and title are populated:</span>
 
-    <span class="keyword">if</span> kind == <span class="string">"file"</span> <span class="keyword">and</span> item_idx < <span class="function">len</span>(ann_files):
-        ann = ann_files[item_idx]
-        <span class="keyword">return</span> {
-            <span class="string">"source_type"</span>: <span class="string">"file"</span>,
-            <span class="string">"file_id"</span>: ann[<span class="string">"file_id"</span>],    <span class="comment"># &lt;-- HAS file_id!</span>
-            <span class="string">"filename"</span>: ann[<span class="string">"filename"</span>],
-            <span class="string">"url"</span>: <span class="comment">None</span>,                <span class="comment"># &lt;-- COULD look up attributes here</span>
-            <span class="string">"title"</span>: <span class="comment">None</span>,              <span class="comment"># &lt;-- COULD look up attributes here</span>
-            <span class="string">"quote"</span>: ann[<span class="string">"quote"</span>],
-        }
+<span class="keyword">if</span> match <span class="keyword">and</span> match.attributes:
+    entry[<span class="string">"url"</span>] = match.attributes.get(<span class="string">"origin_url"</span>)   <span class="comment"># &lt;-- populated if attribute set</span>
+    entry[<span class="string">"title"</span>] = match.attributes.get(<span class="string">"title"</span>)      <span class="comment"># &lt;-- populated if attribute set</span>
 
-<span class="comment"># The fix (~10 lines): after resolving, call</span>
-<span class="comment"># client.vector_stores.files.retrieve(vs_id, file_id)</span>
-<span class="comment"># to get attributes dict, then set:</span>
-<span class="comment">#   result["url"] = attrs.get("source_url")</span>
-<span class="comment">#   result["title"] = attrs.get("title")</span></code></pre>
+<span class="comment"># Today: attributes are empty (only 6 auto-attached, no custom).</span>
+<span class="comment"># Result: url = None, title = None.</span>
+<span class="comment"># Fix: hydrate origin_url, domain, title using manifest.json at upload time.</span></code></pre>
 </details>
 
 <div class="key-rule">
   <div class="rule-title">Section Takeaway</div>
-  Annotations have <code>file_id</code> but no <code>url</code>. Search results (with <code>include</code>) have <code>url</code> in attributes. Both share <code>file_id</code>. The fix is a join &mdash; not an API call, not a redesign. ~15 lines.
+  The platform join is live &mdash; <code>include</code> is passed and <code>join_file_search_results()</code> matches by <code>file_id</code>. The only remaining gap: <strong>custom attributes (origin_url, domain, title) need to be set at upload time</strong> via manifest.json hydration. Once set, citations automatically have clickable URLs.
 </div>
 
 </section>
@@ -4928,133 +5069,81 @@ These sessions help students:
 <!-- SECTION 14: Solutions -->
 <!-- ============================================================ -->
 <section id="solutions">
-<h2>14. Solutions</h2>
+<h2>14. HA Platform-Based Solution: Hydrate Attributes Using manifest.json</h2>
 
-<p>Three approaches to getting the source URL reliably into every citation, regardless of file size or which chunk is retrieved:</p>
+<div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534;">
+  <strong>&#10003; Platform pipeline is ready.</strong> <code>include</code> is passed, <code>join_file_search_results()</code> is live. The remaining work is populating the custom attribute slots so the join has data to return.
+</div>
 
-<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 24px 0;">
+<p>The platform can already read attributes from the response and populate <code>url</code> + <code>title</code> on citations. What's missing: getting <code>origin_url</code>, <code>domain</code>, and <code>title</code> into the 10 available custom attribute slots at upload time.</p>
 
-  <!-- Option A -->
-  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--success); position: relative;">
-    <div style="position: absolute; top: -12px; left: 16px; background: var(--success); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px;">RECOMMENDED FOR MVP</div>
-    <h4 style="margin-top: 8px; margin-bottom: 12px;">Option A: Keep Files Short</h4>
-    <table style="font-size: 12px; margin: 0;">
-      <tr><td><strong>Effort</strong></td><td>Zero code changes</td></tr>
-      <tr><td><strong>How</strong></td><td>One scraped page = one file</td></tr>
-      <tr><td><strong>Why it works</strong></td><td>Most pages &lt; 800 tokens = one chunk = metadata always present</td></tr>
-      <tr><td><strong>Limitation</strong></td><td>Long pages (catalogs, handbooks, PDFs) still lose metadata</td></tr>
-    </table>
-    <div class="callout success" style="margin-bottom: 0; margin-top: 12px; padding: 10px 12px; font-size: 12px;">
-      <strong>Already working today.</strong> The playground demo proves citations work with current .txt files.
-    </div>
+<h3>What's Done vs. What's Left</h3>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0;">
+
+  <!-- Done -->
+  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--success);">
+    <h4 style="color: var(--success); margin-bottom: 12px;">&#10003; Done (Platform Side)</h4>
+    <ul style="font-size: 13px; padding-left: 20px; line-height: 2;">
+      <li><code>include=["file_search_call.results"]</code> passed to <code>responses.create()</code></li>
+      <li><code>join_file_search_results()</code> matches annotations to search_results by <code>file_id</code></li>
+      <li>V2 post-processor reads <code>attributes.origin_url</code> and <code>attributes.title</code></li>
+      <li>Citation schema already has <code>url</code> and <code>title</code> fields</li>
+      <li>Frontend renders clickable URL when populated</li>
+    </ul>
   </div>
 
-  <!-- Option B -->
-  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--chunk1); position: relative;">
-    <div style="position: absolute; top: -12px; left: 16px; background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px;">RECOMMENDED FOR V1</div>
-    <h4 style="margin-top: 8px; margin-bottom: 12px;">Option B: <code>include</code> Parameter + Join</h4>
-    <table style="font-size: 12px; margin: 0;">
-      <tr><td><strong>Effort</strong></td><td>~15 lines across 2 files</td></tr>
-      <tr><td><strong>How</strong></td><td>Add <code>include=["file_search_call.results"]</code> to responses.create(), join search_results to annotations by file_id</td></tr>
-      <tr><td><strong>Requires</strong></td><td>1. Custom attributes set at upload<br>2. PR to harvard-ea (2 files)</td></tr>
-      <tr><td><strong>Extra API calls</strong></td><td><strong style="color: var(--success);">Zero</strong> &mdash; data already in the response</td></tr>
-      <tr><td><strong>Solves</strong></td><td>URL in every citation regardless of file size</td></tr>
-    </table>
-    <div class="callout success" style="margin-bottom: 0; margin-top: 12px; padding: 10px 12px; font-size: 12px;">
-      <strong>Permanent fix, zero latency cost.</strong> The search results (with attributes) come back in the same response &mdash; just need to wire the join.
-    </div>
-  </div>
-
-  <!-- Option C -->
-  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 1px solid var(--border);">
-    <h4 style="margin-top: 0; margin-bottom: 12px;">Option C: Larger Chunks</h4>
-    <table style="font-size: 12px; margin: 0;">
-      <tr><td><strong>Effort</strong></td><td>1 config line</td></tr>
-      <tr><td><strong>How</strong></td><td>Increase max_chunk_size to 2000+ tokens</td></tr>
-      <tr><td><strong>Trade-off</strong></td><td>Fewer chunks = less precise block locators = worse citation granularity</td></tr>
-      <tr><td><strong>Limitation</strong></td><td>Still doesn't solve truly large files (10k+ token PDFs)</td></tr>
-    </table>
-    <div class="callout warning" style="margin-bottom: 0; margin-top: 12px; padding: 10px 12px; font-size: 12px;">
-      <strong>Trade-off too steep.</strong> Degrades citation precision for all files to help only edge cases.
-    </div>
+  <!-- Left -->
+  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--danger);">
+    <h4 style="color: var(--danger); margin-bottom: 12px;">&#10007; Remaining (Upload Side)</h4>
+    <ul style="font-size: 13px; padding-left: 20px; line-height: 2;">
+      <li>Generate <strong>manifest.json</strong> mapping filename &rarr; origin_url + domain + title</li>
+      <li>Hydrate custom attributes at upload time using manifest.json</li>
+      <li>Decide integration point: extend <code>sync_engine.py</code> or post-upload script</li>
+      <li>Handle PDFs/docs (no parseable frontmatter &mdash; manifest is required)</li>
+    </ul>
   </div>
 
 </div>
 
-<h3>Option B: What the Code Change Looks Like</h3>
-
-<p>Three changes across two files &mdash; no extra API calls, no new dependencies:</p>
+<h3>Why manifest.json (Not Just Frontmatter)</h3>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
-
-  <!-- Change 1 -->
-  <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
-    <div style="font-size: 12px; font-weight: 700; color: var(--chunk1); margin-bottom: 8px;">CHANGE 1: Add <code>include</code> to responses.create()</div>
-    <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-<span style="color: #6c7086;"># chat_send_message.py — response_params assembly:</span><br>
-response_params = {<br>
-&nbsp;&nbsp;<span style="color: #a6e3a1;">"model"</span>: actual_model,<br>
-&nbsp;&nbsp;<span style="color: #a6e3a1;">"input"</span>: chat_input,<br>
-&nbsp;&nbsp;<span style="color: #a6e3a1;">"instructions"</span>: prompt,<br>
-&nbsp;&nbsp;<span style="color: #a6e3a1;">"tools"</span>: tools,<br>
-&nbsp;&nbsp;<span style="color: #a6e3a1; font-weight: bold;">"include"</span>: [<span style="color: #a6e3a1; font-weight: bold;">"file_search_call.results"</span>],&nbsp;&nbsp;<span style="color: #a6e3a1;"># &larr; NEW</span><br>
-}
-    </div>
-  </div>
-
-  <!-- Change 2 -->
-  <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
-    <div style="font-size: 12px; font-weight: 700; color: var(--chunk1); margin-bottom: 8px;">CHANGE 2: Extract search_results from response</div>
-    <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-<span style="color: #6c7086;"># chat_send_message.py — after getting response:</span><br>
-search_results = []<br>
-<span style="color: #cba6f7;">for</span> item <span style="color: #cba6f7;">in</span> response.output:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #cba6f7;">if</span> getattr(item, <span style="color: #a6e3a1;">"type"</span>, <span style="color: #fab387;">None</span>) == <span style="color: #a6e3a1;">"file_search_call"</span>:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;search_results = item.search_results <span style="color: #cba6f7;">or</span> []
-    </div>
-  </div>
-
-  <!-- Change 3 -->
-  <div>
-    <div style="font-size: 12px; font-weight: 700; color: var(--chunk1); margin-bottom: 8px;">CHANGE 3: Join by file_id in _resolve_source_id()</div>
-    <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-<span style="color: #6c7086;"># citations.py — in _resolve_source_id(), after building the entry:</span><br>
-<span style="color: #cba6f7;">if</span> entry[<span style="color: #a6e3a1;">"source_type"</span>] == <span style="color: #a6e3a1;">"file"</span> <span style="color: #cba6f7;">and</span> search_results:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;"># Find matching result by file_id:</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;match = <span style="color: #89b4fa;">next</span>((r <span style="color: #cba6f7;">for</span> r <span style="color: #cba6f7;">in</span> search_results<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #cba6f7;">if</span> r.file_id == entry[<span style="color: #a6e3a1;">"file_id"</span>]), <span style="color: #fab387;">None</span>)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #cba6f7;">if</span> match <span style="color: #cba6f7;">and</span> match.attributes:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;entry[<span style="color: #a6e3a1;">"url"</span>] = match.attributes.get(<span style="color: #a6e3a1;">"source_url"</span>)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;entry[<span style="color: #a6e3a1;">"title"</span>] = match.attributes.get(<span style="color: #a6e3a1;">"title"</span>)
-    </div>
-  </div>
-
+  <p style="font-size: 14px; margin-bottom: 16px;">Frontmatter parsing works for scraped .md files &mdash; but not for everything in the vector store:</p>
+  <table style="font-size: 13px; margin: 0;">
+    <tr style="background: var(--light-bg);"><th style="padding: 8px;">File Type</th><th style="padding: 8px;">Has Frontmatter?</th><th style="padding: 8px;">manifest.json?</th></tr>
+    <tr><td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> Scraped .md files</td><td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> Yes (YAML header)</td><td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> Yes</td></tr>
+    <tr style="background: #f8f9fa;"><td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> PDFs</td><td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> No (binary format)</td><td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> Yes</td></tr>
+    <tr><td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> Word docs</td><td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> No</td><td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> Yes</td></tr>
+    <tr style="background: #f8f9fa;"><td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> Legacy .txt files</td><td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> No (header lines, not YAML)</td><td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> Yes</td></tr>
+  </table>
+  <p style="font-size: 13px; color: var(--muted); margin-top: 12px; margin-bottom: 0;"><strong>manifest.json is the universal source of truth</strong> &mdash; it maps every filename to its origin_url regardless of file format.</p>
 </div>
 
-<p>This requires that custom attributes are set at upload time. Two ways to do that:</p>
+<h3>Integration Options</h3>
 
 <div class="side-by-side">
-  <div class="panel">
-    <h4>A. Extend sync_engine.py (~20 lines)</h4>
+  <div class="panel" style="border-top: 3px solid var(--chunk1);">
+    <h4>A. Extend sync_engine.py</h4>
     <div style="font-size: 13px; line-height: 1.8;">
-      Parse YAML frontmatter from .md files during sync. Add <code>source_url</code>, <code>domain</code>, <code>title</code> to the attributes dict before upload.<br><br>
+      Read manifest.json during sync. For each file, look up its entry and add <code>origin_url</code>, <code>domain</code>, <code>title</code> to the attributes dict before upload.<br><br>
       <strong>Pro:</strong> All in one pipeline, leverages FileSync change detection<br>
       <strong>Con:</strong> Requires PR to harvard-ea
     </div>
   </div>
-  <div class="panel">
+  <div class="panel" style="border-top: 3px solid var(--chunk3);">
     <h4>B. Post-upload script</h4>
     <div style="font-size: 13px; line-height: 1.8;">
       After sync completes, run a script that reads manifest.json and calls <code>vector_stores.files.update()</code> for each file.<br><br>
-      <strong>Pro:</strong> No platform code changes<br>
+      <strong>Pro:</strong> No platform code changes, can run independently<br>
       <strong>Con:</strong> Extra process, latency, must track file_ids
     </div>
   </div>
 </div>
 
-<h3>Option D: Manifest in Prompt (No Code Changes)</h3>
+<h3>Stopgap: Manifest in Prompt (No Upload Changes)</h3>
 
-<p>Alternative approach: bake the filename&rarr;URL mapping directly into the system prompt so the model always has it available:</p>
+<p>While attribute hydration is being implemented, we can bake the filename&rarr;URL mapping directly into the system prompt so the model always has it available for its ### References section:</p>
 
 <div style="background: var(--code-bg); border-radius: 10px; padding: 20px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--code-text); line-height: 1.8; overflow-x: auto;">
 <span style="color: #6c7086;"># Appended to system prompt (from manifest.json):</span><br>
@@ -5064,7 +5153,7 @@ search_results = []<br>
 advising.txt &rarr; https://german.fas.harvard.edu/advising<br>
 our-people.txt &rarr; https://german.fas.harvard.edu/our-people<br>
 academic-calendar.txt &rarr; https://registrar.fas.harvard.edu/academic-calendar<br>
-<span style="color: #6c7086;">... (~61 entries, ~200 tokens total)</span>
+<span style="color: #6c7086;">... (~100-200 entries, ~200-400 tokens total)</span>
 </div>
 
 <div class="side-by-side">
@@ -5079,7 +5168,7 @@ academic-calendar.txt &rarr; https://registrar.fas.harvard.edu/academic-calendar
   <div class="panel" style="border-top: 3px solid var(--danger);">
     <h4 style="font-size: 13px;">Cons</h4>
     <ul style="font-size: 13px; padding-left: 20px; line-height: 1.8;">
-      <li>~200 extra tokens per prompt (61 files)</li>
+      <li>Extra tokens per prompt</li>
       <li>Only helps model-written References, NOT Sources panel</li>
       <li>Must keep mapping in sync with vector store</li>
       <li>Prompt gets stale if files added/removed</li>
@@ -5087,38 +5176,9 @@ academic-calendar.txt &rarr; https://registrar.fas.harvard.edu/academic-calendar
   </div>
 </div>
 
-<h3>Summary: Phased Approach</h3>
-
-<table>
-  <tr>
-    <th>Phase</th>
-    <th>What</th>
-    <th>Effort</th>
-    <th>Result</th>
-  </tr>
-  <tr>
-    <td><strong>MVP (now)</strong></td>
-    <td>One page per file, current .txt format</td>
-    <td>Zero</td>
-    <td>Citations work for most pages</td>
-  </tr>
-  <tr>
-    <td><strong>V1</strong></td>
-    <td>Custom attributes + <code>include</code> param + join by file_id</td>
-    <td>~15 lines across 2 files</td>
-    <td>URL in every citation, zero extra API calls, domain filtering</td>
-  </tr>
-  <tr>
-    <td><strong>V2</strong></td>
-    <td>Markdown output + descriptive filenames + frontmatter</td>
-    <td>Scraper enhancements</td>
-    <td>Better block granularity + nicer Sources panel display</td>
-  </tr>
-</table>
-
 <div class="key-rule">
   <div class="rule-title">Bottom Line</div>
-  <strong style="font-size: 16px; color: #78350f;">The citation system already works for MVP.</strong> The URL gap only affects long files (chunk 3+). The permanent fix is ~15 lines: add <code>include</code> to <code>responses.create()</code> and join search_results to annotations by <code>file_id</code> to populate the url field. Zero extra API calls. Content format improvements (markdown, frontmatter, descriptive filenames) are polish on top of a working system.
+  <strong style="font-size: 16px; color: #78350f;">The platform is ready. We need to hydrate attributes.</strong> The join code is live. Once <code>origin_url</code>, <code>domain</code>, and <code>title</code> are set as custom attributes (using manifest.json as the source), every citation automatically gets a clickable URL. Zero extra API calls, zero latency impact.
 </div>
 
 </section>
@@ -5128,200 +5188,93 @@ academic-calendar.txt &rarr; https://registrar.fas.harvard.edu/academic-calendar
 <!-- SECTION 15: URL in Citations — The Requirement -->
 <!-- ============================================================ -->
 <section id="url-requirement">
-<h2>15. URL in Citations &mdash; The Requirement</h2>
+<h2>15. URL in Citations &mdash; Status &amp; Next Steps</h2>
 
 <div class="callout warning">
   <strong>Requirement from Brooks:</strong> Citations must include the source URL. Students need to be able to trace any answer back to the original Harvard page. A citation that says "German Studies sample advising content" without a URL is not acceptable for production.
 </div>
 
-<p>Today, the URL appears in citations <strong>only when the metadata header happens to be in the same chunk</strong> as the retrieved content. For long pages, it doesn't. We need a guaranteed solution.</p>
+<h3>Progress: 2 of 3 Steps Complete</h3>
 
-<h3>Where the URL Must Appear</h3>
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
+  <div style="margin-bottom: 16px;">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border);">
+      <span style="color: var(--success); font-size: 18px; font-weight: bold;">&#10003;</span>
+      <span style="font-size: 14px;"><strong>Step 1:</strong> Pass <code>include=["file_search_call.results"]</code> to get search_results in response</span>
+      <span style="margin-left: auto; font-size: 11px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px;">LIVE</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border);">
+      <span style="color: var(--success); font-size: 18px; font-weight: bold;">&#10003;</span>
+      <span style="font-size: 14px;"><strong>Step 2:</strong> <code>join_file_search_results()</code> bridges annotations to search_results by file_id</span>
+      <span style="margin-left: auto; font-size: 11px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px;">LIVE</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0;">
+      <span style="color: var(--danger); font-size: 18px; font-weight: bold;">&#10007;</span>
+      <span style="font-size: 14px;"><strong>Step 3:</strong> Hydrate custom attributes (<code>origin_url</code>, <code>domain</code>, <code>title</code>) at upload time using manifest.json</span>
+      <span style="margin-left: auto; font-size: 11px; background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 4px;">BLOCKED</span>
+    </div>
+  </div>
+  <p style="font-size: 13px; color: var(--muted); margin: 0;">Once Step 3 is complete, every citation automatically has a clickable URL &mdash; the platform code is already wired to read and display it.</p>
+</div>
+
+<h3>What "Done" Looks Like</h3>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
-  <p style="font-size: 14px; margin-bottom: 12px;"><strong>Agent Prompt References section (model-generated):</strong></p>
+  <p style="font-size: 14px; margin-bottom: 12px;"><strong>Sources panel (platform-driven) &mdash; with attributes hydrated:</strong></p>
   <div style="background: #f8fafc; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.8; margin-bottom: 16px;">
-    <strong>### References</strong><br>
-    <em>*[1]*</em> Advising | Department of Germanic Languages, <span style="color: var(--success); font-weight: bold;">german.fas.harvard.edu/advising</span> <span style="color: var(--success);">&larr; REQUIRED</span><br>
-    <em>*[2]*</em> German Studies advising for second-year students, <span style="color: var(--danger); font-weight: bold;">??? no URL ???</span> <span style="color: var(--danger);">&larr; NOT ACCEPTABLE</span>
-  </div>
-
-  <p style="font-size: 14px; margin-bottom: 12px;"><strong>Platform Sources panel (post-processor generated):</strong></p>
-  <div style="background: #f8fafc; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.8;">
     <span style="display: inline-block; background: var(--chunk1); color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-size: 11px; margin-right: 8px;">1</span>
-    <strong>advising.txt</strong> &mdash; <code style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 3px;">Block3</code> &mdash; <span style="color: var(--success); font-weight: bold;">german.fas.harvard.edu/advising</span> <span style="color: var(--success);">&larr; REQUIRED</span>
+    <strong>advising.txt</strong> &mdash; <code style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 3px;">Block3</code> &mdash; <span style="color: var(--success); font-weight: bold;">german.fas.harvard.edu/advising</span> <span style="color: var(--success);">&#10003;</span><br>
+    <span style="display: inline-block; background: var(--chunk1); color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-size: 11px; margin-right: 8px;">2</span>
+    <strong>our-people.txt</strong> &mdash; <code style="font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 3px;">Block48</code> &mdash; <span style="color: var(--success); font-weight: bold;">german.fas.harvard.edu/our-people</span> <span style="color: var(--success);">&#10003;</span>
+  </div>
+
+  <p style="font-size: 14px; margin-bottom: 12px;"><strong>### References (model-driven) &mdash; model still writes what it sees:</strong></p>
+  <div style="background: #f8fafc; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.8;">
+    <em>*[1]*</em> Advising | Department of Germanic Languages, <span style="color: var(--success); font-weight: bold;">german.fas.harvard.edu/advising</span><br>
+    <em>*[2]*</em> German Studies sample advising content <span style="color: var(--muted);">(URL not visible in chunk, but Sources panel has it)</span>
   </div>
 </div>
 
-<h3>Three Platform Approaches (for Ventz)</h3>
+<h3>Blockers for Step 3</h3>
 
-<p>All three require modifications to <code>harvard-ea</code>. The scraper is forked and we own it — but the platform is Ventz's. We need his buy-in on one of these:</p>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0;">
 
-<div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin: 24px 0;">
-
-  <!-- Approach A -->
-  <div style="background: var(--card-bg); border-radius: 10px; padding: 24px; border: 2px solid var(--chunk1); position: relative;">
-    <div style="position: absolute; top: -12px; left: 16px; background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px;">APPROACH A: CLEANEST</div>
-    <h4 style="margin-top: 8px;">FileSync Attribute Enrichment + Post-Processor Lookup</h4>
-    <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">~30 lines across 2 files. Permanent fix for all file sizes.</p>
-
-    <div class="side-by-side" style="margin: 0;">
-      <div class="panel" style="margin: 0;">
-        <h4>Step 1: Set attributes at upload</h4>
-        <p style="font-size: 12px; color: var(--muted);">Modify <code>sync_engine.py</code> (~20 lines)</p>
-        <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--code-text); line-height: 1.7;">
-          <span style="color: #6c7086;"># After downloading content, parse frontmatter</span><br>
-          <span style="color: #cba6f7;">if</span> file_info.name.endswith(<span style="color: #a6e3a1;">'.md'</span>):<br>
-          &nbsp;&nbsp;custom = parse_frontmatter(content)<br>
-          &nbsp;&nbsp;<span style="color: #cba6f7;">if</span> custom:<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;attributes.update({<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">'source_url'</span>: custom[<span style="color: #a6e3a1;">'source_url'</span>],<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">'domain'</span>: custom[<span style="color: #a6e3a1;">'domain'</span>],<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">'title'</span>: custom[<span style="color: #a6e3a1;">'title'</span>],<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;})
-        </div>
-      </div>
-      <div class="panel" style="margin: 0;">
-        <h4>Step 2: Look up at citation time</h4>
-        <p style="font-size: 12px; color: var(--muted);">Modify <code>citations.py</code> (~10 lines)</p>
-        <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--code-text); line-height: 1.7;">
-          <span style="color: #6c7086;"># After resolving citation</span><br>
-          <span style="color: #cba6f7;">if</span> entry[<span style="color: #a6e3a1;">"file_id"</span>]:<br>
-          &nbsp;&nbsp;vs_file = client.files.<span style="color: #89b4fa;">retrieve</span>(<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;file_id=entry[<span style="color: #a6e3a1;">"file_id"</span>]<br>
-          &nbsp;&nbsp;)<br>
-          &nbsp;&nbsp;attrs = vs_file.attributes or {}<br>
-          &nbsp;&nbsp;entry[<span style="color: #a6e3a1;">"url"</span>] = attrs.get(<span style="color: #a6e3a1;">"source_url"</span>)<br>
-          &nbsp;&nbsp;entry[<span style="color: #a6e3a1;">"title"</span>] = attrs.get(<span style="color: #a6e3a1;">"title"</span>)
-        </div>
-      </div>
-    </div>
-
-    <div class="callout success" style="margin-bottom: 0; margin-top: 16px;">
-      <strong>Result:</strong> Every citation has source_url and title regardless of which chunk was retrieved. Frontend citation object already has <code>url</code> and <code>title</code> fields — just currently null for file citations. Also enables domain-based query filtering.
-    </div>
+  <!-- Blocker 1 -->
+  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--danger);">
+    <h4 style="color: var(--danger); margin-bottom: 12px;">Blocker 1: Custom Attribute Hydration</h4>
+    <p style="font-size: 13px; line-height: 1.8;">Need to set <code>origin_url</code>, <code>domain</code>, <code>title</code> as custom attributes on each file in the vector store at upload time.</p>
+    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Source:</strong> manifest.json (maps filename &rarr; metadata)</p>
+    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Options:</strong></p>
+    <ul style="font-size: 12px; padding-left: 20px; line-height: 1.8;">
+      <li>Extend <code>sync_engine.py</code> to read manifest.json during sync</li>
+      <li>Post-upload script via <code>vector_stores.files.update()</code></li>
+    </ul>
   </div>
 
-  <!-- Approach B -->
-  <div style="background: var(--card-bg); border-radius: 10px; padding: 24px; border: 1px solid var(--border); position: relative;">
-    <div style="position: absolute; top: -12px; left: 16px; background: var(--chunk3); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px;">APPROACH B: PUA METADATA INJECTION</div>
-    <h4 style="margin-top: 8px;">Embed URL in Content Using PUA Unicode (Invisible to Students)</h4>
-    <p style="font-size: 14px; color: var(--muted); margin-bottom: 16px;">Modify <code>source_preprocessor.py</code>. Piggybacks on existing PUA strip infrastructure.</p>
-
-    <div style="display: flex; gap: 16px; align-items: flex-start;">
-      <div style="flex: 2;">
-        <p style="font-size: 13px; line-height: 1.8;"><strong>How it works:</strong></p>
-        <ol style="font-size: 13px; line-height: 2; padding-left: 20px;">
-          <li>Preprocessor injects PUA-wrapped metadata into content every ~800 tokens</li>
-          <li>Metadata survives chunking (it's inline text, repeated)</li>
-          <li>Model can read it (sees URL in chunk content)</li>
-          <li>Existing <code>strip_all_pua()</code> removes it from final output</li>
-          <li>Students never see the injected metadata</li>
-        </ol>
-      </div>
-      <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--code-text); line-height: 1.7;">
-        <span style="color: #6c7086;"># Injected every ~800 tokens:</span><br>
-        <span style="color: #f9e2af;"></span>meta<span style="color: #f9e2af;"></span><br>
-        source_url=https://...<br>
-        title=About | Dept...<br>
-        <span style="color: #f9e2af;"></span><br>
-        <br>
-        <span style="color: #6c7086;"># Model reads it,</span><br>
-        <span style="color: #6c7086;"># strip_all_pua() removes</span><br>
-        <span style="color: #6c7086;"># it from output</span>
-      </div>
-    </div>
-
-    <div class="callout info" style="margin-bottom: 0; margin-top: 16px;">
-      <strong>Trade-off:</strong> Uses ~30-40 extra tokens per repetition. Clever but less clean than Approach A. Advantage: the model itself sees the URL and can use it directly in its References section without any post-processor change.
-    </div>
-  </div>
-
-  <!-- Approach C -->
-  <div style="background: var(--card-bg); border-radius: 10px; padding: 24px; border: 1px solid var(--border); position: relative;">
-    <div style="position: absolute; top: -12px; left: 16px; background: var(--muted); color: white; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px;">APPROACH C: REPEAT IN CONTENT</div>
-    <h4 style="margin-top: 8px;">Repeat Metadata Header Every N Paragraphs (No Platform Change)</h4>
-    <p style="font-size: 14px; color: var(--muted); margin-bottom: 12px;">Scraper-only change. No harvard-ea modification needed. But wasteful.</p>
-
-    <div style="display: flex; gap: 16px;">
-      <div style="flex: 1; font-size: 13px; line-height: 1.8;">
-        <strong>How:</strong> Scraper repeats the 4-line header every ~10 paragraphs in the output file.<br>
-        <strong>Pro:</strong> Zero platform changes. Model always sees URL.<br>
-        <strong>Con:</strong> Wastes ~40 tokens per repetition. Bloats content. Model might hallucinate from seeing metadata as content.
-      </div>
-      <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 10px; color: var(--code-text); line-height: 1.6;">
-        Source: https://german.fas.harvard.edu/about<br>
-        Domain: german.fas.harvard.edu<br>
-        Title: About | Dept of Germanic...<br>
-        <br>
-        [Block1] # About...<br>
-        [Block2] ## Discover...<br>
-        ...<br>
-        <br>
-        <span style="color: #f9e2af;">Source: https://german.fas.harvard.edu/about</span><br>
-        <span style="color: #f9e2af;">Domain: german.fas.harvard.edu</span><br>
-        <span style="color: #f9e2af;">Title: About | Dept of Germanic...</span><br>
-        <br>
-        [Block11] ## Study Abroad...<br>
-        [Block12] ...
-      </div>
-    </div>
+  <!-- Blocker 2 -->
+  <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--danger);">
+    <h4 style="color: var(--danger); margin-bottom: 12px;">Blocker 2: S3 Sync Setup</h4>
+    <p style="font-size: 13px; line-height: 1.8;">FileSync S3 adapter requires IAM credentials to pull content from the S3 bucket.</p>
+    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Need from Ventz:</strong></p>
+    <ul style="font-size: 12px; padding-left: 20px; line-height: 1.8;">
+      <li>IAM role setup (who creates, what scope?)</li>
+      <li>Or alternative: pre-signed URLs, platform upload API</li>
+      <li>Credential rotation process</li>
+    </ul>
   </div>
 
 </div>
 
-<h3>Recommendation for Ventz Conversation</h3>
-
-<table>
-  <tr>
-    <th>Approach</th>
-    <th>Platform Changes</th>
-    <th>Lines of Code</th>
-    <th>URL Guaranteed?</th>
-    <th>Extra API Calls?</th>
-    <th>Extra Tokens?</th>
-  </tr>
-  <tr style="background: #eff6ff;">
-    <td><strong>A: <code>include</code> + Join</strong></td>
-    <td>chat_send_message.py + citations.py</td>
-    <td>~15</td>
-    <td style="color: var(--success); font-weight: bold;">Yes (every citation)</td>
-    <td style="color: var(--success); font-weight: bold;">Zero</td>
-    <td>None</td>
-  </tr>
-  <tr>
-    <td><strong>B: Attributes + Separate Lookup</strong></td>
-    <td>sync_engine.py + citations.py</td>
-    <td>~30</td>
-    <td style="color: var(--success); font-weight: bold;">Yes (every citation)</td>
-    <td style="color: var(--danger);">N per response</td>
-    <td>None</td>
-  </tr>
-  <tr>
-    <td><strong>C: PUA Metadata Injection</strong></td>
-    <td>source_preprocessor.py</td>
-    <td>~25</td>
-    <td style="color: var(--success); font-weight: bold;">Yes (model sees it)</td>
-    <td style="color: var(--success); font-weight: bold;">Zero</td>
-    <td>~40 per repeat</td>
-  </tr>
-  <tr>
-    <td><strong>D: Manifest in Prompt</strong></td>
-    <td>None (prompt only)</td>
-    <td>~0</td>
-    <td style="color: var(--chunk3);">References only (not Sources panel)</td>
-    <td style="color: var(--success); font-weight: bold;">Zero</td>
-    <td>~200 total</td>
-  </tr>
-</table>
+<h3>The Conversation with Ventz</h3>
 
 <div class="key-rule">
-  <div class="rule-title">The Ask for Ventz</div>
-  <strong style="font-size: 16px; color: #78350f;">"We need source_url in every citation. Approach A is ~15 lines: add <code>include</code> param + join search_results by file_id. Zero extra API calls. Can we PR this?"</strong>
-  <p style="margin-top: 8px; color: #92400e; margin-bottom: 0;">If the answer is no or "not yet," Approach D (manifest in prompt) gives the model URLs immediately with zero code changes &mdash; though it only helps the ### References section, not the Sources panel. Approach C (PUA injection) is the middle ground if we can touch preprocessor but not citations.py.</p>
+  <div class="rule-title">Updated Ask</div>
+  <strong style="font-size: 16px; color: #78350f;">"The platform join code is live (<code>include</code> + <code>join_file_search_results</code>). We need to hydrate 3 custom attributes at upload time. Can we either extend <code>sync_engine.py</code> to read manifest.json, or use a post-upload script to call <code>vector_stores.files.update()</code>?"</strong>
+  <p style="margin-top: 8px; color: #92400e; margin-bottom: 0;">Secondary: S3 IAM credentials for FileSync. Who creates the role and what's the credential path?</p>
 </div>
 
 </section>
+
 
 
 </main>
