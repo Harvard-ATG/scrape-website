@@ -5141,6 +5141,142 @@ These sessions help students:
   </div>
 </div>
 
+<details class="code-ref">
+  <summary>Option A: How manifest.json gets loaded during sync <span class="filepath">sync_engine.py:338-368</span></summary>
+  <pre><code><span class="comment"># manifest.json lives in the S3 bucket alongside the content files.</span>
+<span class="comment"># The adapter downloads it like any other file during list_files_recursive().</span>
+<span class="comment"># We intercept it before upload and use it as a lookup table.</span>
+
+<span class="comment"># --- In sync_engine.py, _sync_file() method: ---</span>
+
+<span class="comment"># Download file content (existing line 340)</span>
+content = self.adapter.download_file(file_info)
+
+<span class="comment"># Build metadata attributes (existing lines 351-364)</span>
+attributes = {
+    <span class="string">'source_type'</span>: source_metadata.get(<span class="string">'adapter_type'</span>, <span class="string">'unknown'</span>),
+    <span class="string">'source_id'</span>: source_metadata.get(<span class="string">'source_id'</span>, <span class="string">''</span>),
+    <span class="string">'source_name'</span>: source_metadata.get(<span class="string">'source_name'</span>, <span class="string">''</span>),
+    <span class="string">'sync_timestamp'</span>: datetime.now(timezone.utc).isoformat(),
+    <span class="string">'original_path'</span>: file_info.path,
+    <span class="string">'file_size_bytes'</span>: <span class="function">float</span>(file_info.size),
+}
+
+<span class="comment"># --- NEW: Merge custom attributes from manifest ---</span>
+<span class="keyword">if</span> self._manifest <span class="keyword">and</span> file_info.name <span class="keyword">in</span> self._manifest:
+    entry = self._manifest[file_info.name]
+    attributes[<span class="string">'origin_url'</span>] = entry.get(<span class="string">'origin_url'</span>, <span class="string">''</span>)
+    attributes[<span class="string">'domain'</span>] = entry.get(<span class="string">'domain'</span>, <span class="string">''</span>)
+    attributes[<span class="string">'title'</span>] = entry.get(<span class="string">'title'</span>, <span class="string">''</span>)
+
+<span class="comment"># Upload to vector store with enriched attributes</span>
+vector_file_id = self.vector_store.upload_file(file_info, content, attributes=attributes)</code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>How manifest.json is loaded into memory at sync start <span class="filepath">sync_engine.py (new)</span></summary>
+  <pre><code><span class="comment"># manifest.json is stored in S3 alongside the scraped content files.</span>
+<span class="comment"># S3 bucket layout:</span>
+<span class="comment">#   s3://apo-bot-content/</span>
+<span class="comment">#     manifest.json          &lt;-- the mapping file</span>
+<span class="comment">#     advising.md</span>
+<span class="comment">#     our-people.md</span>
+<span class="comment">#     handbook.pdf</span>
+<span class="comment">#     ...</span>
+
+<span class="comment"># At the start of sync(), before processing files:</span>
+<span class="keyword">def</span> <span class="function">_load_manifest</span>(self) -> Dict[str, Dict]:
+    <span class="string">"""Load manifest.json from the S3 bucket if it exists."""</span>
+    <span class="keyword">try</span>:
+        <span class="comment"># The adapter already has S3 access &mdash; just download manifest.json</span>
+        manifest_info = FileInfo(
+            id=<span class="string">'manifest.json'</span>,
+            name=<span class="string">'manifest.json'</span>,
+            path=f<span class="string">"{self.adapter.prefix}manifest.json"</span>,
+            size=<span class="number">0</span>, modified=<span class="keyword">None</span>, hash=<span class="keyword">None</span>
+        )
+        raw = self.adapter.download_file(manifest_info)
+        manifest = json.loads(raw)
+        logger.info(f<span class="string">"Loaded manifest.json: {len(manifest)} entries"</span>)
+        <span class="keyword">return</span> manifest
+    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
+        logger.warning(f<span class="string">"No manifest.json found (attributes won't be enriched): {e}"</span>)
+        <span class="keyword">return</span> {}
+
+<span class="comment"># Called once at start of sync:</span>
+self._manifest = self._load_manifest()
+
+<span class="comment"># manifest.json is NOT uploaded to the vector store (skip it in file list):</span>
+files_to_sync = [f <span class="keyword">for</span> f <span class="keyword">in</span> all_files <span class="keyword">if</span> f.name != <span class="string">'manifest.json'</span>]</code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>manifest.json structure (what the scraper produces) <span class="filepath">scraper output</span></summary>
+  <pre><code><span class="comment">// manifest.json &mdash; produced by the scraper alongside content files</span>
+<span class="comment">// Uploaded to S3 bucket root. One entry per file.</span>
+{
+  <span class="string">"advising.md"</span>: {
+    <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/advising"</span>,
+    <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
+    <span class="string">"title"</span>: <span class="string">"Advising | Department of Germanic Languages"</span>
+  },
+  <span class="string">"our-people.md"</span>: {
+    <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/our-people"</span>,
+    <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
+    <span class="string">"title"</span>: <span class="string">"People | Department of Germanic Languages"</span>
+  },
+  <span class="string">"handbook-2026.pdf"</span>: {
+    <span class="string">"origin_url"</span>: <span class="string">"https://registrar.fas.harvard.edu/files/handbook-2026.pdf"</span>,
+    <span class="string">"domain"</span>: <span class="string">"registrar.fas.harvard.edu"</span>,
+    <span class="string">"title"</span>: <span class="string">"FAS Student Handbook 2026"</span>
+  }
+  <span class="comment">// ... 100-200 entries total</span>
+}</code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Option B: Post-upload script (standalone, no platform changes) <span class="filepath">scripts/hydrate_attributes.py</span></summary>
+  <pre><code><span class="comment">#!/usr/bin/env python3</span>
+<span class="comment">"""Hydrate custom attributes on vector store files using manifest.json.</span>
+<span class="comment">Run after FileSync completes. Reads manifest from S3, then updates each file.</span>
+<span class="comment">"""</span>
+<span class="keyword">import</span> json, boto3
+<span class="keyword">from</span> openai <span class="keyword">import</span> OpenAI
+
+VECTOR_STORE_ID = <span class="string">"vs_abc123"</span>
+BUCKET = <span class="string">"apo-bot-content"</span>
+
+<span class="comment"># 1. Load manifest from S3</span>
+s3 = boto3.client(<span class="string">'s3'</span>)
+obj = s3.get_object(Bucket=BUCKET, Key=<span class="string">'manifest.json'</span>)
+manifest = json.loads(obj[<span class="string">'Body'</span>].read())
+
+<span class="comment"># 2. List files in vector store</span>
+client = OpenAI()
+vs_files = client.vector_stores.files.list(VECTOR_STORE_ID)
+
+<span class="comment"># 3. For each file, look up in manifest and update attributes</span>
+<span class="keyword">for</span> vs_file <span class="keyword">in</span> vs_files:
+    filename = vs_file.filename  <span class="comment"># e.g. "advising.md"</span>
+    <span class="keyword">if</span> filename <span class="keyword">in</span> manifest:
+        entry = manifest[filename]
+        client.vector_stores.files.update(
+            vector_store_id=VECTOR_STORE_ID,
+            file_id=vs_file.id,
+            attributes={
+                <span class="comment"># Keep existing auto-attached attributes...</span>
+                **(vs_file.attributes <span class="keyword">or</span> {}),
+                <span class="comment"># ...and add custom ones from manifest:</span>
+                <span class="string">'origin_url'</span>: entry[<span class="string">'origin_url'</span>],
+                <span class="string">'domain'</span>: entry[<span class="string">'domain'</span>],
+                <span class="string">'title'</span>: entry[<span class="string">'title'</span>],
+            }
+        )
+        <span class="function">print</span>(f<span class="string">"Updated {filename}: {entry['origin_url']}"</span>)
+
+<span class="comment"># Can be triggered by: Lambda after sync, CI/CD step, or manual run</span></code></pre>
+</details>
+
 <h3>Stopgap: Manifest in Prompt (No Upload Changes)</h3>
 
 <p>While attribute hydration is being implemented, we can bake the filename&rarr;URL mapping directly into the system prompt so the model always has it available for its ### References section:</p>
@@ -5243,34 +5379,121 @@ academic-calendar.txt &rarr; https://registrar.fas.harvard.edu/academic-calendar
   <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--danger);">
     <h4 style="color: var(--danger); margin-bottom: 12px;">Blocker 1: Custom Attribute Hydration</h4>
     <p style="font-size: 13px; line-height: 1.8;">Need to set <code>origin_url</code>, <code>domain</code>, <code>title</code> as custom attributes on each file in the vector store at upload time.</p>
-    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Source:</strong> manifest.json (maps filename &rarr; metadata)</p>
+    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Source:</strong> manifest.json (maps filename &rarr; metadata), lives in S3 bucket alongside content files</p>
     <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Options:</strong></p>
     <ul style="font-size: 12px; padding-left: 20px; line-height: 1.8;">
-      <li>Extend <code>sync_engine.py</code> to read manifest.json during sync</li>
-      <li>Post-upload script via <code>vector_stores.files.update()</code></li>
+      <li>Extend <code>sync_engine.py</code> to load manifest.json at sync start, merge attributes per-file</li>
+      <li>Lambda trigger after sync &rarr; reads manifest.json &rarr; calls <code>vector_stores.files.update()</code></li>
+      <li>Post-upload standalone script (manual or CI/CD triggered)</li>
     </ul>
+    <p style="font-size: 12px; color: var(--muted); margin-top: 8px;">See Section 14 for implementation code.</p>
   </div>
 
   <!-- Blocker 2 -->
   <div style="background: var(--card-bg); border-radius: 10px; padding: 20px; border: 2px solid var(--danger);">
     <h4 style="color: var(--danger); margin-bottom: 12px;">Blocker 2: S3 Sync Setup</h4>
-    <p style="font-size: 13px; line-height: 1.8;">FileSync S3 adapter requires IAM credentials to pull content from the S3 bucket.</p>
-    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Need from Ventz:</strong></p>
+    <p style="font-size: 13px; line-height: 1.8;">FileSync S3 adapter requires access to the S3 bucket. Multiple paths available:</p>
+    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Options:</strong></p>
     <ul style="font-size: 12px; padding-left: 20px; line-height: 1.8;">
-      <li>IAM role setup (who creates, what scope?)</li>
-      <li>Or alternative: pre-signed URLs, platform upload API</li>
-      <li>Credential rotation process</li>
+      <li><strong>IAM credentials</strong> &mdash; access_key_id + secret_access_key (what S3Adapter expects today)</li>
+      <li><strong>Lambda</strong> &mdash; trigger a Lambda that has bucket access via execution role, calls HA API to upload</li>
+      <li><strong>HA FileSync API</strong> &mdash; use <code>POST /api/filesync/&lt;agent_id&gt;/sync</code> to trigger sync from admin, which calls the S3 adapter internally</li>
     </ul>
+    <p style="font-size: 13px; line-height: 1.8; margin-top: 8px;"><strong>Key question:</strong> Who provisions the IAM role / credentials? Or can we use a Lambda with an execution role that already has bucket access?</p>
   </div>
 
 </div>
+
+<details class="code-ref">
+  <summary>Blocker 2: S3 Adapter &mdash; what credentials it needs <span class="filepath">filesync/adapters/s3.py:39-47</span></summary>
+  <pre><code><span class="comment"># S3Config &mdash; required by the S3Adapter</span>
+@dataclass
+<span class="keyword">class</span> <span class="function">S3Config</span>:
+    access_key_id: str          <span class="comment"># AWS access key ID</span>
+    secret_access_key: str      <span class="comment"># AWS secret access key</span>
+    bucket_name: str            <span class="comment"># S3 bucket name (e.g. "apo-bot-content")</span>
+    prefix: str = <span class="string">""</span>           <span class="comment"># Optional folder prefix</span>
+    region: str = <span class="string">"us-east-1"</span>  <span class="comment"># AWS region</span>
+
+<span class="comment"># These credentials are stored in the admin UI as source config,</span>
+<span class="comment"># saved to DynamoDB, and passed to the adapter at sync time.</span>
+<span class="comment"># Admin configures them once via:</span>
+<span class="comment">#   POST /api/filesync/&lt;agent_id&gt;/sources</span>
+<span class="comment">#   body: { adapter_type: "s3", access_key_id: "...", ... }</span></code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Blocker 2: Lambda alternative &mdash; trigger sync via HA API <span class="filepath">filesync_api.py:959-963</span></summary>
+  <pre><code><span class="comment"># The HA platform exposes a sync trigger API:</span>
+<span class="comment"># POST /api/filesync/&lt;agent_id&gt;/sync</span>
+<span class="comment">#</span>
+<span class="comment"># A Lambda could:</span>
+<span class="comment">#   1. Be triggered by S3 event (new files uploaded to bucket)</span>
+<span class="comment">#   2. Call the HA FileSync API to trigger a sync</span>
+<span class="comment">#   3. HA platform pulls files from S3 using configured credentials</span>
+<span class="comment">#   4. After sync, Lambda calls hydrate_attributes.py to set metadata</span>
+<span class="comment">#</span>
+<span class="comment"># Flow:</span>
+<span class="comment">#   S3 PutObject event &rarr; Lambda &rarr; POST /api/filesync/{agent_id}/sync</span>
+<span class="comment">#                                   &rarr; wait for job complete</span>
+<span class="comment">#                                   &rarr; hydrate_attributes()</span>
+
+<span class="comment"># The sync endpoint (existing):</span>
+@filesync_api_bp.route(<span class="string">'/api/filesync/&lt;agent_id&gt;/sync'</span>, methods=[<span class="string">'POST'</span>])
+@admin_auth
+<span class="keyword">def</span> <span class="function">trigger_sync</span>(agent_id):
+    <span class="comment">"""Trigger sync for all enabled sources. Runs in background thread."""</span>
+    data = request.get_json() <span class="keyword">or</span> {}
+    force = data.get(<span class="string">'force'</span>, <span class="keyword">False</span>)
+    <span class="comment"># ... creates adapter, authenticates, runs engine.sync()</span>
+    <span class="comment"># Returns: { success: true, job_ids: [...] }</span>
+
+<span class="comment"># Lambda execution role needs:</span>
+<span class="comment">#   - s3:GetObject on apo-bot-content bucket (read manifest + files)</span>
+<span class="comment">#   - Permission to call HA API (admin auth token or API key)</span>
+<span class="comment"># No direct IAM key management needed &mdash; role-based access.</span></code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Blocker 2: Where S3 credentials are configured in FileSync <span class="filepath">filesync_api.py:1349 + admin UI</span></summary>
+  <pre><code><span class="comment"># Sources are configured via the admin UI or API:</span>
+<span class="comment"># POST /api/filesync/&lt;agent_id&gt;/sources</span>
+<span class="comment"># Body:</span>
+{
+    <span class="string">"adapter_type"</span>: <span class="string">"s3"</span>,
+    <span class="string">"source_name"</span>: <span class="string">"APO Bot Content"</span>,
+    <span class="string">"enabled"</span>: <span class="keyword">true</span>,
+    <span class="string">"config"</span>: {
+        <span class="string">"access_key_id"</span>: <span class="string">"AKIA..."</span>,
+        <span class="string">"secret_access_key"</span>: <span class="string">"wJal..."</span>,
+        <span class="string">"bucket_name"</span>: <span class="string">"apo-bot-content"</span>,
+        <span class="string">"prefix"</span>: <span class="string">""</span>,
+        <span class="string">"region"</span>: <span class="string">"us-east-1"</span>
+    }
+}
+
+<span class="comment"># Stored in DynamoDB (filesync-sources table).</span>
+<span class="comment"># On sync trigger, the platform:</span>
+<span class="comment">#   1. Reads source config from DynamoDB</span>
+<span class="comment">#   2. Creates S3Adapter with these credentials</span>
+<span class="comment">#   3. adapter.authenticate() &rarr; boto3 client with access key</span>
+<span class="comment">#   4. Lists + downloads files from bucket</span>
+<span class="comment">#   5. Uploads to OpenAI vector store with attributes</span>
+<span class="comment">#</span>
+<span class="comment"># For Lambda approach: Lambda calls this API, no direct S3 creds needed</span>
+<span class="comment"># in HA platform &mdash; the Lambda's execution role provides bucket access.</span>
+<span class="comment"># But: HA admin UI still needs the creds for the S3Adapter pattern.</span>
+<span class="comment">#</span>
+<span class="comment"># Simplest path: Ventz creates IAM user with s3:GetObject + s3:ListBucket</span>
+<span class="comment"># on apo-bot-content, provides key pair, we configure in admin UI.</span></code></pre>
+</details>
 
 <h3>The Conversation with Ventz</h3>
 
 <div class="key-rule">
   <div class="rule-title">Updated Ask</div>
-  <strong style="font-size: 16px; color: #78350f;">"The platform join code is live (<code>include</code> + <code>join_file_search_results</code>). We need to hydrate 3 custom attributes at upload time. Can we either extend <code>sync_engine.py</code> to read manifest.json, or use a post-upload script to call <code>vector_stores.files.update()</code>?"</strong>
-  <p style="margin-top: 8px; color: #92400e; margin-bottom: 0;">Secondary: S3 IAM credentials for FileSync. Who creates the role and what's the credential path?</p>
+  <strong style="font-size: 16px; color: #78350f;">"The platform join code is live (<code>include</code> + <code>join_file_search_results</code>). We need to hydrate 3 custom attributes at upload time. Can we either extend <code>sync_engine.py</code> to read manifest.json during sync, or trigger a Lambda post-sync that calls <code>vector_stores.files.update()</code>?"</strong>
+  <p style="margin-top: 8px; color: #92400e; margin-bottom: 0;">For S3 access: can we get IAM credentials (access key + secret) for the <code>apo-bot-content</code> bucket? Or would a Lambda with an execution role that calls the HA FileSync API be preferred? The S3 adapter in FileSync is already built &mdash; we just need the credential handoff.</p>
 </div>
 
 </section>
