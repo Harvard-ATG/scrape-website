@@ -119,7 +119,8 @@ def _url_excluded(url: str, patterns: list[re.Pattern]) -> bool:
 
 
 def _fetch_sitemap_urls(host: str, scheme: str = "https",
-                        timeout: int = 10, max_urls: int = 5000) -> list[str]:
+                        timeout: int = 10, max_urls: int = 5000,
+                        user_agent: str = CONFIG['user_agent']) -> list[str]:
     """Best-effort sitemap discovery.
 
     Tries ``{scheme}://{host}/sitemap.xml`` then
@@ -135,7 +136,7 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
 
     def _get(url: str) -> bytes | None:
         try:
-            req = Request(url, headers={"User-Agent": CONFIG["user_agent"]})
+            req = Request(url, headers={"User-Agent": user_agent})
             with urlopen(req, timeout=timeout) as resp:
                 return resp.read()
         except Exception:
@@ -255,6 +256,29 @@ def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
     return links
 
 
+_METADATA_FIELDS = (
+    "title", "author", "url", "hostname", "description", "sitename",
+    "date", "categories", "tags", "fingerprint", "id", "license",
+)
+
+
+def _build_frontmatter(meta, fallback_url: str) -> str:
+    # Seed url from fallback if metadata didn't capture it
+    if meta and not meta.url:
+        meta.url = fallback_url
+    lines = ["---"]
+    for attr in _METADATA_FIELDS:
+        value = getattr(meta, attr, None) if meta else None
+        if attr == "url" and not value:
+            value = fallback_url
+        if value:
+            # json.dumps produces a valid YAML double-quoted scalar — handles
+            # colons, quotes, special chars without adding a yaml dependency.
+            lines.append(f"{attr}: {json.dumps(str(value), ensure_ascii=False)}")
+    lines.append("---")
+    return "\n".join(lines) + "\n"
+
+
 def _extract_text_trafilatura(html_content: str, url: str) -> str | None:
     """Extract clean Markdown (with metadata front matter) for LLM consumption."""
     try:
@@ -265,7 +289,7 @@ def _extract_text_trafilatura(html_content: str, url: str) -> str | None:
         # repeats across pages (e.g. an FAQ answer on both the FAQ page and its
         # own page) — and producing no file at all when a page is only such text.
         LRU_TEST.clear()
-        text = trafilatura.extract(
+        body = trafilatura.extract(
             html_content,
             url=url,
             include_comments=False,
@@ -274,10 +298,13 @@ def _extract_text_trafilatura(html_content: str, url: str) -> str | None:
             include_images=False,
             favor_recall=True,       # maximize content extraction
             deduplicate=True,        # intra-page only (cache cleared above)
-            with_metadata=True,      # YAML front matter: title, url, hostname...
+            with_metadata=False,
             output_format='markdown',
         )
-        return text
+        if body is None:
+            return None
+        meta = trafilatura.extract_metadata(html_content, default_url=url)
+        return _build_frontmatter(meta, url) + body
     except Exception:
         return None
 
@@ -400,13 +427,15 @@ class WebsiteScraper:
         self.start_url = start_url
         self.base_domain = self.extract_domain(start_url)
 
-        # Apply per-instance config overrides before anything reads CONFIG
-        if concurrency is not None:
-            CONFIG['max_concurrent'] = concurrency
-        if timeout is not None:
-            CONFIG['timeout'] = timeout
-        if delay is not None:
-            CONFIG['delay_between_requests'] = delay
+        # Per-instance config values (fall back to module-level defaults)
+        self.max_concurrent = concurrency if concurrency is not None else CONFIG['max_concurrent']
+        self.timeout = timeout if timeout is not None else CONFIG['timeout']
+        self.delay = delay if delay is not None else CONFIG['delay_between_requests']
+        self.max_retries = CONFIG['max_retries']
+        self.user_agent = CONFIG['user_agent']
+        self.max_file_size = CONFIG['max_file_size']
+        self.checkpoint_interval = CONFIG['checkpoint_interval']
+        self.progress_interval = CONFIG['progress_interval']
 
         # Crawl-quality knobs
         self.strip_tracking_params = strip_tracking_params
@@ -421,7 +450,7 @@ class WebsiteScraper:
             re.compile(p) for p in self._exclude_pattern_strings
         ]
         self.session = None
-        self.semaphore = asyncio.Semaphore(CONFIG['max_concurrent'])
+        self.semaphore = asyncio.Semaphore(self.max_concurrent)
         self.denied_urls: list[str] = []
         self.failed_urls: list[str] = []
 
@@ -484,7 +513,7 @@ class WebsiteScraper:
 
         self.logger.info(f"Output directory: {self.base_dir}")
         self.logger.info(f"Starting domain: {self.base_domain}")
-        self.logger.info(f"Max concurrent requests: {CONFIG['max_concurrent']}")
+        self.logger.info(f"Max concurrent requests: {self.max_concurrent}")
 
     @staticmethod
     def extract_domain(url: str) -> str:
@@ -548,17 +577,17 @@ class WebsiteScraper:
 
     async def init_session(self):
         connector = aiohttp.TCPConnector(
-            limit=CONFIG['max_concurrent'],
-            limit_per_host=CONFIG['max_concurrent'],
+            limit=self.max_concurrent,
+            limit_per_host=self.max_concurrent,
             resolver=aiohttp.AsyncResolver(),
             ttl_dns_cache=300,
             enable_cleanup_closed=True,
         )
-        timeout = aiohttp.ClientTimeout(total=CONFIG['timeout'])
+        timeout = aiohttp.ClientTimeout(total=self.timeout)
         self.session = aiohttp.ClientSession(
             connector=connector,
             timeout=timeout,
-            headers={'User-Agent': CONFIG['user_agent']},
+            headers={'User-Agent': self.user_agent},
             max_field_size=32768,
         )
 
@@ -568,7 +597,7 @@ class WebsiteScraper:
 
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
         last_error = None
-        for attempt in range(CONFIG['max_retries']):
+        for attempt in range(self.max_retries):
             try:
                 async with self.session.request(method, url, allow_redirects=True) as response:
                     content_type = response.headers.get('Content-Type', '')
@@ -593,13 +622,13 @@ class WebsiteScraper:
                         return content, content_type, 'html', status
             except asyncio.TimeoutError:
                 last_error = "Timeout"
-                if attempt < CONFIG['max_retries'] - 1:
+                if attempt < self.max_retries - 1:
                     await asyncio.sleep(1 * (attempt + 1))
             except Exception as e:
                 last_error = str(e)
-                if attempt < CONFIG['max_retries'] - 1:
+                if attempt < self.max_retries - 1:
                     await asyncio.sleep(1 * (attempt + 1))
-        raise Exception(f"Failed after {CONFIG['max_retries']} attempts: {last_error}")
+        raise Exception(f"Failed after {self.max_retries} attempts: {last_error}")
 
     async def download_file(self, url: str, content: bytes, content_type: str):
         file_hash = hashlib.md5(content).hexdigest()
@@ -664,12 +693,12 @@ class WebsiteScraper:
     async def process_url(self, url: str):
         async with self.semaphore:
             try:
-                await asyncio.sleep(CONFIG['delay_between_requests'])
+                await asyncio.sleep(self.delay)
 
                 content, content_type, content_kind, status = await self.fetch_with_retry(url)
 
                 if content_kind == 'file':
-                    if len(content) > CONFIG['max_file_size']:
+                    if len(content) > self.max_file_size:
                         self.logger.debug(f"Skipping large file: {url} ({len(content) / (1024*1024):.2f} MB)")
                         return
                     await self.download_file(url, content, content_type)
@@ -708,7 +737,7 @@ class WebsiteScraper:
     async def _progress_reporter(self):
         """Periodically log progress summary."""
         while True:
-            await asyncio.sleep(CONFIG['progress_interval'])
+            await asyncio.sleep(self.progress_interval)
             self.logger.info(
                 f"Progress: {self.url_store.count} visited | "
                 f"{self.stats['pages_downloaded']} pages | "
@@ -723,7 +752,7 @@ class WebsiteScraper:
     async def _checkpoint_saver(self):
         """Periodically checkpoint queue + stats to SQLite for crash recovery."""
         while True:
-            await asyncio.sleep(CONFIG['checkpoint_interval'])
+            await asyncio.sleep(self.checkpoint_interval)
             self.url_store.save_queue(self.urls_to_visit)
             self.url_store.save_stats(self.stats)
             self.logger.debug(f"Checkpoint saved: {len(self.urls_to_visit)} URLs in queue")
@@ -736,6 +765,7 @@ class WebsiteScraper:
             parsed_start = urlparse(self.start_url)
             sitemap_urls = _fetch_sitemap_urls(
                 self.base_domain, scheme=parsed_start.scheme or "https",
+                user_agent=self.user_agent,
             )
             if sitemap_urls:
                 added = 0
@@ -760,7 +790,7 @@ class WebsiteScraper:
             tasks = []
 
             while self.urls_to_visit or tasks:
-                while self.urls_to_visit and len(tasks) < CONFIG['max_concurrent']:
+                while self.urls_to_visit and len(tasks) < self.max_concurrent:
                     url = self.urls_to_visit.popleft()
 
                     if not self.url_store.contains(url):
@@ -891,10 +921,6 @@ async def main():
         print("Error: provide a URL, --file, or --retry")
         raise SystemExit(1)
 
-    CONFIG['max_concurrent'] = args.concurrency
-    CONFIG['timeout'] = args.timeout
-    CONFIG['delay_between_requests'] = args.delay
-
     # Build exclude patterns list
     if args.no_default_excludes:
         exclude_patterns = list(args.exclude_pattern or [])
@@ -917,6 +943,9 @@ async def main():
                 exclude_patterns=exclude_patterns,
                 strip_tracking_params=args.strip_tracking_params,
                 use_sitemap=args.use_sitemap,
+                concurrency=args.concurrency,
+                timeout=args.timeout,
+                delay=args.delay,
                 output_dir=args.output_dir,
             )
             # Seed any additional URLs for this domain
