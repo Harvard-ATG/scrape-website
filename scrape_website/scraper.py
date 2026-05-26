@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-import functools
 import aiohttp
 import aiofiles
 import os
@@ -10,8 +9,6 @@ import logging
 import json
 from urllib.parse import urlparse, urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
 import xml.etree.ElementTree as ET
-from urllib.request import urlopen, Request
-from urllib.error import URLError
 from pathlib import Path
 from collections import deque
 from concurrent.futures import ProcessPoolExecutor
@@ -119,9 +116,9 @@ def _url_excluded(url: str, patterns: list[re.Pattern]) -> bool:
     return False
 
 
-def _fetch_sitemap_urls(host: str, scheme: str = "https",
-                        timeout: int = 10, max_urls: int = 5000,
-                        user_agent: str = CONFIG['user_agent']) -> list[str]:
+async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
+                              scheme: str = "https",
+                              max_urls: int = 5000) -> list[str]:
     """Best-effort sitemap discovery.
 
     Tries ``{scheme}://{host}/sitemap.xml`` then
@@ -129,22 +126,17 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
     ``<sitemap><loc>`` entries (sitemap-index format) up to one level.
     Returns a deduped list of ``<loc>`` URLs, capped at *max_urls*.
     Any fetch/parse failure returns ``[]``.
-
-    Uses only stdlib (``urllib`` + ``xml.etree``) — no new deps.
     """
-    # Common XML namespace used in sitemaps
     ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
-    def _get(url: str) -> bytes | None:
+    async def _get(url: str) -> bytes | None:
         try:
-            req = Request(url, headers={"User-Agent": user_agent})
-            with urlopen(req, timeout=timeout) as resp:
-                return resp.read()
+            async with session.get(url) as resp:
+                return await resp.read() if resp.status == 200 else None
         except Exception:
             return None
 
     def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
-        """Extract <loc> text from <url> or <sitemap> elements."""
         urls: list[str] = []
         try:
             root = ET.fromstring(xml_bytes)
@@ -171,7 +163,7 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
 
     for path in ("/sitemap.xml", "/sitemap_index.xml"):
         sitemap_url = f"{scheme}://{host}{path}"
-        data = _get(sitemap_url)
+        data = await _get(sitemap_url)
         if not data:
             continue
 
@@ -179,7 +171,7 @@ def _fetch_sitemap_urls(host: str, scheme: str = "https",
         sub_sitemaps = _parse_locs(data, tag="sitemap")
         if sub_sitemaps:
             for sub_url in sub_sitemaps:
-                sub_data = _get(sub_url)
+                sub_data = await _get(sub_url)
                 if sub_data:
                     for loc in _parse_locs(sub_data, tag="url"):
                         if loc not in seen:
@@ -767,21 +759,16 @@ class WebsiteScraper:
         # Seed from sitemap if enabled (best-effort, non-blocking)
         if self.use_sitemap:
             parsed_start = urlparse(self.start_url)
-            loop = asyncio.get_running_loop()
             try:
                 sitemap_urls = await asyncio.wait_for(
-                    loop.run_in_executor(
-                        None,
-                        functools.partial(
-                            _fetch_sitemap_urls,
-                            self.base_domain,
-                            parsed_start.scheme or "https",
-                            user_agent=self.user_agent,
-                        ),
+                    _fetch_sitemap_urls(
+                        self.session,
+                        self.base_domain,
+                        parsed_start.scheme or "https",
                     ),
                     timeout=15,
                 )
-            except (asyncio.TimeoutError, Exception):
+            except Exception:
                 sitemap_urls = []
             if sitemap_urls:
                 added = 0
