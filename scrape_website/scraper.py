@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import functools
 import aiohttp
 import aiofiles
 import os
@@ -29,7 +30,7 @@ CONFIG = {
     'max_concurrent': 100,  # Number of concurrent downloads
     'timeout': 30,  # Request timeout in seconds
     'max_retries': 3,  # Max retries for failed requests
-    'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36',
+    'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:151.0) Gecko/20100101 Firefox/151.0',
     'delay_between_requests': 0.1,  # Politeness delay in seconds
     'max_file_size': 100 * 1024 * 1024,  # 100MB max file size
     'checkpoint_interval': 30,  # Seconds between queue checkpoints
@@ -586,7 +587,7 @@ class WebsiteScraper:
             ttl_dns_cache=300,
             enable_cleanup_closed=True,
         )
-        timeout = aiohttp.ClientTimeout(total=self.timeout)
+        timeout = aiohttp.ClientTimeout(total=self.timeout, connect=10, sock_connect=10, sock_read=self.timeout)
         self.session = aiohttp.ClientSession(
             connector=connector,
             timeout=timeout,
@@ -766,10 +767,22 @@ class WebsiteScraper:
         # Seed from sitemap if enabled (best-effort, non-blocking)
         if self.use_sitemap:
             parsed_start = urlparse(self.start_url)
-            sitemap_urls = _fetch_sitemap_urls(
-                self.base_domain, scheme=parsed_start.scheme or "https",
-                user_agent=self.user_agent,
-            )
+            loop = asyncio.get_running_loop()
+            try:
+                sitemap_urls = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None,
+                        functools.partial(
+                            _fetch_sitemap_urls,
+                            self.base_domain,
+                            parsed_start.scheme or "https",
+                            user_agent=self.user_agent,
+                        ),
+                    ),
+                    timeout=15,
+                )
+            except (asyncio.TimeoutError, Exception):
+                sitemap_urls = []
             if sitemap_urls:
                 added = 0
                 for surl in sitemap_urls:
