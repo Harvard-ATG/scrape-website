@@ -262,7 +262,7 @@ _METADATA_FIELDS = (
 )
 
 
-def _build_frontmatter(meta, fallback_url: str) -> str:
+def _build_frontmatter(meta, fallback_url: str, http_status: int | None = None) -> str:
     # Seed url from fallback if metadata didn't capture it
     if meta and not meta.url:
         meta.url = fallback_url
@@ -275,11 +275,13 @@ def _build_frontmatter(meta, fallback_url: str) -> str:
             # json.dumps produces a valid YAML double-quoted scalar — handles
             # colons, quotes, special chars without adding a yaml dependency.
             lines.append(f"{attr}: {json.dumps(str(value), ensure_ascii=False)}")
+    if http_status is not None:
+        lines.append(f"http_status: {int(http_status)}")
     lines.append("---")
     return "\n".join(lines) + "\n"
 
 
-def _extract_text_trafilatura(html_content: str, url: str) -> str | None:
+def _extract_text_trafilatura(html_content: str, url: str, http_status: int | None = None) -> str | None:
     """Extract clean Markdown (with metadata front matter) for LLM consumption."""
     try:
         # Reset trafilatura's process-global dedup cache before every page so
@@ -304,19 +306,20 @@ def _extract_text_trafilatura(html_content: str, url: str) -> str | None:
         if body is None:
             return None
         meta = trafilatura.extract_metadata(html_content, default_url=url)
-        return _build_frontmatter(meta, url) + body
+        return _build_frontmatter(meta, url, http_status=http_status) + body
     except Exception:
         return None
 
 
 def _parse_and_extract(html_content: str, url: str, base_domain: str,
                        strip_tracking: bool = False,
-                       exclude_patterns: list[str] | None = None) -> tuple[set[str], str | None]:
+                       exclude_patterns: list[str] | None = None,
+                       http_status: int | None = None) -> tuple[set[str], str | None]:
     """Combined link extraction + text extraction in one process pool call."""
     links = _extract_links_lxml(html_content, url, base_domain,
                                 strip_tracking=strip_tracking,
                                 exclude_patterns=exclude_patterns)
-    text = _extract_text_trafilatura(html_content, url)
+    text = _extract_text_trafilatura(html_content, url, http_status=http_status)
     return links, text
 
 
@@ -714,7 +717,7 @@ class WebsiteScraper:
                     links, extracted_text = await loop.run_in_executor(
                         self.executor, _parse_and_extract, content, url,
                         self.base_domain, self.strip_tracking_params,
-                        self._exclude_pattern_strings,
+                        self._exclude_pattern_strings, status,
                     )
 
                     # Save HTML
