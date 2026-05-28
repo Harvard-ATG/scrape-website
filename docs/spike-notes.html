@@ -442,7 +442,9 @@ tr:hover td {
   <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.4); padding: 8px 12px 4px; margin-top: 8px;">Gap &amp; Solutions</div>
   <a href="#the-gap"><span class="nav-number">13</span> The Gap (What's Left)</a>
   <a href="#solutions"><span class="nav-number">14</span> HA Platform Solution</a>
-  <a href="#url-requirement"><span class="nav-number">15</span> Status &amp; Next Steps</a>
+  <a href="#manifest"><span class="nav-number">15</span> Manifest &amp; State DB</a>
+  <a href="#filename-convention"><span class="nav-number">16</span> Filename Convention</a>
+  <a href="#url-requirement"><span class="nav-number">17</span> Status &amp; Next Steps</a>
 </nav>
 
 <!-- Main Content -->
@@ -471,7 +473,7 @@ tr:hover td {
       <ul style="font-size: 14px; line-height: 1.4; padding-left: 20px; opacity: 0.9;">
         <li style="margin-bottom: 14px;"><span style="color: #4ade80;">&#10003;</span> Add <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">include=["file_search_call.results"]</code></li>
         <li style="margin-bottom: 14px;"><span style="color: #4ade80;">&#10003;</span> Join <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">search_results</code> to annotations by file_id</li>
-        <li style="margin-bottom: 14px;"><span style="opacity: 0.5;">&#9744;</span> Add <strong>manifest.json</strong> &mdash; set custom attributes at upload time (data never goes in)</li>
+        <li style="margin-bottom: 14px;"><span style="opacity: 0.5;">&#9744;</span> Add <strong><a href="#solutions" style="color: #4ade80;">manifest.json</a></strong> &mdash; set custom attributes at upload time (data never goes in)</li>
         <li style="margin-bottom: 14px;"><span style="opacity: 0.5;">&#9744;</span> 2-line change in <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">_resolve_source_id()</code> &mdash; read <code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">url</code>/<code style="background: rgba(255,255,255,0.15); padding: 2px 6px; border-radius: 3px; font-size: 12px;">title</code> from attributes (data never comes out)</li>
         <li style="margin-bottom: 0;"><strong>Zero extra API calls, zero latency impact</strong></li>
       </ul>
@@ -2660,9 +2662,9 @@ text = trafilatura.extract(html, output_format=<span style="color: #a6e3a1;">'ma
   <p style="font-size: 12px; color: var(--muted); margin: 8px 0 0;">All adapters produce this same dataclass. The sync engine is provider-agnostic once it has a <code>FileInfo</code>. Supported file types filtered at <span class="filepath">sync_engine.py:117</span>.</p>
 </details>
 
-<h4 style="margin-top: 32px; color: var(--dark); border-bottom: 1px solid var(--border); padding-bottom: 6px;">
+<h4 id="change-detection" style="margin-top: 32px; color: var(--dark); border-bottom: 1px solid var(--border); padding-bottom: 6px;">
   <span style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--dark); color: white; border-radius: 50%; font-size: 11px; font-weight: 700; margin-right: 8px;">2</span>
-  Change Detection
+  <a href="#change-detection" style="color: inherit; text-decoration: none;">Change Detection</a>
 </h4>
 
 <p style="font-size: 14px;">Double-layer hash comparison ensures unchanged pages cost effectively zero. The sync engine fetches the actual vector store contents to reconcile against &mdash; handles manually deleted files or swapped vector stores.</p>
@@ -2687,16 +2689,75 @@ text = trafilatura.extract(html, output_format=<span style="color: #a6e3a1;">'ma
 </div>
 
 <p style="font-size: 14px; margin-bottom: 8px;"><strong>Decision tree:</strong></p>
+<p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">
+  <strong>Key mechanism:</strong> The vector store lookup is done by <em>filename</em> (<code>vs_files_by_name.get(file_info.name)</code>, line 156).
+  For S3 sources, <code>file_info.name</code> is the last segment of the S3 key (e.g., <code>seas_harvard_edu__bioengineering_b76ce9e4.md</code>).
+  The S3 key path is embedded in the filename itself (via the <code>{domain}__{path-slug}_{hash8}.md</code> convention), which ensures uniqueness across directories.
+  Each filename in the vector store <strong>must be unique</strong> for this matching to work correctly&mdash;two files with the same basename would collide in the lookup map.
+</p>
 <div style="background: var(--code-bg); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8; margin-bottom: 20px;">
-  For each file in source:<br>
-  &nbsp;&nbsp;&boxvr;&mdash; File NOT in vector store (regardless of state DB) &rarr; <span style="color: #a6e3a1;">ADD</span><br>
+  FileSync creates a list of all files in Vector Store, indexed by filename<br>
+  &nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:131–133 — <code>vs_files_by_name = {f['filename']: f for f in vector_store_files}</code></span><br>
+  FileSync loads the state DB (DynamoDB table, PK=<code>agent_id</code>, SK=<code>source_id#file_id</code>)<br>
+  &nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:139–140 — <code>existing_state_map = {s.file_id: s for s in existing_state}</code></span><br>
+  &nbsp;&nbsp;<span style="color: #6c7086;">// each SyncState record stores: file_hash (ETag at last sync), vector_file_id, synced_at</span><br>
+  <br>
+  Per file, if filename found in vector store file names list:<br>
+  &nbsp;&nbsp;<span style="color: #6c7086;">e.g. <code>"seas_harvard_edu__bioengineering_undergraduate-program_b76ce9e4.md"</code></span><br>
+  <br>
+  &nbsp;&nbsp;&boxvr;&mdash; File NOT in VS file list &rarr; <span style="color: #a6e3a1;">ADD</span><br>
+  &nbsp;&nbsp;&boxvr;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:156,159–163 — <code>vs_files_by_name.get(file_info.name)</code> → None</span><br>
   &nbsp;&nbsp;&boxvr;&mdash; File in VS + state exists + hash SAME &rarr; <span style="color: #6c7086;">SKIP</span> (zero cost)<br>
+  &nbsp;&nbsp;&boxvr;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:157,172–180 — DynamoDB lookup: PK=<code>agent_id</code>, SK=<code>source_id#file_id</code> (file_id = full S3 key)</span><br>
+  &nbsp;&nbsp;&boxvr;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// returns SyncState with <code>file_hash</code> (ETag at last sync) → compared to current <code>adapter.get_file_hash()</code></span><br>
   &nbsp;&nbsp;&boxvr;&mdash; File in VS + state exists + hash DIFFERENT &rarr; <span style="color: #f9e2af;">UPDATE</span> (delete old, upload new)<br>
+  &nbsp;&nbsp;&boxvr;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:174–177 — <code>adapter.get_file_hash() != state.file_hash</code></span><br>
   &nbsp;&nbsp;&boxur;&mdash; File in VS + NO state &rarr; <span style="color: #6c7086;">SKIP</span> (assume current)<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:184–191 — file exists in VS but never tracked by FileSync (e.g. manually uploaded), no hash to compare</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// By design: if first upload was manual and you want FileSync to track it going forward,</span><br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// a force sync is required to establish a baseline in the state DB. Otherwise updates are not detected.</span><br>
   <br>
   For each file in state DB but NOT in source:<br>
-  &nbsp;&nbsp;&boxur;&mdash; <span style="color: #f38ba8;">DELETED</span> &rarr; delete from vector store, remove state entry
+  &nbsp;&nbsp;&boxur;&mdash; <span style="color: #f38ba8;">DELETED</span> &rarr; delete from vector store, remove state entry<br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// sync_engine.py:193–207 — state_filename not in source_names set</span>
 </div>
+
+<details class="code-ref">
+  <summary>Vector store filename map construction <span class="filepath">sync_engine.py:131-133</span></summary>
+  <pre><code><span class="comment"># Line 131-133: Build the VS lookup map (filename → file metadata)</span>
+vector_store_files = self.vector_store.<span class="function">list_files</span>()
+vs_files_by_name: Dict[str, Dict] = {f[<span class="string">'filename'</span>]: f <span class="keyword">for</span> f <span class="keyword">in</span> vector_store_files}
+<span class="comment"># ↑ This is the primary lookup — filename must be unique across all files!</span></code></pre>
+  <p style="font-size: 12px; color: var(--muted); margin: 8px 0 0;">If two files share the same filename, only one appears in this dict — the other becomes invisible to sync and gets re-uploaded every run.</p>
+</details>
+
+<details class="code-ref">
+  <summary>State DB lookup (keyed by file_id = full S3 key) <span class="filepath">sync_engine.py:138-140, 157</span></summary>
+  <pre><code><span class="comment"># Line 138-140: Build the state DB lookup map</span>
+existing_state = self.state_manager.<span class="function">get_all_states</span>()
+existing_state_map = {s.file_id: s <span class="keyword">for</span> s <span class="keyword">in</span> existing_state}
+<span class="comment"># ↑ Keyed by file_id (for S3: the full S3 object key, e.g. "text/seas_harvard_edu__bio_b76ce9e4.md")</span>
+
+<span class="comment"># Line 157: State lookup uses file_info.id (also the S3 key)</span>
+state = existing_state_map.get(file_info.id)
+<span class="comment"># ↑ Returns SyncState with file_hash for change detection, or None if never synced</span></code></pre>
+  <p style="font-size: 12px; color: var(--muted); margin: 8px 0 0;">The state DB tracks <em>what we last synced</em> (hash, vector_file_id). The VS map tracks <em>what's actually there now</em>. Both lookups must agree for SKIP.</p>
+</details>
+
+<details class="code-ref">
+  <summary>S3 adapter: how file_info.name is set (basename of S3 key) <span class="filepath">s3.py:355-359, 384-387</span></summary>
+  <pre><code><span class="comment"># s3.py:355-359 — name is the last path segment of the S3 key:</span>
+key = obj[<span class="string">'Key'</span>]           <span class="comment"># e.g. "text/seas_harvard_edu__bioengineering_b76ce9e4.md"</span>
+name = key.split(<span class="string">'/'</span>)[-1]  <span class="comment"># e.g. "seas_harvard_edu__bioengineering_b76ce9e4.md"</span>
+
+<span class="comment"># s3.py:384-387 — FileInfo construction:</span>
+<span class="keyword">return</span> FileInfo(
+    id=key,    <span class="comment"># full S3 key (used for state DB lookup)</span>
+    name=name, <span class="comment"># basename only (used for vector store lookup)</span>
+    path=key,  <span class="comment"># full S3 key</span>
+    ...)</code></pre>
+  <p style="font-size: 12px; color: var(--muted); margin: 8px 0 0;">The scraper's <code>{domain}__{path-slug}_{hash8}.md</code> filename convention encodes the full URL path into the basename, making collisions near-impossible without needing subdirectories in the VS.</p>
+</details>
 
 <!-- Why single-part PUT -->
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0;">
@@ -4465,7 +4526,8 @@ next_num = <span class="number">1</span>
   <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--code-text); line-height: 1.8; margin-bottom: 12px;">
     <span style="color: #6c7086;">// Resolved citations passed to frontend:</span><br>
     sources = [{<br>
-    &nbsp;&nbsp;source_type: <span style="color: #a6e3a1;">"file"</span>,&nbsp;&nbsp;file_id: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
+    &nbsp;&nbsp;source_type: <span style="color: #a6e3a1;">"file"</span>,<br>
+    &nbsp;&nbsp;file_id: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
     &nbsp;&nbsp;filename: <span style="color: #a6e3a1;">"advising.txt"</span>,<br>
     &nbsp;&nbsp;url: <span style="color: #f38ba8;">None</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// &larr; would be clickable link if populated</span><br>
     &nbsp;&nbsp;locator: <span style="color: #a6e3a1;">"Block5"</span>,&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// &larr; shows which block was cited</span><br>
@@ -5243,25 +5305,106 @@ These sessions help students:
   <summary>Potential scraper output: manifest.json structure <span class="filepath">scraper output</span></summary>
   <pre><code><span class="comment">// manifest.json &mdash; produced by the scraper alongside content files</span>
 <span class="comment">// Uploaded to S3 bucket root. One entry per file.</span>
+<span class="comment">// generated_at = timestamp of this export; FileSync uses it as a consistency gate.</span>
 {
-  <span class="string">"advising.md"</span>: {
-    <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/advising"</span>,
-    <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
-    <span class="string">"title"</span>: <span class="string">"Advising | Department of Germanic Languages"</span>
-  },
-  <span class="string">"our-people.md"</span>: {
-    <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/our-people"</span>,
-    <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
-    <span class="string">"title"</span>: <span class="string">"People | Department of Germanic Languages"</span>
-  },
-  <span class="string">"handbook-2026.pdf"</span>: {
-    <span class="string">"origin_url"</span>: <span class="string">"https://registrar.fas.harvard.edu/files/handbook-2026.pdf"</span>,
-    <span class="string">"domain"</span>: <span class="string">"registrar.fas.harvard.edu"</span>,
-    <span class="string">"title"</span>: <span class="string">"FAS Student Handbook 2026"</span>
+  <span class="string">"generated_at"</span>: <span class="string">"2026-05-27T02:30:00Z"</span>,
+  <span class="string">"files"</span>: {
+    <span class="string">"advising.md"</span>: {
+      <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/advising"</span>,
+      <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
+      <span class="string">"title"</span>: <span class="string">"Advising | Department of Germanic Languages"</span>
+    },
+    <span class="string">"our-people.md"</span>: {
+      <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/our-people"</span>,
+      <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
+      <span class="string">"title"</span>: <span class="string">"People | Department of Germanic Languages"</span>
+    },
+    <span class="string">"handbook-2026.pdf"</span>: {
+      <span class="string">"origin_url"</span>: <span class="string">"https://registrar.fas.harvard.edu/files/handbook-2026.pdf"</span>,
+      <span class="string">"domain"</span>: <span class="string">"registrar.fas.harvard.edu"</span>,
+      <span class="string">"title"</span>: <span class="string">"FAS Student Handbook 2026"</span>
+    }
+    <span class="comment">// ... 80K-100K entries total</span>
   }
-  <span class="comment">// ... 100-200 entries total</span>
 }</code></pre>
 </details>
+
+<!-- Where manifest.json comes from and where it lives -->
+<h4 style="margin-top: 28px;">Where Does manifest.json Come From?</h4>
+
+<p style="font-size: 14px;">The scraper already maintains a SQLite database (<code>URLStore</code>) for URL dedup tracking. This DB has the filename &harr; source URL mapping as a byproduct of crawling. Three options for producing the manifest:</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0;">
+
+  <div style="background: var(--card-bg); border: 2px solid var(--success); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--success); margin-bottom: 8px; font-size: 13px;">A. Generate from scraper DB after crawl</h5>
+    <p style="font-size: 12px; line-height: 1.6; margin-bottom: 8px;">At end of crawl, query the SQLite DB and emit <code>manifest.json</code> to the output directory. Upload to S3 alongside content files.</p>
+    <p style="font-size: 11px; color: var(--muted); margin: 0;"><strong>Pro:</strong> DB is authoritative source of truth; manifest is a derived artifact, always consistent.<br><strong>Con:</strong> Requires scraper modification (minor &mdash; one query + json.dump at end of run).</p>
+  </div>
+
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--dark); margin-bottom: 8px; font-size: 13px;">B. Build on-the-fly during scrape</h5>
+    <p style="font-size: 12px; line-height: 1.6; margin-bottom: 8px;">As each page is saved, append its entry to the manifest dict in memory. Write once at end.</p>
+    <p style="font-size: 11px; color: var(--muted); margin: 0;"><strong>Pro:</strong> No extra DB query step; manifest stays perfectly in sync with output files.<br><strong>Con:</strong> Slightly tighter coupling; if scraper crashes mid-run, partial manifest.</p>
+  </div>
+
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--dark); margin-bottom: 8px; font-size: 13px;">C. Skip manifest &mdash; expose the DB directly</h5>
+    <p style="font-size: 12px; line-height: 1.6; margin-bottom: 8px;">Make the scraper DB (DynamoDB/Postgres/SQLite) queryable by the platform at sync time instead of a flat file.</p>
+    <p style="font-size: 11px; color: var(--muted); margin: 0;"><strong>Pro:</strong> Always fresh; no stale file risk.<br><strong>Con:</strong> Cross-service coupling; DB calls per file during sync; network latency; access control.</p>
+  </div>
+
+</div>
+
+<h4 style="margin-top: 28px;">Where Does It Live?</h4>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0;">
+
+  <div style="background: var(--card-bg); border: 2px solid var(--success); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--success); margin-bottom: 8px; font-size: 13px;">S3 (alongside content) &check;</h5>
+    <p style="font-size: 12px; line-height: 1.6; margin: 0;">FileSync already has S3 access. Manifest is loaded once at sync start, held in memory. Versioned via S3 versioning. No new infrastructure.</p>
+  </div>
+
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--dark); margin-bottom: 8px; font-size: 13px;">DynamoDB table</h5>
+    <p style="font-size: 12px; line-height: 1.6; margin: 0;">New table (PK=filename). Platform queries per-file or scans at sync start. Adds infra; requires provisioning + IAM.</p>
+  </div>
+
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--dark); margin-bottom: 8px; font-size: 13px;">Postgres / shared DB</h5>
+    <p style="font-size: 12px; line-height: 1.6; margin: 0;">Full relational store. Handles 80K&ndash;100K rows easily, but adds operational burden (RDS ~$15&ndash;30/mo, migrations, connection pooling, VPC). Justified only if already running Postgres elsewhere.</p>
+  </div>
+
+</div>
+
+<h4 style="margin-top: 28px;">Why manifest.json Wins</h4>
+
+<div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 10px; padding: 20px; margin: 20px 0;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div>
+      <p style="font-size: 13px; font-weight: 700; color: var(--success); margin-bottom: 8px;">Advantages</p>
+      <ul style="font-size: 12px; line-height: 2; padding-left: 18px; margin: 0;">
+        <li><strong>Loaded into memory once</strong> &mdash; single S3 GET at sync start; no per-file DB calls</li>
+        <li><strong>Versioned in S3</strong> &mdash; full history, rollback trivial</li>
+        <li><strong>Debuggable</strong> &mdash; open in any editor, <code>jq '.files["advising.md"]' manifest.json</code></li>
+        <li><strong>Portable</strong> &mdash; no infrastructure coupling; works with any consumer</li>
+        <li><strong>No cross-service auth</strong> &mdash; same S3 bucket, same IAM role</li>
+        <li><strong>Consistency gate built-in</strong> &mdash; <code>generated_at</code> timestamp lets FileSync skip mid-crawl uploads without blocking the entire sync</li>
+      </ul>
+    </div>
+    <div>
+      <p style="font-size: 13px; font-weight: 700; color: var(--danger); margin-bottom: 8px;">Downsides (in practice)</p>
+      <ul style="font-size: 12px; line-height: 2; padding-left: 18px; margin: 0;">
+        <li><strong>Export step required</strong> &mdash; if the scraper runs but the export fails or is skipped, manifest goes stale; must be wired into end-of-crawl reliably</li>
+        <li><strong>Mid-crawl window</strong> &mdash; files uploaded to S3 before manifest re-export are invisible to FileSync (by design &mdash; <code>generated_at</code> gate holds them back until next export confirms them)</li>
+        <li><strong>Scale ceiling</strong> &mdash; at 80K&ndash;100K files, single JSON blob is ~12MB; loads in &lt;1s but grows linearly with fleet</li>
+        <li><strong>Full dump each sync</strong> &mdash; cheap (SELECT &rarr; json.dumps ~160ms for 80K rows) but still a full export vs. DB row upsert for 5 changed pages</li>
+        <li><strong>No query semantics</strong> &mdash; can't ask "which files have domain=X" without loading + filtering; operator uses the SQLite DB for ad-hoc queries instead</li>
+      </ul>
+    </div>
+  </div>
+  <p style="font-size: 12px; color: #166534; margin: 16px 0 0; padding-top: 12px; border-top: 1px solid rgba(34,197,94,0.3);"><strong>Scale context:</strong> 80&ndash;200 sites &times; ~400 pages each = 32K&ndash;80K files (~12MB manifest). Still loads into memory in &lt;1s via single S3 GET. The scraper DB (SQLite) is the source of truth; manifest.json is the sync-time export &mdash; rebuilt once before FileSync runs, not after every partial crawl. Concurrent/incremental crawls upsert rows in the DB independently; the manifest is derived. <strong>Consistency:</strong> <code>generated_at</code> timestamp in the manifest lets FileSync skip S3 files with <code>LastModified &gt; generated_at</code> (mid-crawl uploads not yet confirmed by a fresh export). No sentinel files, no locking &mdash; just a free timestamp comparison using data S3 already provides. See <code>scrape-website/context/manifest_storage_analysis.md</code> for full storage options comparison.</p>
+</div>
 
 <details class="code-ref">
   <summary>Option A: How manifest.json is loaded into memory at sync start <span class="filepath">sync_engine.py (new)</span></summary>
@@ -5275,10 +5418,9 @@ These sessions help students:
 <span class="comment">#     ...</span>
 
 <span class="comment"># At the start of sync(), before processing files:</span>
-<span class="keyword">def</span> <span class="function">_load_manifest</span>(self) -> Dict[str, Dict]:
-    <span class="string">"""Load manifest.json from the S3 bucket if it exists."""</span>
+<span class="keyword">def</span> <span class="function">_load_manifest</span>(self) -> tuple[Dict[str, Dict], datetime | None]:
+    <span class="string">"""Load manifest.json from S3. Returns (files_dict, generated_at)."""</span>
     <span class="keyword">try</span>:
-        <span class="comment"># The adapter already has S3 access &mdash; just download manifest.json</span>
         manifest_info = FileInfo(
             id=<span class="string">'manifest.json'</span>,
             name=<span class="string">'manifest.json'</span>,
@@ -5286,18 +5428,37 @@ These sessions help students:
             size=<span class="number">0</span>, modified=<span class="keyword">None</span>, hash=<span class="keyword">None</span>
         )
         raw = self.adapter.download_file(manifest_info)
-        manifest = json.loads(raw)
-        logger.info(f<span class="string">"Loaded manifest.json: {len(manifest)} entries"</span>)
-        <span class="keyword">return</span> manifest
+        data = json.loads(raw)
+
+        <span class="comment"># Parse top-level generated_at (consistency gate timestamp)</span>
+        generated_at = <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="string">'generated_at'</span> <span class="keyword">in</span> data:
+            generated_at = datetime.fromisoformat(data[<span class="string">'generated_at'</span>])
+
+        files = data.get(<span class="string">'files'</span>, data)  <span class="comment"># backward-compat: flat dict or nested</span>
+        logger.info(f<span class="string">"Loaded manifest: {len(files)} entries, generated_at={generated_at}"</span>)
+        <span class="keyword">return</span> files, generated_at
     <span class="keyword">except</span> Exception <span class="keyword">as</span> e:
-        logger.warning(f<span class="string">"No manifest.json found (attributes won't be enriched): {e}"</span>)
-        <span class="keyword">return</span> {}
+        logger.warning(f<span class="string">"No manifest.json found: {e}"</span>)
+        <span class="keyword">return</span> {}, <span class="keyword">None</span>
 
 <span class="comment"># Called once at start of sync:</span>
-self._manifest = self._load_manifest()
+self._manifest, self._manifest_generated_at = self._load_manifest()
 
-<span class="comment"># manifest.json is NOT uploaded to the vector store (skip it in file list):</span>
-files_to_sync = [f <span class="keyword">for</span> f <span class="keyword">in</span> all_files <span class="keyword">if</span> f.name != <span class="string">'manifest.json'</span>]</code></pre>
+<span class="comment"># manifest.json is NOT uploaded to the vector store (skip it in file list).</span>
+<span class="comment"># Consistency gate: skip files modified AFTER the manifest was exported.</span>
+<span class="comment"># S3 LastModified is already in FileInfo.modified (s3.py:365).</span>
+files_to_sync = [
+    f <span class="keyword">for</span> f <span class="keyword">in</span> all_files
+    <span class="keyword">if</span> f.name != <span class="string">'manifest.json'</span>
+    <span class="keyword">and</span> (
+        self._manifest_generated_at <span class="keyword">is None</span>  <span class="comment"># no manifest = sync everything</span>
+        <span class="keyword">or</span> f.modified <span class="keyword">is None</span>                <span class="comment"># no timestamp = allow</span>
+        <span class="keyword">or</span> f.modified &lt;= self._manifest_generated_at
+    )
+]
+<span class="comment"># Files with modified > generated_at are mid-crawl uploads;</span>
+<span class="comment"># they'll be picked up on the next sync after the scraper re-exports.</span></code></pre>
 </details>
 
 <details class="code-ref">
@@ -5633,10 +5794,749 @@ references_md = build_references_section(citations)
 
 
 <!-- ============================================================ -->
-<!-- SECTION 15: URL in Citations — The Requirement -->
+<!-- SECTION 15: Manifest & State DB -->
+<!-- ============================================================ -->
+<section id="manifest">
+<h2>15. Manifest &amp; State DB</h2>
+
+<p>The <strong>manifest.json</strong> is the authoritative mapping of every file in the vector store back to its source. Each entry maps a filename (the key) to its <code>origin_url</code>, <code>domain</code>, <code>title</code>, and &mdash; for binary files &mdash; <code>found_on</code> (the page that linked to the download).</p>
+
+<p>Why it exists: binary files (PDFs, DOCX, XLSX) can&rsquo;t hold metadata internally. Even for web pages where frontmatter contains the source URL, that metadata gets chunked away from the citing chunk in large files. The manifest is the <strong>universal source of truth</strong> regardless of file type &mdash; it&rsquo;s what the citation pipeline reads from at upload time.</p>
+
+<div class="callout info">
+  <strong>Filenames must be unique &mdash; they&rsquo;re the manifest key.</strong>
+  If two files share a filename, one overwrites the other in the manifest and becomes invisible to sync. The filename convention guarantees uniqueness via an 8-character URL hash suffix. <a href="#filename-convention" style="color: var(--chunk1); font-weight: 600;">&rarr; See &sect;16: Filename Convention for the full design.</a>
+</div>
+
+<div class="callout info">
+  <strong>Filenames are stable &mdash; they never change when page content updates.</strong>
+  The filename is derived from the URL (which is permanent), not from page content. This means the manifest key for a given page is the same across every crawl. Content changes trigger a content_hash update (for change detection), but the filename &mdash; and therefore the manifest entry &mdash; stays put.
+</div>
+
+<h3>Scale</h3>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center;">
+    <div>
+      <div style="font-size: 28px; font-weight: 700; color: var(--crimson);">80&ndash;200</div>
+      <div style="font-size: 12px; color: var(--muted);">Harvard sites</div>
+    </div>
+    <div>
+      <div style="font-size: 28px; font-weight: 700; color: var(--crimson);">32K&ndash;80K</div>
+      <div style="font-size: 12px; color: var(--muted);">manifest entries (at full scale)</div>
+    </div>
+    <div>
+      <div style="font-size: 28px; font-weight: 700; color: var(--crimson);">~12 MB</div>
+      <div style="font-size: 12px; color: var(--muted);">JSON size (80K entries)</div>
+    </div>
+  </div>
+  <p style="font-size: 12px; color: var(--muted); margin: 12px 0 0; text-align: center;">~400 pages per site average &times; 80&ndash;200 sites. Export from state DB takes ~500ms at 80K rows.</p>
+</div>
+
+<details class="code-ref">
+  <summary>Manifest entry examples <span class="filepath">manifest.json</span></summary>
+  <pre><code><span class="comment">// Web page entry — origin_url IS the page</span>
+{
+  <span class="string">"german_fas_harvard_edu__advising_a7b3c9e4.md"</span>: {
+    <span class="string">"origin_url"</span>: <span class="string">"https://german.fas.harvard.edu/advising"</span>,
+    <span class="string">"domain"</span>: <span class="string">"german.fas.harvard.edu"</span>,
+    <span class="string">"title"</span>: <span class="string">"Advising | Department of Germanic Languages"</span>
+  }
+}
+
+<span class="comment">// Binary file entry — found_on is the page that linked to the download</span>
+{
+  <span class="string">"seas_harvard_edu__seas_undergraduate_student_handbook_2025-2026_531306e7.pdf"</span>: {
+    <span class="string">"origin_url"</span>: <span class="string">"https://seas.harvard.edu/sites/default/files/SEAS_Undergraduate_Student_Handbook_2025-2026.pdf"</span>,
+    <span class="string">"found_on"</span>: <span class="string">"https://seas.harvard.edu/undergraduate/resources"</span>,
+    <span class="string">"domain"</span>: <span class="string">"seas.harvard.edu"</span>,
+    <span class="string">"title"</span>: <span class="string">"SEAS Undergraduate Student Handbook 2025-2026"</span>
+  }
+}
+
+<span class="comment">// Truncated filename — full URL preserved in origin_url (no information loss)</span>
+{
+  <span class="string">"www_math_harvard_edu__event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-hous_24d4f280.md"</span>: {
+    <span class="string">"origin_url"</span>: <span class="string">"https://www.math.harvard.edu/event/joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-householder-dice-a-matrix-free-algorithm-for-simulating-dynamics-on-random-matrices"</span>,
+    <span class="string">"domain"</span>: <span class="string">"www.math.harvard.edu"</span>,
+    <span class="string">"title"</span>: <span class="string">"Householder Dice: A Matrix-Free Algorithm for Simulating Dynamics on Random Matrices"</span>
+  }
+}
+
+<span class="comment">// The truncated filename loses the tail of the URL path,</span>
+<span class="comment">// but the manifest preserves the complete URL and title.</span>
+<span class="comment">// For debugging: look up the filename in the manifest to get the full picture.</span></code></pre>
+</details>
+
+<h3>Storage: Extending the Scraper State DB</h3>
+
+<p>Jeremy&rsquo;s architecture (<a href="#proposed-architecture" style="color: var(--chunk1);">&sect;4</a>) already extends the existing SQLite <code>URLStore</code> with <code>content_hash</code>, relevance flag, and S3 key columns. The manifest metadata lives in the <strong>same table</strong> &mdash; we add fields for the filename mapping alongside what&rsquo;s already planned. No new infrastructure.</p>
+
+<div class="callout info">
+  <strong>Store-agnostic pattern.</strong> If the MCP route uses Postgres instead of SQLite, the schema is identical &mdash; only the connection changes. The downstream contract (manifest.json dumped to S3) stays the same regardless of backing store.
+</div>
+
+<h4><code>files_metadata</code> Table Schema</h4>
+
+<table>
+  <tr><th>Column</th><th>Type</th><th>Purpose</th></tr>
+  <tr><td><code>url</code></td><td>TEXT PRIMARY KEY</td><td>Source URL (what was crawled)</td></tr>
+  <tr><td><code>filename</code></td><td>TEXT NOT NULL</td><td>Generated filename &mdash; the manifest key and vector store lookup key</td></tr>
+  <tr><td><code>url_hash</code></td><td>TEXT NOT NULL</td><td><code>md5(url)[:8]</code> &mdash; used in filename construction</td></tr>
+  <tr><td><code>content_hash</code></td><td>TEXT</td><td><code>md5(file_bytes)</code> &mdash; change detection across crawls</td></tr>
+  <tr><td><code>domain</code></td><td>TEXT NOT NULL</td><td>Parsed hostname (vector store filter attribute)</td></tr>
+  <tr><td><code>title</code></td><td>TEXT</td><td>From <code>&lt;title&gt;</code> tag, H1, or original filename for binaries</td></tr>
+  <tr><td><code>found_on</code></td><td>TEXT</td><td>Page where binary was linked (NULL for web pages)</td></tr>
+  <tr><td><code>file_type</code></td><td>TEXT NOT NULL</td><td><code>'web'</code> or <code>'binary'</code></td></tr>
+  <tr><td><code>crawled_at</code></td><td>TEXT</td><td>ISO timestamp of last crawl</td></tr>
+  <tr><td><code>file_size</code></td><td>INTEGER</td><td>Bytes</td></tr>
+</table>
+
+<div class="side-by-side" style="margin-top: 24px;">
+  <div class="panel" style="border-top: 3px solid var(--chunk1);">
+    <h4>url_hash</h4>
+    <div style="font-size: 13px; line-height: 1.8;">
+      <strong>Derived from:</strong> <code>md5(url)[:8]</code><br>
+      <strong>Purpose:</strong> Filename construction &mdash; the uniqueness guarantee<br>
+      <strong>Changes?</strong> Never. URL is permanent.<br>
+      <strong>Used in:</strong> <code>{domain}__{slug}_{url_hash}.ext</code>
+    </div>
+  </div>
+  <div class="panel" style="border-top: 3px solid var(--chunk2);">
+    <h4>content_hash</h4>
+    <div style="font-size: 13px; line-height: 1.8;">
+      <strong>Derived from:</strong> <code>md5(file_bytes)</code><br>
+      <strong>Purpose:</strong> Change detection &mdash; did the page content update since last crawl?<br>
+      <strong>Changes?</strong> Every time content updates.<br>
+      <strong>Used for:</strong> Skip re-upload if unchanged; trigger FileSync delta
+    </div>
+  </div>
+</div>
+
+<div class="callout warning" style="margin-top: 20px;">
+  <strong>Caveat:</strong> Jeremy&rsquo;s implementation may have evolved since this analysis. Treat this schema as the target contract &mdash; verify column names and types against the current codebase before implementation.
+</div>
+
+<h3>The Dump: Why JSON on S3 (Not Direct DB Access)</h3>
+
+<div class="key-rule">
+  <div class="rule-title">Design Principle</div>
+  <strong style="font-size: 16px; color: #78350f;">The boundary between scraper and platform is S3. The manifest.json is the contract artifact at that boundary.</strong>
+  <p style="margin-top: 8px; color: #92400e; margin-bottom: 0;">The platform should never need a live connection back to the scraper&rsquo;s local database. They communicate through files in S3 &mdash; decoupled, inspectable, store-agnostic.</p>
+</div>
+
+<h4>Why Dump (Not Direct Read)</h4>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
+  <ol style="font-size: 14px; line-height: 2.2; padding-left: 20px; margin: 0;">
+    <li><strong>Decoupled:</strong> Scraper runs, dumps, pushes to S3. Platform reads whenever it syncs. They don&rsquo;t need to be online simultaneously.</li>
+    <li><strong>Store-agnostic:</strong> Whether the backing store is SQLite (now) or Postgres (MCP route later) &mdash; the contract doesn&rsquo;t change. It&rsquo;s always flat JSON in S3.</li>
+    <li><strong>Debuggable:</strong> Anyone with <code>aws s3 cp</code> + <code>jq</code> can inspect the manifest. No DB credentials, no SSH tunneling, no query tooling needed.</li>
+    <li><strong>No cross-service auth:</strong> Same S3 bucket, same IAM role that FileSync already uses. No new permissions to provision.</li>
+    <li><strong>Atomic &amp; versionable:</strong> One file, versioned in S3. Rollback to a previous manifest is a single CLI command.</li>
+  </ol>
+</div>
+
+<h4>When It Triggers</h4>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0;">
+  <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 13px; line-height: 1.8;">
+    <div style="font-weight: 700; color: var(--chunk1);">When:</div>
+    <div>End of each crawl run, after all pages are saved to disk/DB</div>
+    <div style="font-weight: 700; color: var(--chunk1);">Scope:</div>
+    <div>One domain at a time &mdash; each crawl writes its domain&rsquo;s entries to the state DB</div>
+    <div style="font-weight: 700; color: var(--chunk1);">Assembly:</div>
+    <div>Full manifest assembled from all domains&rsquo; entries before S3 upload</div>
+    <div style="font-weight: 700; color: var(--chunk1);">Frequency:</div>
+    <div>After each domain crawl completes (incremental crawls may run ~16 min for all 200 sites)</div>
+  </div>
+</div>
+
+<details class="code-ref">
+  <summary>Dump method: export from state DB <span class="filepath">app.py (new)</span></summary>
+  <pre><code><span class="comment"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="comment"># Based on last known scraper architecture — verify against Jeremy's</span>
+<span class="comment"># current implementation. Column names/table name may have changed.</span>
+<span class="comment"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="keyword">import</span> json, sqlite3
+<span class="keyword">from</span> datetime <span class="keyword">import</span> datetime, timezone
+
+<span class="keyword">def</span> <span class="function">export_manifest</span>(db_path: str, output_path: str) -> int:
+    <span class="string">"""Export manifest.json from the scraper state DB.
+
+    Reads all files_metadata rows and writes a JSON mapping of
+    filename → {origin_url, domain, title, found_on?} to output_path.
+    Includes generated_at timestamp used by FileSync as a consistency gate.
+
+    Returns the number of entries written.
+    """</span>
+    conn = sqlite3.connect(db_path)
+    rows = conn.execute(<span class="string">"""
+        SELECT filename, url AS origin_url, domain, title, found_on
+        FROM files_metadata
+    """</span>).fetchall()
+    conn.close()
+
+    files = {}
+    <span class="keyword">for</span> filename, origin_url, domain, title, found_on <span class="keyword">in</span> rows:
+        entry = {
+            <span class="string">"origin_url"</span>: origin_url,
+            <span class="string">"domain"</span>: domain,
+            <span class="string">"title"</span>: title,
+        }
+        <span class="keyword">if</span> found_on:  <span class="comment"># only for binary files</span>
+            entry[<span class="string">"found_on"</span>] = found_on
+        files[filename] = entry
+
+    manifest = {
+        <span class="string">"generated_at"</span>: datetime.now(timezone.utc).isoformat(),
+        <span class="string">"files"</span>: files,
+    }
+
+    <span class="keyword">with</span> open(output_path, <span class="string">'w'</span>) <span class="keyword">as</span> f:
+        json.dump(manifest, f, indent=<span class="number">2</span>)
+
+    <span class="keyword">return</span> len(files)</code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Full dump flow (pseudo code) <span class="filepath">end-of-crawl integration</span></summary>
+  <pre><code><span class="comment"># Pseudo code — actual integration depends on Jeremy's crawl orchestration</span>
+<span class="comment"># This runs AFTER all content files are uploaded to S3.</span>
+<span class="comment"># Order matters: content first, manifest last.</span>
+<span class="comment"># generated_at timestamp acts as the consistency gate —</span>
+<span class="comment"># FileSync skips any S3 file with LastModified > generated_at.</span>
+
+<span class="keyword">def</span> <span class="function">end_of_crawl</span>(state_db_path, s3_bucket=<span class="string">"apo-bot-content"</span>):
+    <span class="comment"># 1. Export manifest from state DB → local JSON file</span>
+    <span class="comment">#    generated_at is stamped NOW — after content uploads are done</span>
+    output_path = <span class="string">"output/manifest.json"</span>
+    count = export_manifest(state_db_path, output_path)
+    logger.info(f<span class="string">"Manifest exported: {count} entries"</span>)
+
+    <span class="comment"># 2. Upload manifest to S3 (same bucket where content files live)</span>
+    upload_to_s3(output_path, bucket=s3_bucket, key=<span class="string">"manifest.json"</span>)
+    logger.info(f<span class="string">"Manifest uploaded to s3://{s3_bucket}/manifest.json"</span>)
+
+    <span class="comment"># FileSync consistency model:</span>
+    <span class="comment"># - Reads manifest.generated_at at sync start</span>
+    <span class="comment"># - Compares against each file's S3 LastModified (free from ListObjects)</span>
+    <span class="comment"># - file.modified <= generated_at → safe to sync (manifest covers it)</span>
+    <span class="comment"># - file.modified > generated_at  → skip (mid-crawl upload, not yet confirmed)</span>
+    <span class="comment"># - Next sync after re-export picks it up cleanly</span>
+
+<span class="comment"># ─── For Postgres (MCP route) — same pattern, different query source ───</span>
+<span class="comment"># def export_manifest_pg(conn_string, output_path):</span>
+<span class="comment">#     conn = psycopg2.connect(conn_string)</span>
+<span class="comment">#     cur = conn.cursor()</span>
+<span class="comment">#     cur.execute("SELECT filename, url, domain, title, found_on FROM files_metadata")</span>
+<span class="comment">#     ... same dict-building logic ...</span>
+<span class="comment">#     # Contract is the same: flat JSON → S3</span></code></pre>
+</details>
+
+</section>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 16: Filename Convention -->
+<!-- ============================================================ -->
+<section id="filename-convention">
+<h2>16. Filename Convention (The Key)</h2>
+
+<p>The filename is a <strong>lookup key</strong> &mdash; it must be unique and deterministic. It doesn&rsquo;t need to be perfectly human-readable or discernible at a glance; the manifest has the full URL and title for anyone debugging. The hash suffix guarantees uniqueness. Everything else is best-effort context.</p>
+
+<h3>The Problem: Why Counters Break</h3>
+
+<p>The current scraper uses <code>generate_html_filename()</code> which derives the filename from the URL path only (<code>/advising</code> &rarr; <code>advising.md</code>). When two domains have the same path, it appends a collision counter: <code>_1</code>, <code>_2</code>, etc. The counter depends on crawl order &mdash; which is non-deterministic.</p>
+
+<div class="side-by-side">
+  <div class="panel" style="border-top: 3px solid var(--danger);">
+    <h4>First Crawl (german before math)</h4>
+    <div style="font-family: monospace; font-size: 12px; line-height: 2;">
+      german&rsquo;s /advising &rarr; <code>advising.md</code><br>
+      math&rsquo;s /advising &rarr; <code>advising_1.md</code>
+    </div>
+  </div>
+  <div class="panel" style="border-top: 3px solid var(--danger);">
+    <h4>Second Crawl (math before german)</h4>
+    <div style="font-family: monospace; font-size: 12px; line-height: 2;">
+      math&rsquo;s /advising &rarr; <code>advising.md</code><br>
+      german&rsquo;s /advising &rarr; <code>advising_1.md</code>
+    </div>
+  </div>
+</div>
+
+<p style="font-size: 14px; color: var(--danger); font-weight: 600; margin-top: 8px;">Result: manifest key <code>advising.md</code> now points to a different URL. FileSync sees the wrong metadata. Citations link to the wrong page.</p>
+
+<h3>The Convention</h3>
+
+<p style="font-size: 14px; line-height: 1.8;">Every URL is mechanically converted into a flat filename. The function is pure &mdash; given the same URL, it always produces the same filename regardless of crawl order, timing, or machine state. No database lookup, no collision counter, no disk check.</p>
+
+<div style="background: var(--code-bg); border-radius: 10px; padding: 24px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; color: var(--code-text); line-height: 2;">
+  <span style="color: #6c7086;">URL:&nbsp;&nbsp;</span><code>https://german.fas.harvard.edu/advising/undergraduate-requirements</code><br>
+  <br>
+  <div style="margin-bottom: 16px; color: #89b4fa; font-weight: 600;">Pattern: {domain}__{path-slug}_{url_hash8}.{ext}</div>
+  <span style="color: #6c7086;">File:</span>&nbsp;<code>german_fas_harvard_edu__advising_undergraduate-requirements_a7b3c9e4.md</code><br>
+  <span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_____________________|__|_________________________________|_|_______|__|</span><br>
+  <span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #cba6f7;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;domain (22)</span><span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #fab387;">^^</span><span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #a6e3a1;">path slug (35)</span><span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #fab387;">hash(8)</span><span style="color: #6c7086;">&nbsp;</span><span style="color: #f38ba8;">ext</span><br>
+  <span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #fab387;">separator</span>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0;">
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--chunk1); margin-bottom: 6px;">Deterministic</div>
+    <p style="font-size: 13px; margin: 0;"><code>f(url) &rarr; filename</code> &mdash; no state, no counter, no disk check. Same URL always produces the same filename on any machine, any run.</p>
+  </div>
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--chunk3); margin-bottom: 6px;">Stable</div>
+    <p style="font-size: 13px; margin: 0;">URL-based, not content-based. Page content changes &rarr; filename stays the same. Manifest key is permanent.</p>
+  </div>
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+    <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--chunk2); margin-bottom: 6px;">Unique</div>
+    <p style="font-size: 13px; margin: 0;">URLs are already globally unique &mdash; no two can resolve to the same place. The URL <em>is</em> the identity.</p>
+  </div>
+</div>
+
+<h4 style="margin-top: 24px;">Why the Hash? Truncation Collision Insurance</h4>
+
+<p style="font-size: 14px; line-height: 1.8;">Every URL is already unique &mdash; we don&rsquo;t <em>need</em> a hash for identity. But when we truncate long URLs to fit a character budget, two different URLs could theoretically produce the same truncated slug. The 8-char hash (<code>md5(full_url)[:8]</code>) makes collisions mathematically impossible (~1 in 4 billion) regardless of how aggressive the truncation is.</p>
+
+<p style="font-size: 14px; line-height: 1.8; margin-top: 12px;"><strong>We include the hash when these are true:</strong></p>
+<ul style="font-size: 13px; line-height: 2; padding-left: 20px;">
+  <li>The filename exceeds or approaches the character budget (truncation needed)</li>
+  <li>Multiple pages share long common prefixes (e.g. event-heavy sites with similar titles)</li>
+  <li>The distinguishing part of the URL is past the truncation cut point</li>
+  <li>We want one universal filename function &mdash; no conditional logic for "short enough" vs. "needs hash"</li>
+</ul>
+
+<div style="background: var(--code-bg); border-radius: 10px; padding: 20px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--code-text); line-height: 2.2; overflow-x: auto;">
+<span style="color: #89b4fa; font-weight: 600;">Example: where truncation without a hash could collide</span><br>
+<br>
+<span style="color: #6c7086;">URL 1:</span>&nbsp;&nbsp;.../event/joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-<span style="color: #cba6f7;">householder-dice-a-matrix-free-algorithm</span><br>
+<br>
+<span style="color: #6c7086;">URL 2:</span>&nbsp;&nbsp;.../event/joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-<span style="color: #fab387;">johnson-lindenstrauss-lemma-proof</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #cba6f7;">▲ purple</span>&nbsp;vs.&nbsp;<span style="color: #fab387;">▲ orange</span><span style="color: #6c7086;"> &mdash; only difference is past char 86</span><br>
+<br>
+<span style="color: #6c7086;">Truncated at 86 chars (no hash) &mdash; both produce the exact same filename:</span><br>
+<span style="color: #6c7086;">URL 1 &rarr;</span>&nbsp;www_math_harvard_edu__event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-.md<br>
+<span style="color: #6c7086;">URL 2 &rarr;</span>&nbsp;www_math_harvard_edu__event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-.md<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;⚠ COLLISION &mdash; two different pages, identical filename</span><br>
+<br>
+<br>
+<span style="color: #6c7086;">With hash &mdash; always different:</span><br>
+<br>
+<span style="color: #6c7086;">URL 1 &rarr;</span>&nbsp;www_math_harvard_edu__event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-<span style="color: #cba6f7;">_24d4f280</span>.md<br>
+<br>
+<span style="color: #6c7086;">URL 2 &rarr;</span>&nbsp;www_math_harvard_edu__event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-<span style="color: #fab387;">_8f1c3b92</span>.md<br>
+<br>
+<span style="color: #22c55e;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;✓ Different URLs → different hashes → guaranteed unique</span><br>
+</div>
+
+<h4>At 120 chars: human-discernable, hash rarely needed but always present</h4>
+<p style="font-size: 13px; line-height: 1.8;">120 chars is chosen for <strong>human readability</strong> &mdash; fits one terminal line, scannable in S3 console and logs. At this length, ~15&ndash;20% of verbose event/seminar URLs get truncated. The hash costs 9 chars of budget (<code>_a7b3c9e4</code>) but guarantees we never have to think about collisions.</p>
+
+<h4>At 200 chars: hash is near-zero probability of ever being needed</h4>
+<ul style="font-size: 13px; line-height: 2; padding-left: 20px;">
+  <li>Less than 1% of Harvard pages would truncate at all</li>
+  <li>Two URLs would need identical first ~165 chars of path to collide &mdash; effectively impossible</li>
+  <li>Filenames are nearly self-documenting (full URL path visible)</li>
+  <li>Hash is still there as insurance &mdash; costs nothing functionally, just 9 chars of width</li>
+</ul>
+
+<p style="font-size: 13px; color: var(--muted); margin-top: 12px;"><strong>Decision:</strong> We include the hash unconditionally in all filenames. It&rsquo;s cheap insurance (9 chars), keeps the filename function simple (no branching for "needs hash" vs. "doesn&rsquo;t"), and makes the system provably collision-free at any truncation length. The manifest provides the reverse lookup (filename &rarr; URL) that the hash intentionally makes impossible.</p>
+
+<p style="font-size: 13px; color: var(--muted); margin: 8px 0 20px; padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;"><strong>Rule of thumb:</strong> If you see a hyphen in the filename, it was already a hyphen in the URL or came from a space in the original doc name. If you see an underscore, we put it there (replaced a dot, slash, or used it as the hash separator). Double underscore <code>__</code> always means "domain ends here, path starts here." Special characters (&amp;, @, etc.) are stripped. Truncation only sacrifices the path slug &mdash; domain, hash, and extension are never touched.</p>
+
+<h4 style="margin-top: 28px;">URL &rarr; Filename: What Changes, What Stays</h4>
+
+<div style="background: var(--code-bg); border-radius: 10px; padding: 24px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--code-text); line-height: 2.2; overflow-x: auto;">
+<span style="color: #89b4fa; font-weight: 600;">Input URL:</span><br>
+<code>https://<span style="color: #cba6f7;">german.fas.harvard.edu</span>/<span style="color: #a6e3a1;">advising/undergraduate-requirements</span></code><br>
+<span style="color: #6c7086;">domain:</span>&nbsp;&nbsp;<span style="color: #cba6f7;">german.fas.harvard.edu</span><br>
+<span style="color: #6c7086;">path:</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">advising/undergraduate-requirements</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Character key:</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">_</span>&nbsp;&nbsp;= we introduced (replaced . or /)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">__</span> = we introduced (domain/path separator)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #22c55e;">-</span>&nbsp;&nbsp;= already in the URL (passes through untouched)</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Transformations:</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;dots become underscores</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;german<span style="color: #f38ba8;">.</span>fas<span style="color: #f38ba8;">.</span>harvard<span style="color: #f38ba8;">.</span>edu</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #cba6f7;">german<span style="color: #fab387;">_</span>fas<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;double underscore separator (domain / path boundary)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;german_fas_harvard_edu</span>&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #cba6f7;">german_fas_harvard_edu</span><span style="color: #fab387;">__</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;slashes become underscores</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;advising<span style="color: #f38ba8;">/</span>undergraduate-requirements</span>&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #a6e3a1;">advising<span style="color: #fab387;">_</span>undergraduate-requirements</span><br>
+<br>
+<span style="color: #22c55e;">&nbsp;&nbsp;hyphens pass through (already in URL)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;undergraduate<span style="color: #22c55e;">-</span>requirements</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #a6e3a1;">undergraduate<span style="color: #22c55e;">-</span>requirements</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;hash guarantees uniqueness</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;(append md5(full_url)[:8])</span>&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #fab387;">_a7b3c9e4</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Result:</span><br>
+<code><span style="color: #cba6f7;">german_fas_harvard_edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">advising</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">undergraduate-requirements</span><span style="color: #fab387;">_</span><span style="color: #fab387;">a7b3c9e4</span><span style="color: #f38ba8;">.md</span></code><br>
+</div>
+
+<div style="background: var(--code-bg); border-radius: 10px; padding: 24px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--code-text); line-height: 2.2; overflow-x: auto;">
+<span style="color: #89b4fa; font-weight: 600;">Binary file (PDF) &mdash; same pattern, original filename instead of URL path:</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Found on:</span><br>
+<code>https://<span style="color: #cba6f7;">registrar.fas.harvard.edu</span>/files/<span style="color: #a6e3a1;">Final Exam Schedule Spring 2026.pdf</span></code><br>
+<span style="color: #6c7086;">domain:</span>&nbsp;&nbsp;<span style="color: #cba6f7;">registrar.fas.harvard.edu</span><br>
+<span style="color: #6c7086;">path:</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">files/Final Exam Schedule Spring 2026.pdf</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Character key:</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">_</span>&nbsp;&nbsp;= we introduced (replaced . or /)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">__</span> = we introduced (domain/path separator)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #22c55e;">-</span>&nbsp;&nbsp;= replaced spaces (and lowercased)</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Transformations:</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;dots become underscores</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;registrar<span style="color: #f38ba8;">.</span>fas<span style="color: #f38ba8;">.</span>harvard<span style="color: #f38ba8;">.</span>edu</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #cba6f7;">registrar<span style="color: #fab387;">_</span>fas<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;double underscore separator (domain / filename boundary)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;registrar_fas_harvard_edu</span>&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #cba6f7;">registrar_fas_harvard_edu</span><span style="color: #fab387;">__</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;slashes become underscores</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;files<span style="color: #f38ba8;">/</span>Final Exam Schedule Spring 2026.pdf</span>&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #a6e3a1;">files<span style="color: #fab387;">_</span>Final Exam Schedule Spring 2026</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;spaces become hyphens, lowercased</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;files_Final Exam Schedule Spring 2026</span>&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #a6e3a1;">files<span style="color: #fab387;">_</span>final<span style="color: #22c55e;">-</span>exam<span style="color: #22c55e;">-</span>schedule<span style="color: #22c55e;">-</span>spring<span style="color: #22c55e;">-</span>2026</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;hash guarantees uniqueness</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;(append md5(full_url)[:8])</span>&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #fab387;">_44f7a7ac</span><br>
+<br>
+<span style="color: #f38ba8;">&nbsp;&nbsp;original extension preserved</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;.pdf</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;&nbsp;<span style="color: #f38ba8;">.pdf</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Result:</span><br>
+<code><span style="color: #cba6f7;">registrar_fas_harvard_edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">files</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">final<span style="color: #22c55e;">-</span>exam<span style="color: #22c55e;">-</span>schedule<span style="color: #22c55e;">-</span>spring<span style="color: #22c55e;">-</span>2026</span><span style="color: #fab387;">_</span><span style="color: #fab387;">44f7a7ac</span><span style="color: #f38ba8;">.pdf</span></code><br>
+</div>
+
+<div style="background: var(--code-bg); border-radius: 10px; padding: 24px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--code-text); line-height: 2.2; overflow-x: auto;">
+<span style="color: #89b4fa; font-weight: 600;">Character key:</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #cba6f7;">purple</span>&nbsp;&nbsp;= domain</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #a6e3a1;">green</span>&nbsp;&nbsp;&nbsp;= path (content from URL)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">orange _</span>&nbsp;= we introduced (replaced . or /)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">orange __</span> = we introduced (domain/path separator)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #22c55e;">green -</span>&nbsp;= hyphen (from URL, or replaced space + lowercased)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #fab387;">orange hash</span> = md5(url)[:8]</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;<span style="color: #f38ba8;">red</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= extension</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">More examples (web pages):</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">seas.harvard.edu</span>/<span style="color: #a6e3a1;">bioengineering/undergraduate-program</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">seas<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">bioengineering</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">undergraduate<span style="color: #22c55e;">-</span>program</span><span style="color: #fab387;">_b76ce9e4</span><span style="color: #f38ba8;">.md</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;seas_harvard_edu__bioengineering_undergraduate-program_b76ce9e4.md</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">registrar.fas.harvard.edu</span>/<span style="color: #a6e3a1;">academic-calendar/important-dates</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">registrar<span style="color: #fab387;">_</span>fas<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">academic<span style="color: #22c55e;">-</span>calendar</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">important<span style="color: #22c55e;">-</span>dates</span><span style="color: #fab387;">_c3e81f90</span><span style="color: #f38ba8;">.md</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;registrar_fas_harvard_edu__academic-calendar_important-dates_c3e81f90.md</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">www.math.harvard.edu</span>/<span style="color: #a6e3a1;">event/spring-2026-colloquia</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">www<span style="color: #fab387;">_</span>math<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">event</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">spring<span style="color: #22c55e;">-</span>2026<span style="color: #22c55e;">-</span>colloquia</span><span style="color: #fab387;">_f1a29b44</span><span style="color: #f38ba8;">.md</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;www_math_harvard_edu__event_spring-2026-colloquia_f1a29b44.md</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">More examples (binary files &mdash; full URL path, same rule):</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">registrar.fas.harvard.edu</span>/<span style="color: #a6e3a1;">files/Final Exam Schedule Spring 2026.pdf</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">registrar<span style="color: #fab387;">_</span>fas<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">files</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">final<span style="color: #22c55e;">-</span>exam<span style="color: #22c55e;">-</span>schedule<span style="color: #22c55e;">-</span>spring<span style="color: #22c55e;">-</span>2026</span><span style="color: #fab387;">_44f7a7ac</span><span style="color: #f38ba8;">.pdf</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;registrar_fas_harvard_edu__files_final-exam-schedule-spring-2026_44f7a7ac.pdf</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">seas.harvard.edu</span>/<span style="color: #a6e3a1;">files/SEAS Undergraduate Student Handbook 2025-2026.pdf</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">seas<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">files</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">seas<span style="color: #22c55e;">-</span>undergraduate<span style="color: #22c55e;">-</span>student<span style="color: #22c55e;">-</span>handbook<span style="color: #22c55e;">-</span>2025<span style="color: #22c55e;">-</span>2026</span><span style="color: #fab387;">_531306e7</span><span style="color: #f38ba8;">.pdf</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;seas_harvard_edu__files_seas-undergraduate-student-handbook-2025-2026_531306e7.pdf</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">hls.harvard.edu</span>/<span style="color: #a6e3a1;">docs/Course Catalog &amp; Academic Policies 2025-26.docx</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">hls<span style="color: #fab387;">_</span>harvard<span style="color: #fab387;">_</span>edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">docs</span><span style="color: #fab387;">_</span><span style="color: #a6e3a1;">course<span style="color: #22c55e;">-</span>catalog<span style="color: #22c55e;">-</span>academic<span style="color: #22c55e;">-</span>policies<span style="color: #22c55e;">-</span>2025<span style="color: #22c55e;">-</span>26</span><span style="color: #fab387;">_8e2c4a11</span><span style="color: #f38ba8;">.docx</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hls_harvard_edu__docs_course-catalog-academic-policies-2025-26_8e2c4a11.docx</span><br>
+</div>
+
+<h3>Truncation: Meeting Pipeline Limits</h3>
+
+<p style="font-size: 14px; line-height: 1.8;">We expect truncation to <strong>rarely trigger</strong>. Most Harvard URLs produce filenames well under 100 characters. But we&rsquo;ve already seen the edge case in practice: event-heavy sites like <code>math.harvard.edu</code> generate URL slugs with full seminar titles (165+ chars), and binary files from research sites like <code>compbio.hms.harvard.edu</code> have long descriptive names (<code>supplementary-materials-table-S1-through-S14-complete-dataset-with-annotations-and-metadata.xlsx</code>). At 80&ndash;200 sites &times; ~400 pages each, even a 1&ndash;2% truncation rate means hundreds of files. We need a defined strategy for when it happens &mdash; not if.</p>
+
+<div class="callout info">
+  <strong>Truncation doesn&rsquo;t need to produce perfectly readable filenames.</strong> The hash makes it unique. The manifest has the full URL. Truncation just keeps us under system limits &mdash; it&rsquo;s a mechanical constraint, not a usability goal.
+</div>
+
+<h4 style="margin-top: 24px;">Downstream Impact: What Does Truncation Actually Affect?</h4>
+
+<p style="font-size: 13px; margin-bottom: 12px;">The filename flows through the entire pipeline. Here&rsquo;s what truncation means at each stage:</p>
+
+<table style="font-size: 13px; margin: 12px 0 20px;">
+  <tr><th>System</th><th>Impact of Truncation</th><th>Why It&rsquo;s OK</th></tr>
+  <tr><td><strong>Scraper &rarr; S3 upload</strong></td><td>None</td><td>S3 key limit is 1,024 chars &mdash; never hit</td></tr>
+  <tr><td><strong>manifest.json</strong></td><td>None</td><td>Key is whatever the function produces; full URL lives in <code>origin_url</code></td></tr>
+  <tr><td><strong>FileSync lookup</strong></td><td>None</td><td><code>vs_files_by_name.get(file_info.name)</code> &mdash; matches by filename (the basename). Same string produced by the same function, always matches.</td></tr>
+  <tr><td><strong>Vector store (OpenAI)</strong></td><td>None</td><td>Filename stored as metadata on the file object. <code>file_id</code> in vector store is OpenAI&rsquo;s opaque ID (<code>file-abc123...</code>), not the filename. Citation annotations return this opaque ID.</td></tr>
+  <tr><td><strong>FileSync State DB (DynamoDB)</strong></td><td>None</td><td>SK = <code>source_id#file_id</code> where <code>file_id</code> = full S3 key (<a href="#change-detection" style="color: var(--chunk1);">s3.py:385</a>, <a href="#change-detection" style="color: var(--chunk1);">db.py:199</a>). Also stores <code>vector_file_id</code> = OpenAI&rsquo;s opaque ID. Neither is the truncated basename &mdash; the filename is only a lookup key, not a stored ID.</td></tr>
+  <tr><td><strong>Citations panel (user-facing)</strong></td><td style="color: var(--chunk3);">Minor</td><td>Users see truncated filename in Sources &mdash; but <code>origin_url</code> attribute has the full link</td></tr>
+  <tr><td><strong>Debugging / logs</strong></td><td style="color: var(--chunk3);">Minor</td><td>Truncated name may require manifest lookup: <code>jq '.files["filename"]' manifest.json</code></td></tr>
+</table>
+
+<p style="font-size: 13px; color: var(--muted); margin-bottom: 20px;"><strong>Bottom line:</strong> Truncation has <em>zero functional impact</em> on the pipeline. The only cost is human readability in two places (Sources panel, debug logs) &mdash; and both have the full URL available via manifest or attributes. We truncate as a <strong>caution</strong> against future system additions that might have tighter limits, and to keep filenames manageable for anyone touching S3 directly.</p>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin: 20px 0;">
+  <p style="font-size: 13px; font-weight: 700; margin: 0 0 8px;">TL;DR</p>
+  <ul style="font-size: 13px; line-height: 1.8; padding-left: 18px; margin: 0;">
+    <li>The filename passes through every system in the pipeline. <strong>None of them break at 120 &mdash; or even 200.</strong></li>
+    <li>The question is where readability degrades vs. how much URL context we preserve.</li>
+    <li>We truncate as a <strong>defensive choice</strong>, not because anything fails today.</li>
+    <li>The hash guarantees uniqueness regardless of truncation length.</li>
+    <li>The manifest has the full URL for anything lost to truncation.</li>
+  </ul>
+</div>
+
+<h4 style="margin-top: 24px;">System Limits (hard ceilings)</h4>
+
+<table style="font-size: 13px; margin: 12px 0 20px;">
+  <tr><th>System</th><th>Hard Limit</th><th>Source</th><th>Notes</th></tr>
+  <tr><td>POSIX filesystem (ext4, APFS)</td><td><strong>255 bytes</strong></td><td><a href="https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/limits.h.html" style="color: var(--chunk1);">POSIX limits.h</a></td><td>Only applies during local crawl; production is S3</td></tr>
+  <tr><td>S3 object key</td><td>1,024 chars</td><td><a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-keys.html" style="color: var(--chunk1);">AWS S3 docs</a></td><td>Effectively unlimited for our use</td></tr>
+  <tr><td>OpenAI vector store filename</td><td>512 chars</td><td><a href="https://platform.openai.com/docs/api-reference/files/create" style="color: var(--chunk1);">OpenAI API ref</a></td><td>The tightest real constraint beyond POSIX</td></tr>
+  <tr><td>DynamoDB item size</td><td>400 KB</td><td><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Constraints.html" style="color: var(--chunk1);">AWS DynamoDB docs</a></td><td>Item limit, not per-attribute; no practical limit for filenames</td></tr>
+  <tr><td>SQLite TEXT column</td><td>~1 GB</td><td><a href="https://www.sqlite.org/limits.html" style="color: var(--chunk1);">SQLite limits</a></td><td>No practical limit</td></tr>
+  <tr><td>manifest.json key</td><td>No limit</td><td><a href="https://www.rfc-editor.org/rfc/rfc8259" style="color: var(--chunk1);">RFC 8259</a></td><td>JSON spec defines no max string length</td></tr>
+</table>
+
+<h4>Visual Limits (display truncation only &mdash; no data loss)</h4>
+
+<table style="font-size: 13px; margin: 12px 0 20px;">
+  <tr><th>Surface</th><th>Visible Chars</th><th>Behavior Beyond</th></tr>
+  <tr><td>Terminal / <code>ls</code></td><td>~80&ndash;120</td><td>Wraps to next line</td></tr>
+  <tr><td>S3 console filename column</td><td>~60&ndash;80</td><td>CSS truncates with <code>&hellip;</code></td></tr>
+  <tr><td>Sources panel (chat UI)</td><td>~40&ndash;60</td><td>CSS truncates with <code>&hellip;</code></td></tr>
+  <tr><td><code>jq</code> / log output</td><td>Full width</td><td>Scrolls or wraps</td></tr>
+  <tr><td>Manifest / code lookups</td><td>Full string</td><td>Exact match &mdash; length irrelevant</td></tr>
+</table>
+
+<h4>The Options</h4>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 20px 0;">
+  <div style="background: var(--card-bg); border: 2px solid var(--success); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--success); margin-bottom: 8px; font-size: 14px;">120 chars (recommended default)</h5>
+    <ul style="font-size: 12px; line-height: 1.8; padding-left: 16px; margin: 0;">
+      <li>Fits one terminal line</li>
+      <li>Readable in S3 console without hover</li>
+      <li>~15&ndash;20% of verbose URLs get truncated</li>
+      <li>Manifest has full URL for anything lost</li>
+      <li>Best for debugging &mdash; scan and identify at a glance</li>
+    </ul>
+  </div>
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--dark); margin-bottom: 8px; font-size: 14px;">200 chars (test option)</h5>
+    <ul style="font-size: 12px; line-height: 1.8; padding-left: 16px; margin: 0;">
+      <li>Almost nothing truncates (&lt;1% of pages)</li>
+      <li>Filenames are nearly self-documenting</li>
+      <li>Two-line wrap in narrow terminals</li>
+      <li>Less reliance on manifest for identification</li>
+      <li>Well under all hard system limits</li>
+    </ul>
+  </div>
+  <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+    <h5 style="color: var(--muted); margin-bottom: 8px; font-size: 14px;">255 chars (POSIX max)</h5>
+    <ul style="font-size: 12px; line-height: 1.8; padding-left: 16px; margin: 0;">
+      <li>No practical gain over 200</li>
+      <li>Introduces POSIX risk on local dev</li>
+      <li>Multi-byte chars could exceed 255 bytes before 255 chars</li>
+      <li>Unwieldy in every visual surface</li>
+      <li>Not recommended</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout info">
+  <strong>Recommendation:</strong> Ship with <code>max_len=120</code> as default. Test with 1&ndash;2 verbose sites at <code>max_len=200</code> to see what we gain. The parameter is a single constant &mdash; trivial to adjust later. The hash guarantees uniqueness at any length.
+</div>
+
+<h4 style="margin-top: 28px;">Truncation Examples</h4>
+
+<div style="background: var(--code-bg); border-radius: 10px; padding: 24px; margin: 20px 0; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px; color: var(--code-text); line-height: 2.2; overflow-x: auto;">
+<span style="color: #89b4fa; font-weight: 600;">Truncated web page (120-char limit exceeded):</span><br>
+<br>
+<span style="color: #6c7086;">URL:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">www<span style="color: #f38ba8;">.</span>math<span style="color: #f38ba8;">.</span>harvard<span style="color: #f38ba8;">.</span>edu</span>/event/joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-householder-dice-a-matrix-free-algorithm-for-simulating-dynamics-on-random-matrices<br>
+<span style="color: #6c7086;">Full:</span>&nbsp;<span style="color: #cba6f7;">www_math_harvard_edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-hous</span><span style="color: #f38ba8; text-decoration: line-through;">eholder-dice-a-matrix-free-algorithm-for-simulating-dynamics-on-random-matrices</span><br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">www_math_harvard_edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-hous</span><span style="color: #fab387;">_24d4f280</span><span style="color: #f38ba8;">.md</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #a6e3a1;">├─ kept: 86 chars of path (budget: 120 - 20 domain - 2 sep - 12 suffix = 86)</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #f38ba8;">└─ lost: "eholder-dice-a-matrix-free-algorithm-for-simulating-dynamics-on-random-matrices"</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(still identifiable as math/CMSA random matrix seminar — manifest has full URL)</span><br>
+<br>
+<span style="color: #89b4fa; font-weight: 600;">Truncated binary file (name too long):</span><br>
+<br>
+<span style="color: #6c7086;">Found on:</span>&nbsp;&nbsp;https://<span style="color: #cba6f7;">compbio<span style="color: #f38ba8;">.</span>hms<span style="color: #f38ba8;">.</span>harvard<span style="color: #f38ba8;">.</span>edu</span>/publications/supplementary-materials-table-S1-through-S14-complete-dataset-with-annotations-and-metadata.xlsx<br>
+<span style="color: #6c7086;">Full name:</span>&nbsp;supplementary-materials-<span style="color: #f38ba8; text-decoration: line-through;">table-s1-through-s14-complete-dataset-with-</span>annotations-and-metadata<br>
+<span style="color: #6c7086;">File:</span>&nbsp;<span style="color: #cba6f7;">compbio_hms_harvard_edu</span><span style="color: #fab387;">__</span><span style="color: #a6e3a1;">supplementary-materials_<span style="color: #fab387;">..</span>_annotations-and-metadata</span><span style="color: #fab387;">_67717b78</span><span style="color: #f38ba8;">.xlsx</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #a6e3a1;">├─ kept: head ("supplementary-materials") + tail ("annotations-and-metadata")</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #f38ba8;">└─ lost: middle ("table-s1-through-s14-complete-dataset-with-")</span><br>
+<span style="color: #6c7086;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(still identifiable as supplementary materials with annotations — manifest has full name)</span><br>
+</div>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0;">
+  <h4 style="margin-top: 0; font-size: 14px;">Budget Breakdown (typical)</h4>
+  <table style="font-size: 13px; margin: 12px 0 0;">
+    <tr><th>Part</th><th>Chars</th><th>Example</th></tr>
+    <tr><td>Domain</td><td>~25</td><td><code>german_fas_harvard_edu</code></td></tr>
+    <tr><td>Separator</td><td>2</td><td><code>__</code></td></tr>
+    <tr><td>Path slug</td><td>~70 (variable)</td><td><code>advising_undergraduate_requirements</code></td></tr>
+    <tr><td>Hash separator</td><td>1</td><td><code>_</code></td></tr>
+    <tr><td>Hash</td><td>8</td><td><code>a7b3c9e4</code></td></tr>
+    <tr><td>Extension</td><td>3&ndash;5</td><td><code>.md</code></td></tr>
+    <tr style="background: #f0fdf4;"><td><strong>Total typical</strong></td><td><strong>~109</strong></td><td></td></tr>
+  </table>
+  <p style="font-size: 12px; color: var(--muted); margin: 12px 0 0;"><strong>What gets sacrificed:</strong> Only the path slug (the variable-length piece). Domain and hash are <em>never</em> truncated &mdash; they&rsquo;re the identity and uniqueness guarantees.</p>
+</div>
+
+<details class="code-ref">
+  <summary>Truncation walkthrough: web page <span class="filepath">120-char limit</span></summary>
+  <pre><code><span class="comment"># Input URL (verbose math dept seminar title):</span>
+<span class="comment"># https://www.math.harvard.edu/event/joint-dept-of-mathematics-and-cmsa-</span>
+<span class="comment"># random-matrix-probability-theory-seminar-householder-dice-a-matrix-</span>
+<span class="comment"># free-algorithm-for-simulating-dynamics-on-random-matrices</span>
+
+<span class="comment"># Step 1: Fixed parts</span>
+domain_slug = <span class="string">"www_math_harvard_edu"</span>              <span class="comment"># 20 chars</span>
+hash        = md5(url)[:<span class="number">8</span>] = <span class="string">"24d4f280"</span>          <span class="comment"># 8 chars</span>
+ext         = <span class="string">".md"</span>                               <span class="comment"># 3 chars</span>
+suffix      = <span class="string">"_24d4f280.md"</span>                      <span class="comment"># 12 chars</span>
+
+<span class="comment"># Step 2: Budget for path slug</span>
+budget = <span class="number">120</span> - <span class="number">20</span> - <span class="number">2</span> - <span class="number">12</span> = <span class="number">86</span> chars available
+
+<span class="comment"># Step 3: Full path slug (165 chars — exceeds budget)</span>
+path_slug = <span class="string">"event_joint-dept-of-mathematics-and-cmsa-random-matrix-..."</span>
+
+<span class="comment"># Step 4: Truncate to 86 chars (try to cut at word boundary)</span>
+truncated = <span class="string">"event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-hous"</span>
+
+<span class="comment"># Step 5: Final filename (exactly 120 chars)</span>
+<span class="string">"www_math_harvard_edu__event_joint-dept-of-mathematics-and-cmsa-random-matrix-probability-theory-seminar-hous_24d4f280.md"</span>
+
+<span class="comment"># What was lost: the tail of the seminar title.</span>
+<span class="comment"># What's still clear: math dept event about random matrix probability theory.</span>
+<span class="comment"># Full URL is in the manifest for anyone who needs it.</span></code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Truncation walkthrough: binary file (head+tail strategy) <span class="filepath">120-char limit</span></summary>
+  <pre><code><span class="comment"># Binary files use original downloaded filename instead of URL path slug.</span>
+<span class="comment"># Strategy: keep head + tail (binary names are descriptive throughout)</span>
+
+<span class="comment"># Input: supplementary-materials-table-S1-through-S14-complete-dataset-</span>
+<span class="comment">#        with-annotations-and-metadata.xlsx</span>
+<span class="comment"># From: https://compbio.hms.harvard.edu/publications/...</span>
+
+<span class="comment"># Step 1: Fixed parts</span>
+domain_slug = <span class="string">"compbio_hms_harvard_edu"</span>           <span class="comment"># 23 chars</span>
+hash        = md5(url)[:<span class="number">8</span>] = <span class="string">"67717b78"</span>          <span class="comment"># 8 chars</span>
+ext         = <span class="string">".xlsx"</span>                             <span class="comment"># 5 chars</span>
+suffix      = <span class="string">"_67717b78.xlsx"</span>                    <span class="comment"># 14 chars</span>
+
+<span class="comment"># Step 2: Budget = 120 - 23 - 2 - 14 = 81 chars for name</span>
+
+<span class="comment"># Step 3: Sanitized name = 91 chars (exceeds budget)</span>
+name = <span class="string">"supplementary-materials-table-s1-through-s14-complete-dataset-with-annotations-and-metadata"</span>
+
+<span class="comment"># Step 4: Binary truncation — keep first meaningful chunk + last chunk</span>
+head = <span class="string">"supplementary-materials"</span>       <span class="comment"># first segment</span>
+tail = <span class="string">"annotations-and-metadata"</span>      <span class="comment"># last segment</span>
+truncated = <span class="string">"supplementary-materials_.._annotations-and-metadata"</span>  <span class="comment"># 51 chars &le; 81 ✓</span>
+
+<span class="comment"># Step 5: Final filename (91 chars)</span>
+<span class="string">"compbio_hms_harvard_edu__supplementary-materials_.._annotations-and-metadata_67717b78.xlsx"</span>
+
+<span class="comment"># What was lost: the middle (table-S1-through-S14-complete-dataset-with-).</span>
+<span class="comment"># Still identifiable: supplementary materials with annotations from compbio.</span>
+<span class="comment"># Manifest has full original name and URL.</span></code></pre>
+</details>
+
+
+<details class="code-ref">
+  <summary>Code: generate_filename_web(url) <span class="filepath">app.py (new)</span></summary>
+  <pre><code><span class="comment"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="comment"># Based on last known scraper architecture — verify against Jeremy's</span>
+<span class="comment"># current implementation. Function signature/location may have changed.</span>
+<span class="comment"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="keyword">from</span> hashlib <span class="keyword">import</span> md5
+<span class="keyword">from</span> urllib.parse <span class="keyword">import</span> urlparse
+
+<span class="keyword">def</span> <span class="function">generate_filename_web</span>(url, max_len=<span class="number">120</span>):
+    <span class="string">"""Deterministic filename from a web page URL."""</span>
+    parsed = urlparse(url)
+    domain_slug = parsed.hostname.replace(<span class="string">'.'</span>, <span class="string">'_'</span>)
+    path = parsed.path.strip(<span class="string">'/'</span>)
+    path_slug = path.replace(<span class="string">'/'</span>, <span class="string">'_'</span>) <span class="keyword">if</span> path <span class="keyword">else</span> <span class="string">'index'</span>
+    h = md5(url.encode()).hexdigest()[:<span class="number">8</span>]
+    suffix = f<span class="string">'_{h}.md'</span>
+
+    candidate = f<span class="string">'{domain_slug}__{path_slug}{suffix}'</span>
+    <span class="keyword">if</span> len(candidate) &lt;= max_len:
+        <span class="keyword">return</span> candidate  <span class="comment"># fits — use full path</span>
+
+    <span class="comment"># Truncation: fill budget with path from left, cut at word boundary</span>
+    budget = max_len - len(domain_slug) - <span class="number">2</span> - len(suffix)
+    truncated = path_slug[:budget]
+    <span class="keyword">if</span> <span class="string">'-'</span> <span class="keyword">in</span> truncated <span class="keyword">and</span> len(truncated) &lt; len(path_slug):
+        last_hyphen = truncated.rfind(<span class="string">'-'</span>)
+        <span class="keyword">if</span> last_hyphen &gt; budget * <span class="number">0.7</span>:
+            truncated = truncated[:last_hyphen]
+    <span class="keyword">return</span> f<span class="string">'{domain_slug}__{truncated}{suffix}'</span></code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Code: generate_filename_binary(url, original_filename) <span class="filepath">app.py (new)</span></summary>
+  <pre><code><span class="comment"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="comment"># Based on last known scraper architecture — verify against Jeremy's</span>
+<span class="comment"># current implementation. Function signature/location may have changed.</span>
+<span class="comment"># ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="keyword">import</span> os
+
+<span class="keyword">def</span> <span class="function">generate_filename_binary</span>(url, original_filename, max_len=<span class="number">120</span>):
+    <span class="string">"""Deterministic filename from a binary file's download URL + original name."""</span>
+    parsed = urlparse(url)
+    domain_slug = parsed.hostname.replace(<span class="string">'.'</span>, <span class="string">'_'</span>)
+    h = md5(url.encode()).hexdigest()[:<span class="number">8</span>]
+    name, ext = os.path.splitext(original_filename)
+    name = name.replace(<span class="string">' '</span>, <span class="string">'-'</span>).lower()
+    suffix = f<span class="string">'_{h}{ext}'</span>
+
+    candidate = f<span class="string">'{domain_slug}__{name}{suffix}'</span>
+    <span class="keyword">if</span> len(candidate) &lt;= max_len:
+        <span class="keyword">return</span> candidate  <span class="comment"># fits — use full original name</span>
+
+    <span class="comment"># Truncation: keep head + tail (binary names are descriptive throughout)</span>
+    budget = max_len - len(domain_slug) - <span class="number">2</span> - len(suffix)
+    segments = name.replace(<span class="string">'-'</span>, <span class="string">'_'</span>).split(<span class="string">'_'</span>)
+    <span class="keyword">if</span> len(segments) &gt;= <span class="number">4</span>:
+        head = <span class="string">'_'</span>.join(segments[:<span class="number">2</span>])
+        tail = <span class="string">'_'</span>.join(segments[-<span class="number">2</span>:])
+        middle_marker = <span class="string">'_.._'</span>
+        <span class="keyword">if</span> len(head) + len(middle_marker) + len(tail) &lt;= budget:
+            truncated = f<span class="string">'{head}{middle_marker}{tail}'</span>
+        <span class="keyword">else</span>:
+            truncated = name[:budget]
+    <span class="keyword">else</span>:
+        truncated = name[:budget]
+    <span class="keyword">return</span> f<span class="string">'{domain_slug}__{truncated}{suffix}'</span></code></pre>
+</details>
+
+
+</section>
+
+
+<!-- ============================================================ -->
+<!-- SECTION 17: URL in Citations — Status & Next Steps -->
 <!-- ============================================================ -->
 <section id="url-requirement">
-<h2>15. URL in Citations &mdash; Status &amp; Next Steps</h2>
+<h2>17. URL in Citations &mdash; Status &amp; Next Steps</h2>
 
 <div class="callout warning">
   <strong>Requirement from Brooks:</strong> Citations must include the source URL. Students need to be able to trace any answer back to the original Harvard page. A citation that says "German Studies sample advising content" without a URL is not acceptable for production.
@@ -5666,8 +6566,18 @@ references_md = build_references_section(citations)
       <span style="font-size: 14px;"><strong>Step 4:</strong> 2-line change in <code>_resolve_source_id()</code>: read <code>origin_url</code>/<code>title</code> from attributes instead of hardcoding <code>None</code></span>
       <span style="margin-left: auto; font-size: 11px; background: #fef9c4; color: #854d0e; padding: 2px 8px; border-radius: 4px;">2 LINES</span>
     </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border);">
+      <span style="color: var(--success); font-size: 18px; font-weight: bold;">&#10003;</span>
+      <span style="font-size: 14px;"><strong>Step 5:</strong> Filename convention designed &mdash; deterministic <code>{domain}__{path-slug}_{hash8}</code> pattern</span>
+      <span style="margin-left: auto; font-size: 11px; background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 4px;"><a href="#filename-convention" style="color: #166534; text-decoration: none;">&sect;15&ndash;16</a></span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0;">
+      <span style="color: var(--danger); font-size: 18px; font-weight: bold;">&#10007;</span>
+      <span style="font-size: 14px;"><strong>Step 6:</strong> Manifest storage &mdash; extend scraper state DB with metadata fields + implement dump method to S3</span>
+      <span style="margin-left: auto; font-size: 11px; background: #fef2f2; color: #991b1b; padding: 2px 8px; border-radius: 4px;"><a href="#manifest" style="color: #991b1b; text-decoration: none;">&sect;15</a></span>
+    </div>
   </div>
-  <p style="font-size: 13px; color: var(--muted); margin: 0;">Steps 3 &amp; 4 together complete the pipeline. Step 4 is trivial once Step 3 is done (attributes need to exist before code can read them).</p>
+  <p style="font-size: 13px; color: var(--muted); margin: 0;">Steps 3 &amp; 4 together complete the pipeline. Step 5 is designed (see &sect;15&ndash;16). Step 6 needs implementation &mdash; extend Jeremy&rsquo;s existing state DB with manifest fields and wire up the JSON export to S3.</p>
 </div>
 
 <h3>What "Done" Looks Like</h3>
