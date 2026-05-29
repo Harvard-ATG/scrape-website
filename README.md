@@ -113,6 +113,8 @@ uv run scrape-website https://example.com/ --concurrency 50 --timeout 60 --delay
 | `--no-default-excludes` | — | Clear built-in exclude patterns (only use `--exclude-pattern` values) |
 | `--no-strip-tracking-params` | — | Keep tracking query params (`utm_*`, `fbclid`, etc.) |
 | `--no-use-sitemap` | — | Skip sitemap.xml discovery for seed URLs |
+| `--scope-to-path` | auto | Restrict crawl to URLs under the starting URL path |
+| `--no-scope-to-path` | — | Crawl the entire domain regardless of starting URL path |
 
 ### Crawl-quality knobs
 
@@ -142,6 +144,19 @@ uv run scrape-website https://example.com/ --no-strip-tracking-params
 ```bash
 # Opt out
 uv run scrape-website https://example.com/ --no-use-sitemap
+```
+
+**Path scoping** — when the starting URL has a non-root path, the crawl is automatically restricted to that subtree. Documents (PDF, DOCX, etc.) linked from in-scope pages are still downloaded even if they live outside the path prefix:
+
+```bash
+# Auto-scoped: only crawls /docs/* pages
+uv run scrape-website https://example.com/docs/
+
+# Override: crawl the whole domain even though the start URL has a path
+uv run scrape-website https://example.com/docs/ --no-scope-to-path
+
+# Force path scoping on a root URL (no-op, since / matches everything)
+uv run scrape-website https://example.com/ --scope-to-path
 ```
 
 ## Programmatic API
@@ -178,6 +193,7 @@ asyncio.run(main())
 | `timeout` | `30` | Request timeout in seconds |
 | `delay` | `0.1` | Delay between requests in seconds |
 | `output_dir` | `"data"` | Root directory for output; domain is appended as a subdirectory |
+| `scope_to_path` | `None` (auto) | `True` = restrict to start URL path; `False` = whole domain; `None` = auto-detect |
 
 Output is written to `<output_dir>/<domain>/` relative to the working directory (default: `data/<domain>/`).
 

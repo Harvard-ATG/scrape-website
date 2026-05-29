@@ -116,6 +116,12 @@ def _url_excluded(url: str, patterns: list[re.Pattern]) -> bool:
     return False
 
 
+def _url_within_path_prefix(path: str, prefix: str) -> bool:
+    """True if *path* is at or below *prefix*."""
+    p = prefix.rstrip('/')
+    return path == p or path.startswith(p + '/')
+
+
 async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
                               scheme: str = "https",
                               max_urls: int = 5000) -> list[str]:
@@ -214,7 +220,8 @@ def _normalize_url(url: str, strip_tracking: bool = False) -> str:
 
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         strip_tracking: bool = False,
-                        exclude_patterns: list[str] | None = None) -> set[str]:
+                        exclude_patterns: list[str] | None = None,
+                        path_prefix: str | None = None) -> set[str]:
     """Extract links using lxml (5-20x faster than BeautifulSoup).
 
     *exclude_patterns*: list of regex **strings** (not compiled) — we
@@ -237,6 +244,10 @@ def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
             if tag == 'a':
                 # Follow all same-domain <a> links
                 if parsed.netloc == base_domain:
+                    if path_prefix and not _url_within_path_prefix(parsed.path, path_prefix):
+                        path_lower = parsed.path.lower()
+                        if not any(path_lower.endswith(ext) for ext in DOWNLOADABLE_EXTENSIONS):
+                            continue
                     if not _url_excluded(normalized, compiled):
                         links.add(normalized)
             elif tag in ('link', 'script', 'img'):
@@ -307,11 +318,13 @@ def _extract_text_trafilatura(html_content: str, url: str, http_status: int | No
 def _parse_and_extract(html_content: str, url: str, base_domain: str,
                        strip_tracking: bool = False,
                        exclude_patterns: list[str] | None = None,
-                       http_status: int | None = None) -> tuple[set[str], str | None]:
+                       http_status: int | None = None,
+                       path_prefix: str | None = None) -> tuple[set[str], str | None]:
     """Combined link extraction + text extraction in one process pool call."""
     links = _extract_links_lxml(html_content, url, base_domain,
                                 strip_tracking=strip_tracking,
-                                exclude_patterns=exclude_patterns)
+                                exclude_patterns=exclude_patterns,
+                                path_prefix=path_prefix)
     text = _extract_text_trafilatura(html_content, url, http_status=http_status)
     return links, text
 
@@ -419,9 +432,15 @@ class WebsiteScraper:
                  concurrency: int | None = None,
                  timeout: int | None = None,
                  delay: float | None = None,
-                 output_dir: str | Path | None = None):
+                 output_dir: str | Path | None = None,
+                 scope_to_path: bool | None = None):
         self.start_url = start_url
         self.base_domain = self.extract_domain(start_url)
+
+        _start_path = urlparse(start_url).path
+        if scope_to_path is None:
+            scope_to_path = bool(_start_path and _start_path != '/')
+        self.path_prefix: str | None = _start_path if scope_to_path else None
 
         # Per-instance config values (fall back to module-level defaults)
         self.max_concurrent = concurrency if concurrency is not None else CONFIG['max_concurrent']
@@ -483,6 +502,9 @@ class WebsiteScraper:
         ch.setLevel(logging.INFO)
         ch.setFormatter(logging.Formatter('%(message)s'))
         self.logger.addHandler(ch)
+
+        if self.path_prefix:
+            self.logger.info(f"Path scope: crawl restricted to {self.path_prefix}*")
 
         # SQLite-backed URL store
         self.url_store = URLStore(self.logs_dir / 'state.db')
@@ -711,6 +733,7 @@ class WebsiteScraper:
                         self.executor, _parse_and_extract, content, url,
                         self.base_domain, self.strip_tracking_params,
                         self._exclude_pattern_strings, status,
+                        self.path_prefix,
                     )
 
                     # Save HTML
@@ -776,6 +799,8 @@ class WebsiteScraper:
                     normalized = _normalize_url(surl, strip_tracking=self.strip_tracking_params)
                     nparsed = urlparse(normalized)
                     if nparsed.netloc != self.base_domain:
+                        continue
+                    if self.path_prefix and not _url_within_path_prefix(nparsed.path, self.path_prefix):
                         continue
                     if _url_excluded(normalized, self._compiled_exclude_patterns):
                         continue
@@ -913,6 +938,14 @@ def parse_args():
     sitemap_group.add_argument('--no-use-sitemap', action='store_false',
                                dest='use_sitemap',
                                help='Do not fetch sitemap.xml for seed URLs')
+    path_group = parser.add_mutually_exclusive_group()
+    path_group.add_argument('--scope-to-path', dest='scope_to_path',
+                            action='store_true',
+                            help='Restrict crawl to URLs under the starting URL path (default: auto)')
+    path_group.add_argument('--no-scope-to-path', dest='scope_to_path',
+                            action='store_false',
+                            help='Crawl the entire domain regardless of starting URL path')
+    parser.set_defaults(scope_to_path=None)
     return parser.parse_args()
 
 
@@ -950,6 +983,7 @@ async def main():
                 timeout=args.timeout,
                 delay=args.delay,
                 output_dir=args.output_dir,
+                scope_to_path=args.scope_to_path,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:
