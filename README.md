@@ -111,6 +111,7 @@ uv run scrape-website https://example.com/ --concurrency 50 --timeout 60 --delay
 | `--fresh` | — | Ignore saved checkpoint and start fresh |
 | `--exclude-pattern` | see below | Regex to exclude URLs (repeatable; appends to defaults) |
 | `--no-default-excludes` | — | Clear built-in exclude patterns (only use `--exclude-pattern` values) |
+| `--include-pattern` | — | Regex allowlist — only URLs matching at least one pattern are crawled (repeatable) |
 | `--no-strip-tracking-params` | — | Keep tracking query params (`utm_*`, `fbclid`, etc.) |
 | `--no-use-sitemap` | — | Skip sitemap.xml discovery for seed URLs |
 | `--scope-to-path` | auto | Restrict crawl to URLs under the starting URL path |
@@ -131,6 +132,19 @@ uv run scrape-website https://blog.example.com/ --no-default-excludes --exclude-
 ```
 
 Default patterns: `/tag/`, `/author/`, `/feed/`, `/print/`, `?print=`, `/comments/`, `/page/\d+`, `/cdn-cgi/`.
+
+**URL include patterns** — when set, only URLs matching at least one pattern are crawled. Composes with exclude patterns: a URL must match an include AND not match any exclude (`(include₁ OR include₂) AND NOT (exclude₁ OR exclude₂)`):
+
+```bash
+# Only crawl /academics/ pages across the whole domain
+uv run scrape-website https://example.com/ --include-pattern '/academics/'
+
+# Multiple include patterns (OR): grab academics and faculty pages
+uv run scrape-website https://example.com/ --include-pattern '/academics/' --include-pattern '/faculty/'
+
+# Combine with exclude: academics pages, but skip paginated ones
+uv run scrape-website https://example.com/ --include-pattern '/academics/' --exclude-pattern '/page/\d+'
+```
 
 **Tracking-param stripping** — removes `utm_source`, `fbclid`, `gclid`, and similar query params so the same page isn't scraped twice with different tracking links:
 

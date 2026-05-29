@@ -221,14 +221,16 @@ def _normalize_url(url: str, strip_tracking: bool = False) -> str:
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         strip_tracking: bool = False,
                         exclude_patterns: list[str] | None = None,
-                        path_prefix: str | None = None) -> set[str]:
+                        path_prefix: str | None = None,
+                        include_patterns: list[str] | None = None) -> set[str]:
     """Extract links using lxml (5-20x faster than BeautifulSoup).
 
-    *exclude_patterns*: list of regex **strings** (not compiled) — we
-    compile them here because compiled patterns are not picklable across
-    the process-pool boundary.
+    *exclude_patterns*/*include_patterns*: lists of regex **strings** (not
+    compiled) — we compile them here because compiled patterns are not
+    picklable across the process-pool boundary.
     """
     compiled = [re.compile(p) for p in (exclude_patterns or [])]
+    compiled_include = [re.compile(p) for p in (include_patterns or [])]
     links = set()
     try:
         doc = lxml.html.fromstring(html_content)
@@ -248,6 +250,8 @@ def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         path_lower = parsed.path.lower()
                         if not any(path_lower.endswith(ext) for ext in DOWNLOADABLE_EXTENSIONS):
                             continue
+                    if compiled_include and not any(p.search(normalized) for p in compiled_include):
+                        continue
                     if not _url_excluded(normalized, compiled):
                         links.add(normalized)
             elif tag in ('link', 'script', 'img'):
@@ -319,12 +323,14 @@ def _parse_and_extract(html_content: str, url: str, base_domain: str,
                        strip_tracking: bool = False,
                        exclude_patterns: list[str] | None = None,
                        http_status: int | None = None,
-                       path_prefix: str | None = None) -> tuple[set[str], str | None]:
+                       path_prefix: str | None = None,
+                       include_patterns: list[str] | None = None) -> tuple[set[str], str | None]:
     """Combined link extraction + text extraction in one process pool call."""
     links = _extract_links_lxml(html_content, url, base_domain,
                                 strip_tracking=strip_tracking,
                                 exclude_patterns=exclude_patterns,
-                                path_prefix=path_prefix)
+                                path_prefix=path_prefix,
+                                include_patterns=include_patterns)
     text = _extract_text_trafilatura(html_content, url, http_status=http_status)
     return links, text
 
@@ -427,6 +433,7 @@ class URLStore:
 class WebsiteScraper:
     def __init__(self, start_url: str, fresh: bool = False,
                  exclude_patterns: list[str] | None = None,
+                 include_patterns: list[str] | None = None,
                  strip_tracking_params: bool = True,
                  use_sitemap: bool = True,
                  concurrency: int | None = None,
@@ -463,6 +470,10 @@ class WebsiteScraper:
         # Pre-compile for in-process filtering (e.g. sitemap seed)
         self._compiled_exclude_patterns: list[re.Pattern] = [
             re.compile(p) for p in self._exclude_pattern_strings
+        ]
+        self._include_pattern_strings: list[str] = include_patterns or []
+        self._compiled_include_patterns: list[re.Pattern] = [
+            re.compile(p) for p in self._include_pattern_strings
         ]
         self.session = None
         self.semaphore = asyncio.Semaphore(self.max_concurrent)
@@ -505,6 +516,8 @@ class WebsiteScraper:
 
         if self.path_prefix:
             self.logger.info(f"Path scope: crawl restricted to {self.path_prefix}*")
+        if self._include_pattern_strings:
+            self.logger.info(f"Include filter: {len(self._include_pattern_strings)} pattern(s) — only matching URLs queued")
 
         # SQLite-backed URL store
         self.url_store = URLStore(self.logs_dir / 'state.db')
@@ -733,7 +746,7 @@ class WebsiteScraper:
                         self.executor, _parse_and_extract, content, url,
                         self.base_domain, self.strip_tracking_params,
                         self._exclude_pattern_strings, status,
-                        self.path_prefix,
+                        self.path_prefix, self._include_pattern_strings or None,
                     )
 
                     # Save HTML
@@ -801,6 +814,10 @@ class WebsiteScraper:
                     if nparsed.netloc != self.base_domain:
                         continue
                     if self.path_prefix and not _url_within_path_prefix(nparsed.path, self.path_prefix):
+                        continue
+                    if self._compiled_include_patterns and not any(
+                        p.search(normalized) for p in self._compiled_include_patterns
+                    ):
                         continue
                     if _url_excluded(normalized, self._compiled_exclude_patterns):
                         continue
@@ -924,6 +941,9 @@ def parse_args():
                         help='Regex pattern to exclude URLs (repeatable; appends to defaults)')
     parser.add_argument('--no-default-excludes', action='store_true',
                         help='Clear the default exclude patterns (use only --exclude-pattern values)')
+    parser.add_argument('--include-pattern', action='append', default=None,
+                        metavar='PATTERN',
+                        help='Regex pattern — only URLs matching at least one are crawled (repeatable)')
     tracking_group = parser.add_mutually_exclusive_group()
     tracking_group.add_argument('--strip-tracking-params', action='store_true', default=True,
                                 dest='strip_tracking_params',
@@ -977,6 +997,7 @@ async def main():
             scraper = WebsiteScraper(
                 domain_urls[0], fresh=args.fresh,
                 exclude_patterns=exclude_patterns,
+                include_patterns=args.include_pattern,
                 strip_tracking_params=args.strip_tracking_params,
                 use_sitemap=args.use_sitemap,
                 concurrency=args.concurrency,
