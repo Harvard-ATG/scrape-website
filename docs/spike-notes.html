@@ -4103,147 +4103,108 @@ undergraduate years<br>
 <!-- SECTION 11: Citation Layers & The V2 Switch -->
 <!-- ============================================================ -->
 <section id="two-layers">
-<h2>11. Citation Layers &amp; The V2 Pipeline</h2>
+<h2>11. Citation Pipeline (Current)</h2>
 
 <div style="background: #f0fdf4; border: 1px solid #22c55e; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: #166534;">
-  <strong>&#10003; Updated:</strong> V2 is now the platform default. The env flag and V1 fallback have been removed. V2 runs unconditionally for all agents.
+  <strong>&#10003; Current state:</strong> Single, always-on citation pipeline. The legacy <code>*[N]*</code> injection (&ldquo;V1&rdquo;), the <code>CITATIONS_V2</code> feature flag, and the prose <code>### References</code> block written by the model (<code>add_reference_enforcement()</code>) have all been <strong>removed</strong>. <code>core/citations.py::process_citations_v2</code> runs unconditionally on every chat response. Responses API only.
 </div>
 
-<p>A response contains <strong>three types of citations</strong>:</p>
+<p>A response now has <strong>exactly two citation surfaces</strong>:</p>
 <ol style="font-size: 14px; line-height: 2; padding-left: 24px;">
-  <li><strong>Inline citations</strong> &mdash; <code>[1]</code>, <code>[2]</code> markers within the response text (platform-driven, from invisible PUA markers)</li>
-  <li><strong>Sources panel</strong> &mdash; numbered list alongside the response showing filename, block locator, and URL if available. Order matches the inline citations. (platform-driven)</li>
-  <li><strong>References list</strong> &mdash; <code>### References</code> section at the end of the message body (model-driven, from system prompt instructions)</li>
-</ol>
-<p style="margin-top: 24px;">There are <strong>two mechanisms</strong> that produce these citations:</p>
-<ol style="font-size: 14px; line-height: 2; padding-left: 24px;">
-  <li><strong>V2 platform pipeline</strong> &mdash; preprocessor + PUA markers + post-processor. Creates inline citations (#1) and the Sources panel (#2).</li>
-  <li><strong>Core system instruction prompt</strong> &mdash; instructions configured by admin that tell the model to build a references section. Creates the References list (#3).</li>
+  <li><strong>Inline citations</strong> &mdash; <code>[1]</code>, <code>[2]</code>, <code>[1,3]</code> markers placed inline by the backend post-processor (from invisible PUA markers the model emits).</li>
+  <li><strong>Sources panel</strong> &mdash; typed <code>citations[]</code> payload rendered by the frontend (<code>CitationSources.jsx</code>). Numbering/dedup is decided by the backend; the frontend renders the list as-is.</li>
 </ol>
 
-<h3>The V2 Pipeline (Now Default)</h3>
-
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
-<table>
-  <tr style="background: var(--dark); color: white;">
-    <th style="padding: 12px;">Component</th>
-    <th style="padding: 12px;">Status</th>
-    <th style="padding: 12px;">Controls</th>
-    <th style="padding: 12px;">What It Does</th>
-  </tr>
-  <tr>
-    <td style="padding: 10px;"><code>CITATIONS_V2_PREPROCESS</code></td>
-    <td style="padding: 10px;"><strong style="color: var(--success);">ON</strong></td>
-    <td style="padding: 10px;">Upload / Ingestion</td>
-    <td style="padding: 10px;">Stamps <code>[Block&lt;n&gt;]</code> markers into file content before uploading to vector store</td>
-  </tr>
-  <tr style="background: #f8f9fa;">
-    <td style="padding: 10px;">V2 Post-processor</td>
-    <td style="padding: 10px;"><strong style="color: var(--success);">ON (unconditional)</strong></td>
-    <td style="padding: 10px;">Prompt + Post-processing</td>
-    <td style="padding: 10px;">Appends PUA citation instructions to system prompt <em>and</em> parses PUA markers into <code>[N]</code> + Sources panel</td>
-  </tr>
-</table>
+<div class="callout warning" style="margin-top: 12px;">
+  <strong>What&rsquo;s gone as a <em>platform</em> surface:</strong> the platform no longer forces a model-written <code>### References</code> section. <code>add_reference_enforcement()</code> has been deleted and the default agent prompt no longer asks for one. The only platform-managed References surface is the typed <code>citations[]</code> array that drives the Sources panel.<br><br>
+  <strong>Still possible as an owner opt-in:</strong> the system prompt is admin-editable. If an owner writes &ldquo;include a <code>### References</code> section at the end&rdquo; (or similar) in their custom prompt, the model will produce one &mdash; nothing on the response path strips it. It&rsquo;s just an LLM following instructions, with all the usual caveats (the model writes labels/URLs only from what it sees in the retrieved chunks, numbering may drift from <code>[N]</code>, etc.). Treat it as a per-agent choice, not a platform feature.
 </div>
 
-<h3>What V2 Does</h3>
+<h3>How the Pipeline Works</h3>
 
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0; border-top: 4px solid var(--success);">
-  <p style="font-size: 14px; font-weight: bold;">Preprocessing (upload):</p>
-  <ul style="font-size: 13px; padding-left: 20px; line-height: 1.8;">
-    <li>A file gets uploaded from S3</li>
-    <li>Before it enters the vector store, the preprocessor splits it on every blank line</li>
-    <li>Each section gets stamped with a <code>[Block&lt;n&gt;]</code> marker (PDFs get <code>[P&lt;n&gt; Block&lt;m&gt;]</code> for page + block)</li>
-    <li>Markers survive chunking because they ride with the text</li>
-    <li>When a chunk is retrieved later, the model can reference exactly which block it came from</li>
-  </ul>
-  <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">System prompt:</p>
-  <ul style="font-size: 13px; padding-left: 20px; line-height: 1.8;">
-    <li>The core system instruction prompt already has a section about citations and how to build a <code>### References</code> section</li>
-    <li>Citations V2 adds a tiny citations prompt on the tail end of the core system instruction prompt + query &mdash; tells the model how to emit invisible citation markers (used to create the inline citations and the Sources panel)</li>
-    <li>What the model returns: the response text with invisible citation markers embedded + a references list</li>
-  </ul>
-  <p style="font-size: 14px; font-weight: bold; margin-top: 16px;">Post-processing:</p>
-  <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
-    <li>Parses PUA markers the model emitted</li>
-    <li>Resolves source IDs against annotations (file_citation + url_citation)</li>
-    <li>Joins annotations to search_results by file_id (<code>join_file_search_results()</code>)</li>
-    <li>Strips all PUA characters from visible output</li>
-    <li>Returns typed citation schema (filename, locator, quote, url &mdash; <em>url populated if attributes are set</em>)</li>
-    <li>Frontend renders Sources panel with block locators</li>
+<p style="font-size: 14px; line-height: 1.8;">The citation pipeline has two phases:</p>
+
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0;">
+  <p style="font-size: 14px; font-weight: 700; color: var(--chunk1); margin: 0 0 8px;">Pre-processing (before the model sees anything)</p>
+  <ol style="font-size: 13px; line-height: 2; padding-left: 20px; margin: 0;">
+    <li><strong>Block markers injected at upload</strong> &mdash; <code>CITATIONS_V2_PREPROCESS</code> stamps <code>[Block&lt;n&gt;]</code> into source files so the model can echo a precise locator later (<code>source_preprocessor.py</code>). Kill-switch: <code>=0/false/no/off</code>.</li>
+    <li><strong>User input sanitized</strong> &mdash; <code>sanitize_user_input()</code> strips PUA U+E200&ndash;E204 from every chat ingress (invisible-unicode prompt-injection defense).</li>
+    <li><strong>Citation instructions appended</strong> &mdash; <code>build_citation_instructions()</code> adds a &ldquo;cite densely&rdquo; block to the system prompt when <code>file_search</code> or <code>web_search</code> is in use.</li>
+    <li><strong>Retrieved chunks requested</strong> &mdash; <code>include=["file_search_call.results"]</code> asks OpenAI to return the chunk text/score/attributes alongside the response. Sent only when <code>file_search</code> is in use AND <code>api_backend != "apigee"</code>. One-shot retry without <code>include</code> if rejected.</li>
   </ol>
 </div>
 
-<h3>Core System Instruction Prompt Citations (Always Active, Independent)</h3>
-
-<p>Regardless of the V2 pipeline, the <strong>core system instruction prompt</strong> (configured by the admin in the UI) independently instructs the model to generate its own references. This is completely separate from the platform machinery.</p>
-
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0; border-top: 4px solid var(--chunk3);">
-  <h4 style="color: var(--chunk3);">Core System Instruction Prompt Citations (Model-Generated)</h4>
-  <p style="font-size: 14px;"><strong>What it produces:</strong> <code>### References</code> section in the message body</p>
-  <p style="font-size: 14px;"><strong>Configured in:</strong> Core system instruction prompt (admin UI) &mdash; plain English instructions</p>
-  <p style="font-size: 14px;"><strong>How it works:</strong></p>
-  <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
-    <li>System prompt tells the model to include a ### References section at the end</li>
-    <li>Model reads chunk content and generates reference labels from what it can see</li>
-    <li>Model writes URL <em>only if it saw one in the chunk text</em></li>
-    <li>References section appears as visible text in the message body</li>
+<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 20px 0;">
+  <p style="font-size: 14px; font-weight: 700; color: var(--chunk1); margin: 0 0 8px;">Post-processing (after the model responds)</p>
+  <ol style="font-size: 13px; line-height: 2; padding-left: 20px; margin: 0;">
+    <li><strong>Streaming scrub</strong> &mdash; <code>StreamScrubber</code> drops PUA marker spans from SSE deltas in real-time so users never see raw <code>citeturn0file4Block5</code>.</li>
+    <li><strong>Parse + resolve + join</strong> &mdash; <code>process_citations_v2()</code> extracts markers, resolves <code>turnNfileM</code> to real file_ids (primary: <code>file_search_results[M]</code>, fallback: <code>ann_files[M]</code>, unresolved: dropped), joins for quotes/scores/attributes via <code>join_file_search_results()</code>.</li>
+    <li><strong>Number + dedup</strong> &mdash; keyed by <code>(source_type, file_id|url)</code>. Same file at 3 blocks = 1 entry. <code>[N]</code> in body is 1:1 with panel. Unresolved markers dropped from both &mdash; no gaps.</li>
+    <li><strong>Replace markers</strong> &mdash; PUA spans become <code>[N]</code> in the text (right-to-left to preserve positions). Final <code>strip_all_pua()</code> catches stragglers. <code>_scrub_block_tags()</code> strips <code>[Block&lt;n&gt;]</code> from quotes.</li>
+    <li><strong>Fallback guard</strong> &mdash; if anything throws, <code>safe_fallback_citations()</code> returns PUA-stripped text + thin <code>{index, file_id, filename}</code> list. Never fails the response.</li>
   </ol>
-  <p style="font-size: 13px; color: var(--muted); margin-top: 12px; margin-bottom: 0;"><strong>Both systems run in parallel:</strong> The V2 pipeline builds inline citations + Sources panel (platform-driven), while the core system instruction prompt produces ### References (model-driven). They are not connected.</p>
 </div>
 
-<div class="key-rule">
-  <div class="rule-title">Summary: Two Independent Mechanisms</div>
-  <table style="margin: 0; font-size: 13px;">
-    <tr><td style="padding: 6px 12px;"><strong>1. V2 Platform Pipeline</strong></td><td style="padding: 6px;">Preprocessor + PUA markers + post-processor &rarr; [N] + Sources panel</td><td style="padding: 6px; color: var(--success);"><strong>ON</strong> (default)</td></tr>
-    <tr><td style="padding: 6px 12px;"><strong>2. Core system instruction prompt</strong></td><td style="padding: 6px;">Model generates ### References from visible chunk content</td><td style="padding: 6px; color: var(--success);"><strong>ALWAYS ON</strong></td></tr>
-  </table>
+<p style="font-size: 13px; color: var(--muted); margin-bottom: 8px;"><strong>Output:</strong> cleaned text with <code>[N]</code> markers + typed <code>citations[]</code> array (<code>number, source_type, file_id, filename, url, title, locator, quote, score, attributes</code>). Frontend renders verbatim &mdash; no client-side dedup, no renumbering. Backend is authoritative.</p>
+
+<div class="callout info">
+  <strong>Key constraints:</strong> OpenAI <code>file_citation</code> annotations carry only <code>file_id</code> / <code>filename</code> / <code>index</code> &mdash; no quote, no url, no title. Quotes come from the <code>file_search_results</code> join (highest-scoring chunk per file). URL/title come from upload-time <code>attributes</code> &mdash; currently <code>None</code> until manifest.json hydrates <code>origin_url</code>.
 </div>
 
-<h3>Real Example: What APO Bot Does Today (V2 ON)</h3>
+
+<h3>Real example: APO Bot today</h3>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
-  <p style="font-size: 14px; color: var(--muted); margin-bottom: 12px;">Student asks: "Are there formal advising sessions for German students?"</p>
+  <p style="font-size: 14px; color: var(--muted); margin-bottom: 12px;">Student asks: &ldquo;Are there formal advising sessions for German students?&rdquo;</p>
 
-  <p style="font-size: 14px; margin-bottom: 8px;"><strong>Agent prompt output (in message body &mdash; Layer 3):</strong></p>
+  <p style="font-size: 14px; margin-bottom: 8px;"><strong>Message body (rendered after post-processing):</strong></p>
   <div style="background: #f8fafc; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.8; margin-bottom: 16px;">
-    Yes. The Department of Germanic Languages and Literatures does have formal advising for students interested in German.<br><br>
-    - <strong>Regular concentration advising:</strong> "Departmental advising of concentrators... Students meet with the Director of Undergraduate Studies... regularly at the beginning of each term and thereafter as desired." <em>*[1]*</em><br>
-    - <strong>Pre-concentration advising:</strong> "By second year... meet with [the DUS] for formal concentration advising" <em>*[2]*</em><br><br>
-    <strong>### References</strong><br>
-    <em>*[1]*</em> Advising | Department of Germanic Languages and Literatures, <span style="color: var(--chunk1);">german.fas.harvard.edu/advising</span> &larr; <strong style="color: var(--success);">URL present (was in chunk)</strong><br>
-    <em>*[2]*</em> German Studies sample advising content for first- and second-year students &larr; <strong style="color: var(--danger);">No URL (wasn't in chunk)</strong>
+    Yes. The Department of Germanic Languages and Literatures has formal advising for students interested in German.<br><br>
+    - <strong>Regular concentration advising:</strong> Students meet with the Director of Undergraduate Studies at the beginning of each term and as desired<strong style="color: var(--chunk1);">[1]</strong>.<br>
+    - <strong>Pre-concentration advising:</strong> By second year, students meet with the DUS for formal concentration advising<strong style="color: var(--chunk1);">[2]</strong>.<br><br>
+    <em style="color: var(--muted); font-size: 12px;">No model-written <code>### References</code> block &mdash; that surface no longer exists.</em>
   </div>
 
-  <p style="font-size: 14px; margin-bottom: 8px;"><strong>V1 post-processor output (citations metadata):</strong></p>
+  <p style="font-size: 14px; margin-bottom: 8px;"><strong>Sources panel (from typed <code>citations[]</code>):</strong></p>
   <div style="background: #f8fafc; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.8;">
     <span style="display: inline-block; background: var(--chunk1); color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-size: 11px; margin-right: 8px;">1</span>
-    <strong>advising.txt</strong> &mdash; <em style="color: var(--muted);">filename only, no locator, no URL</em><br><br>
+    <strong>advising.md</strong> &mdash; <em>quote:</em> &ldquo;Departmental advising of concentrators&hellip;&rdquo;<br>
+    <em style="color: var(--muted); font-size: 12px;">file_id, score, attributes also present; url/title populated only when <code>attributes</code> set at upload</em><br><br>
     <span style="display: inline-block; background: var(--chunk1); color: white; width: 22px; height: 22px; border-radius: 50%; text-align: center; line-height: 22px; font-size: 11px; margin-right: 8px;">2</span>
-    <strong>our-people.txt</strong> &mdash; <em style="color: var(--muted);">filename only, no locator, no URL</em>
+    <strong>sample_content.md</strong> &mdash; <em>quote:</em> &ldquo;By second year&hellip; meet with [the DUS] for formal concentration advising&rdquo;
   </div>
-  <p style="font-size: 12px; color: var(--muted); margin-top: 8px;">V1 post-processor only knows filename. No block locators (preprocessor is off). No URL (post-processor doesn't look up attributes).</p>
 </div>
 
 <div class="callout info">
   <strong>Why this matters for our URL goal</strong><br>
-  The agent prompt is the only thing currently producing URLs &mdash; and only when they're visible in the chunk text. The V2 pipeline gives us block-level locators and the <code>join_file_search_results()</code> join is live &mdash; but <code>url</code> is still None because attributes aren&rsquo;t set at upload. Once manifest.json hydrates <code>origin_url</code>, the Sources panel will have clickable links.
+  The <code>join_file_search_results()</code> join is live &mdash; but <code>url</code> is still None because attributes aren&rsquo;t set at upload. Once manifest.json hydrates <code>origin_url</code> into the vector store attributes, the Sources panel will have clickable links.
 </div>
 
 <details class="code-ref">
-  <summary>Citation prompt injection (runs unconditionally) <span class="filepath">chat_send_message.py:892-907</span></summary>
-  <pre><code><span class="comment"># V2 citations: append citation instruction block when a retrieval tool</span>
-<span class="comment"># is in use. Teaches the model to emit cite&lt;id&gt; markers that</span>
-<span class="comment"># core/citations.py parses. Runs unconditionally (V1 removed).</span>
-<span class="keyword">from</span> core.citations <span class="keyword">import</span> build_citation_instructions <span class="keyword">as</span> _cv2_instructions
+  <summary>Citation instruction injection (unconditional, retrieval-gated) <span class="filepath">chat_send_message.py:907</span></summary>
+  <pre><code><span class="keyword">from</span> core.citations <span class="keyword">import</span> build_citation_instructions <span class="keyword">as</span> _cite_instructions
 _has_fs = <span class="function">any</span>(t.get(<span class="string">"type"</span>) == <span class="string">"file_search"</span> <span class="keyword">for</span> t <span class="keyword">in</span> tools)
 _has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</span>) <span class="keyword">in</span> (<span class="string">"web_search"</span>, <span class="string">"web_search_preview"</span>) <span class="keyword">for</span> t <span class="keyword">in</span> tools)
 <span class="keyword">if</span> _has_fs <span class="keyword">or</span> _has_ws:
-    prompt = prompt + <span class="function">_cv2_instructions</span>(_has_fs, _has_ws)</code></pre>
+    prompt = prompt + <span class="function">_cite_instructions</span>(_has_fs, _has_ws)</code></pre>
 </details>
 
 <details class="code-ref">
-  <summary>Preprocessor &mdash; block marker injection <span class="filepath">source_preprocessor.py:374-381</span></summary>
+  <summary>Citation instruction block &mdash; &ldquo;cite densely&rdquo; lead <span class="filepath">citations.py:336</span></summary>
+  <pre><code><span class="keyword">def</span> <span class="function">build_citation_instructions</span>(has_file_search: bool, has_web_search: bool) -> str:
+    <span class="keyword">if not</span> (has_file_search <span class="keyword">or</span> has_web_search):
+        <span class="keyword">return</span> <span class="string">""</span>
+    lines = [
+        <span class="string">""</span>, <span class="string">""</span>, <span class="string">"## Citations"</span>, <span class="string">""</span>,
+        <span class="string">"Cite densely. Every substantive sentence, statistic, named entity, quoted "</span>
+        <span class="string">"phrase, or specific claim that comes from a retrieved source MUST carry a "</span>
+        <span class="string">"citation marker &mdash; not just one citation per paragraph or per topic. ..."</span>,
+    ]
+    <span class="keyword">return</span> <span class="string">"\n"</span>.join(lines)</code></pre>
+</details>
+
+<details class="code-ref">
+  <summary>Preprocessor &mdash; block marker injection <span class="filepath">source_preprocessor.py:374</span></summary>
   <pre><code><span class="keyword">def</span> <span class="function">_inject_block_markers</span>(text: str) -> str:
     <span class="string">"""Prefix each paragraph with [Block&lt;n&gt;] for LLM citation locator echoes."""</span>
     paragraphs = <span class="function">_split_paragraphs</span>(text)
@@ -4255,105 +4216,142 @@ _has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</s
 </details>
 
 <details class="code-ref">
-  <summary>V2 post-processor &mdash; resolving source IDs (url populated when attributes set) <span class="filepath">citations.py:486-539</span></summary>
-  <pre><code><span class="keyword">def</span> <span class="function">_resolve_source_id</span>(source_id, ann_files, ann_urls):
-    <span class="string">"""Map a model-emitted source_id (e.g. turn0file0) to its real annotation."""</span>
-    m = _SOURCE_ID_TURN_RE.match(source_id)
-    <span class="keyword">if not</span> m:
-        <span class="keyword">return</span> {<span class="string">"source_type"</span>: <span class="string">"unknown"</span>, <span class="string">"file_id"</span>: None, ...}
+  <summary>file_search join &mdash; highest-scoring chunk per file becomes the <code>quote</code> <span class="filepath">citations.py:412</span></summary>
+  <pre><code><span class="keyword">def</span> <span class="function">join_file_search_results</span>(ann_files, file_search_results):
+    <span class="string">"""Enrich ann_files in-place with chunk text/score/attributes.
 
-    kind = m.group(<span class="number">2</span>)
-    item_idx = <span class="function">int</span>(m.group(<span class="number">3</span>))
-
-    <span class="keyword">if</span> kind == <span class="string">"file"</span> <span class="keyword">and</span> item_idx < <span class="function">len</span>(ann_files):
-        ann = ann_files[item_idx]
-        <span class="keyword">return</span> {
-            <span class="string">"source_type"</span>: <span class="string">"file"</span>,
-            <span class="string">"file_id"</span>: ann[<span class="string">"file_id"</span>],
-            <span class="string">"filename"</span>: ann[<span class="string">"filename"</span>],
-            <span class="string">"url"</span>: <span class="comment">None</span>,        <span class="comment"># &lt;-- ALWAYS None for file citations</span>
-            <span class="string">"title"</span>: <span class="comment">None</span>,      <span class="comment"># &lt;-- ALWAYS None for file citations</span>
-            <span class="string">"quote"</span>: ann[<span class="string">"quote"</span>],
-        }</code></pre>
+    OpenAI Responses file_citation annotations carry only file_id/filename/
+    index &mdash; NO quote text. The grounding excerpt only exists when the response
+    was requested with include=["file_search_call.results"]; we join by
+    file_id and keep the highest-scoring chunk per file.
+    """</span>
+    <span class="keyword">if not</span> file_search_results <span class="keyword">or not</span> ann_files:
+        <span class="keyword">return</span> ann_files
+    best_by_fid = {}  <span class="comment"># file_id -> (score, text, attributes)</span>
+    <span class="keyword">for</span> r <span class="keyword">in</span> file_search_results:
+        fid = _fsr_get(r, <span class="string">"file_id"</span>)
+        <span class="keyword">if not</span> fid: <span class="keyword">continue</span>
+        score = _fsr_get(r, <span class="string">"score"</span>)
+        <span class="comment"># ... keep best; then write ann["quote"] = _scrub_block_tags(text)</span></code></pre>
 </details>
-
-<h3>How to Tell: Real Playground Output</h3>
-
-<p>From <code>Academic-Technology-Assistant-Playground-2026-05-15</code> &mdash; an actual APO Bot session asking about German advising:</p>
-
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 24px; margin: 20px 0;">
-  <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;"><strong>Student asked:</strong> "Are there formal advising sessions for german students"</p>
-
-  <div style="background: #f8fafc; border-radius: 6px; padding: 16px; font-size: 13px; line-height: 1.8; margin-bottom: 16px;">
-    <p style="margin-bottom: 12px;">Key pieces:</p>
-    - <strong>Regular concentration advising:</strong> "Departmental advising of concentrators... Students meet with the Director of Undergraduate Studies... regularly at the beginning of each term and thereafter as desired." <em>*[1]*</em><br>
-    - <strong>Pre-concentration / sophomore advising:</strong> Sophomores considering declaring German are encouraged to meet with the DUS... <em>*[1]*</em><br>
-    - <strong>Additional "getting started" advising:</strong> Sample departmental guidance for first- and second-year students explicitly tells second-years to "meet with [the DUS] for formal concentration advising" <em>*[2]*</em><br><br>
-
-    <strong>### References</strong><br>
-    <em>*[1]*</em> Advising | Department of Germanic Languages and Literatures, "Departmental advising of concentrators..." <span style="color: var(--chunk1); font-weight: bold;">german.fas.harvard.edu/advising</span><br>
-    <em>*[2]*</em> German Studies sample advising content for first- and second-year students, "By second year... meet with [the DUS] for formal concentration advising"
-  </div>
-
-  <h4 style="margin-top: 20px;">Diagnosis: V2 is OFF</h4>
-  <table>
-    <tr style="background: var(--light-bg);">
-      <th style="padding: 8px;">Signal</th>
-      <th style="padding: 8px;">What We See</th>
-      <th style="padding: 8px;">Means</th>
-    </tr>
-    <tr>
-      <td style="padding: 8px;">Marker format</td>
-      <td style="padding: 8px;"><code>*[1]*</code> (italic/bold)</td>
-      <td style="padding: 8px;">Model-generated from agent prompt, not platform-injected</td>
-    </tr>
-    <tr style="background: #f8f9fa;">
-      <td style="padding: 8px;"><code>### References</code> section</td>
-      <td style="padding: 8px;">Present in message body</td>
-      <td style="padding: 8px;">Model writing it from agent prompt instructions</td>
-    </tr>
-    <tr>
-      <td style="padding: 8px;">Sources panel with locators</td>
-      <td style="padding: 8px;">Absent</td>
-      <td style="padding: 8px;">V2 post-processor not running, no <code>Block5</code> locators</td>
-    </tr>
-    <tr style="background: #f8f9fa;">
-      <td style="padding: 8px;">[1] has URL</td>
-      <td style="padding: 8px;"><span style="color: var(--success);">&#10003;</span> <code>german.fas.harvard.edu/advising</code></td>
-      <td style="padding: 8px;">Small file &mdash; header was in the chunk the model saw</td>
-    </tr>
-    <tr>
-      <td style="padding: 8px;">[2] has URL</td>
-      <td style="padding: 8px;"><span style="color: var(--danger);">&#10007;</span> No URL, just a description</td>
-      <td style="padding: 8px;">Large file (<code>sample_content.txt</code>, 645 lines) &mdash; cited content is at line 350+, far from header at line 1</td>
-    </tr>
-  </table>
-</div>
-
-<div class="callout info">
-  <strong>The source file behind [2]</strong><br>
-  <code>sample_content.txt</code> is a 645-line file starting with:<br>
-  <code style="font-size: 12px;">Source: https://german.fas.harvard.edu/our-people</code><br>
-  <code style="font-size: 12px;">Domain: german.fas.harvard.edu</code><br>
-  <code style="font-size: 12px;">Title: People | Department of Germanic Languages and Literatures</code><br><br>
-  The cited content ("SECOND-YEAR ADVISING... meet with Dr. Dubois for formal concentration advising") is at <strong>line 350</strong>. At ~800 tokens per chunk, that header is in chunk 1 while the advising content is in chunk 3+. The model never sees both in the same context &mdash; so it improvises the reference label without a URL.
-</div>
 
 <details class="code-ref">
-  <summary>V2 post-processor call (runs unconditionally, no V1 fallback) <span class="filepath">chat_send_message.py:262-291</span></summary>
-  <pre><code><span class="comment"># V2 runs unconditionally &mdash; V1 has been removed</span>
-<span class="keyword">from</span> core.citations <span class="keyword">import</span> process_citations_v2
-<span class="keyword">return</span> <span class="function">process_citations_v2</span>(message_text, annotations, file_search_results)</code></pre>
+  <summary>Post-processor entry &mdash; error guard in place <span class="filepath">chat_send_message.py:279</span></summary>
+  <pre><code><span class="keyword">from</span> core.citations <span class="keyword">import</span> process_citations_v2, safe_fallback_citations
+<span class="keyword">try</span>:
+    <span class="keyword">return</span> <span class="function">process_citations_v2</span>(message_text, annotations, file_search_results)
+<span class="keyword">except</span> Exception:
+    log.exception(<span class="string">"citation processing failed; falling back"</span>)
+    <span class="keyword">return</span> <span class="function">safe_fallback_citations</span>(message_text, annotations)</code></pre>
 </details>
 
-<h3>Following a Citation: V2 Pipeline Step by Step</h3>
+<h3>Step-by-step: following one citation through the full pipeline</h3>
 
-<details open>
-<summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: var(--chunk1); padding: 8px 0;">Expand: 7-step trace through the V2 post-processor</summary>
-
-<p>Tracing one citation from model output through the entire V2 post-processor to understand exactly how <code>[1]</code> and the Sources panel are built:</p>
+<p>Tracing a single source URL from scraper output all the way to a clickable citation in the Sources panel:</p>
 
 <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
+
+  <!-- Pre-processing Steps -->
+  <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--chunk3); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--chunk3);">Pre-processing (URL enters the system)</div>
+
+  <!-- Step A1 -->
+  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+    <div style="min-width: 140px;">
+      <div style="background: var(--chunk3); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP A1</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Scraper crawls page</div>
+    </div>
+    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
+      <span style="color: #6c7086;">// Scraper visits the URL, extracts text, saves .md with YAML front matter:</span><br>
+      url = <span style="color: #a6e3a1;">"https://german.fas.harvard.edu/advising"</span><br>
+      filename = <span style="color: #a6e3a1;">"german_fas_harvard_edu__advising_7028819f.md"</span><br>
+      <span style="color: #6c7086;">// Metadata stored in scraper&rsquo;s SQLite DB (files_metadata table)</span>
+    </div>
+  </div>
+
+  <!-- Step A2 -->
+  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+    <div style="min-width: 140px;">
+      <div style="background: var(--chunk3); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP A2</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Manifest exported</div>
+    </div>
+    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
+      <span style="color: #6c7086;">// End of crawl: DB dumped to manifest.json, uploaded to S3:</span><br>
+      manifest.files[<span style="color: #a6e3a1;">"german_fas_harvard_edu__advising_7028819f.md"</span>] = {<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">origin_url</span>: <span style="color: #a6e3a1;">"https://german.fas.harvard.edu/advising"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">domain</span>: <span style="color: #a6e3a1;">"german.fas.harvard.edu"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">title</span>: <span style="color: #a6e3a1;">"Advising | Department of Germanic Languages"</span><br>
+      }<br>
+      <span style="color: #6c7086;">// generated_at timestamp set &mdash; consistency gate for FileSync</span>
+    </div>
+  </div>
+
+  <!-- Step A3 -->
+  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+    <div style="min-width: 140px;">
+      <div style="background: var(--chunk3); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP A3</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">FileSync uploads to vector store</div>
+    </div>
+    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
+      <span style="color: #6c7086;">// FileSync loads manifest, merges attributes at upload:</span><br>
+      attributes = {<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">source_type</span>: <span style="color: #a6e3a1;">"s3"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">origin_url</span>: <span style="color: #a6e3a1;">"https://german.fas.harvard.edu/advising"</span>,&nbsp;<span style="color: #6c7086;">// &larr; from manifest</span><br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">domain</span>: <span style="color: #a6e3a1;">"german.fas.harvard.edu"</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// &larr; from manifest</span><br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">title</span>: <span style="color: #a6e3a1;">"Advising | Department of Germanic Languages"</span>,<span style="color: #6c7086;"> // &larr; from manifest</span><br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">sync_timestamp</span>: <span style="color: #a6e3a1;">"2026-05-28T02:30:00Z"</span>,<br>
+      &nbsp;&nbsp;...<br>
+      }<br>
+      <span style="color: #6c7086;">// File uploaded to OpenAI vector store with these attributes attached</span><br>
+      <span style="color: #6c7086;">// OpenAI assigns: file_id = "file-abc123"</span>
+    </div>
+  </div>
+
+  <!-- Step A4 -->
+  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+    <div style="min-width: 140px;">
+      <div style="background: var(--chunk3); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP A4</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Preprocessor injects block markers</div>
+    </div>
+    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
+      <span style="color: #6c7086;">// CITATIONS_V2_PREPROCESS stamps [Block&lt;n&gt;] into the file before upload:</span><br>
+      <span style="color: #a6e3a1;">"[Block1] The Department of Germanic Languages..."</span><br>
+      <span style="color: #a6e3a1;">"[Block2] Students meet with the Director..."</span><br>
+      <span style="color: #a6e3a1;">"[Block3] Pre-concentration advising..."</span><br>
+      ...<br>
+      <span style="color: #a6e3a1;">"[Block5] Departmental advising of concentrators..."</span><br>
+      <span style="color: #6c7086;">// Markers survive chunking &mdash; model sees them in retrieved context</span>
+    </div>
+  </div>
+
+  <!-- Step A5 -->
+  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid var(--chunk1);">
+    <div style="min-width: 140px;">
+      <div style="background: var(--chunk3); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP A5</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Citation instructions appended</div>
+    </div>
+    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
+      <span style="color: #6c7086;">// At chat time, build_citation_instructions() adds to system prompt:</span><br>
+      <span style="color: #a6e3a1;">"## Citations\nCite densely. Every substantive sentence..."</span><br>
+      <span style="color: #6c7086;">// Teaches model to emit invisible PUA markers wrapping source IDs</span><br>
+      <span style="color: #6c7086;">// Also: sanitize_user_input() strips any PUA from user text (injection defense)</span><br>
+      <span style="color: #6c7086;">// Also: include=["file_search_call.results"] requests chunk data for the join</span>
+    </div>
+  </div>
+
+  <!-- Post-processing Steps -->
+  <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--chunk1); margin-bottom: 16px; margin-top: 24px; padding-bottom: 8px; border-bottom: 2px solid var(--chunk1);">Post-processing (model has responded)</div>
+
+  <!-- Step 1 -->
+  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+    <div style="min-width: 140px;">
+      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B1</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Model emits</div>
+    </div>
+    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
+      <span style="color: #cdd6f4;">"The department offers advising</span><span style="background: rgba(22,163,74,0.3); padding: 2px 4px; border-radius: 3px; color: #a6e3a1; font-weight: bold;">START</span><span style="color: #cdd6f4;">cite</span><span style="background: rgba(74,144,217,0.3); padding: 2px 4px; border-radius: 3px; color: #89b4fa; font-weight: bold;">DELIM</span><span style="color: #f9e2af;">turn0file0</span><span style="background: rgba(74,144,217,0.3); padding: 2px 4px; border-radius: 3px; color: #89b4fa; font-weight: bold;">DELIM</span><span style="color: #f9e2af;">Block5</span><span style="background: rgba(22,163,74,0.3); padding: 2px 4px; border-radius: 3px; color: #a6e3a1; font-weight: bold;">STOP</span><span style="color: #cdd6f4;"> for students"</span>
+      <div style="font-size: 11px; color: #6c7086; margin-top: 6px;">Invisible PUA characters wrap the citation data. <code>Block5</code> came from the preprocessor&rsquo;s <code>[Block5]</code> tag the model saw in the chunk.</div>
+    </div>
+  </div>
 
   <!-- Step 1 -->
   <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
@@ -4363,20 +4361,22 @@ _has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</s
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
       <span style="color: #cdd6f4;">"The department offers advising</span><span style="background: rgba(22,163,74,0.3); padding: 2px 4px; border-radius: 3px; color: #a6e3a1; font-weight: bold;">START</span><span style="color: #cdd6f4;">cite</span><span style="background: rgba(74,144,217,0.3); padding: 2px 4px; border-radius: 3px; color: #89b4fa; font-weight: bold;">DELIM</span><span style="color: #f9e2af;">turn0file0</span><span style="background: rgba(74,144,217,0.3); padding: 2px 4px; border-radius: 3px; color: #89b4fa; font-weight: bold;">DELIM</span><span style="color: #f9e2af;">Block5</span><span style="background: rgba(22,163,74,0.3); padding: 2px 4px; border-radius: 3px; color: #a6e3a1; font-weight: bold;">STOP</span><span style="color: #cdd6f4;"> for students"</span>
-      <div style="font-size: 11px; color: #6c7086; margin-top: 6px;">Invisible PUA characters wrap the citation data. Represented here as colored labels.</div>
+      <div style="font-size: 11px; color: #6c7086; margin-top: 6px;">Invisible PUA characters wrap the citation data. <code>Block5</code> came from the preprocessor&rsquo;s <code>[Block5]</code> tag the model saw in the chunk.</div>
     </div>
   </div>
 
   <!-- Step 2 -->
   <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
     <div style="min-width: 140px;">
-      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 2</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">extract_citations()</div>
+      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B2</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">SSE scrub + extract_citations()</div>
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// Regex finds all PUA marker spans, parses into structured data:</span><br>
+      <span style="color: #6c7086;">// StreamScrubber drops complete PUA spans from deltas in-flight,</span><br>
+      <span style="color: #6c7086;">// buffering unterminated ones. At text_complete, extract_citations()</span><br>
+      <span style="color: #6c7086;">// pops the locator FIRST, then validates source_id:</span><br>
       markers = [{<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">source_id</span>: <span style="color: #a6e3a1;">"turn0file0"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">source_ids</span>: [<span style="color: #a6e3a1;">"turn0file0"</span>],<br>
       &nbsp;&nbsp;<span style="color: #89b4fa;">locator</span>: <span style="color: #a6e3a1;">"Block5"</span>,<br>
       &nbsp;&nbsp;<span style="color: #89b4fa;">start</span>: <span style="color: #fab387;">31</span>, <span style="color: #89b4fa;">end</span>: <span style="color: #fab387;">58</span><br>
       }]
@@ -4386,66 +4386,64 @@ _has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</s
   <!-- Step 3 -->
   <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
     <div style="min-width: 140px;">
-      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 3</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">_process_with_markers()</div>
+      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B3</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">_resolve_source_id()</div>
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// Assign citation number by first appearance:</span><br>
-      pair_to_num = {}<br>
-      next_num = <span style="color: #fab387;">1</span><br>
-      <br>
-      key = (<span style="color: #a6e3a1;">"turn0file0"</span>, <span style="color: #a6e3a1;">"Block5"</span>)<br>
-      pair_to_num[key] = <span style="color: #fab387;">1</span>&nbsp;&nbsp;<span style="color: #6c7086;">// first unique pair &rarr; gets [1]</span><br>
-      next_num = <span style="color: #fab387;">2</span>
+      <span style="color: #6c7086;">// PRIMARY: file_search_results[M] (the include= payload).</span><br>
+      <span style="color: #6c7086;">// M=0, so use file_search_results[0].file_id &rarr; match to ann by file_id.</span><br>
+      <span style="color: #6c7086;">// FALLBACK: ann_files[0] if no file_search_results (APIGEE).</span><br>
+      <span style="color: #6c7086;">// UNRESOLVED: neither matches &rarr; drop marker + entry.</span>
     </div>
   </div>
 
   <!-- Step 4 -->
   <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
     <div style="min-width: 140px;">
-      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 4</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">_resolve_source_id()</div>
+      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B4</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">join_file_search_results()</div>
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// Parse "turn0file0" with regex:</span><br>
-      m = _SOURCE_ID_TURN_RE.match(<span style="color: #a6e3a1;">"turn0file0"</span>)<br>
-      kind = m.group(<span style="color: #fab387;">2</span>)&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// "file"</span><br>
-      item_idx = int(m.group(<span style="color: #fab387;">3</span>))&nbsp;&nbsp;<span style="color: #6c7086;">// 0</span>
+      <span style="color: #6c7086;">// Highest-scoring chunk for this file_id wins; quote/score/attributes set.</span><br>
+      ann_files[<span style="color: #fab387;">0</span>] = {<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">file_id</span>: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">filename</span>: <span style="color: #a6e3a1;">"advising.md"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">quote</span>: <span style="color: #a6e3a1;">"Departmental advising of concentrators&hellip;"</span>,&nbsp;<span style="color: #6c7086;">// _scrub_block_tags strips [Block5]</span><br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">score</span>: <span style="color: #fab387;">0.87</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">attributes</span>: {&hellip;}<br>
+      }
     </div>
   </div>
 
   <!-- Step 5 -->
   <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
     <div style="min-width: 140px;">
-      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 5</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Array index lookup</div>
+      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B5</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Backend numbering &amp; dedup</div>
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// idx=0 used as array index into annotations list:</span><br>
-      ann_files[<span style="color: #fab387;">0</span>] = {<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">file_id</span>: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">filename</span>: <span style="color: #a6e3a1;">"advising.txt"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">quote</span>: <span style="color: #a6e3a1;">"The department offers advising..."</span><br>
-      }
+      <span style="color: #6c7086;">// Key by (source_type, file_id|url), NOT by (source_id, locator).</span><br>
+      <span style="color: #6c7086;">// Same file at 3 blocks = 1 entry. First-seen locator preserved as metadata.</span><br>
+      pair_to_num[(<span style="color: #a6e3a1;">"file"</span>, <span style="color: #a6e3a1;">"file-abc123"</span>)] = <span style="color: #fab387;">1</span>
     </div>
   </div>
 
   <!-- Step 6 -->
   <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
     <div style="min-width: 140px;">
-      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 6</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Build source object</div>
+      <div style="background: var(--chunk1); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B6</div>
+      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Typed entry</div>
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// Return the resolved citation:</span><br>
       {<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">number</span>: <span style="color: #fab387;">1</span>,<br>
       &nbsp;&nbsp;<span style="color: #89b4fa;">source_type</span>: <span style="color: #a6e3a1;">"file"</span>,<br>
       &nbsp;&nbsp;<span style="color: #89b4fa;">file_id</span>: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">filename</span>: <span style="color: #a6e3a1;">"advising.txt"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">url</span>: <span style="color: #f38ba8;">None</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #f38ba8;">// &larr; THE GAP</span><br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">title</span>: <span style="color: #f38ba8;">None</span>,&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #f38ba8;">// &larr; THE GAP</span><br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">filename</span>: <span style="color: #a6e3a1;">"advising.md"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">url</span>: <span style="color: #f38ba8;">None</span>, <span style="color: #89b4fa;">title</span>: <span style="color: #f38ba8;">None</span>,&nbsp;&nbsp;<span style="color: #6c7086;">// populated when attributes set at upload</span><br>
       &nbsp;&nbsp;<span style="color: #89b4fa;">locator</span>: <span style="color: #a6e3a1;">"Block5"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">quote</span>: <span style="color: #a6e3a1;">"The department offers advising..."</span><br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">quote</span>: <span style="color: #a6e3a1;">"Departmental advising of concentrators&hellip;"</span>,<br>
+      &nbsp;&nbsp;<span style="color: #89b4fa;">score</span>: <span style="color: #fab387;">0.87</span>, <span style="color: #89b4fa;">attributes</span>: {&hellip;}<br>
       }
     </div>
   </div>
@@ -4453,36 +4451,23 @@ _has_ws = <span class="function">any</span>(t.get(<span class="string">"type"</s
   <!-- Step 7 -->
   <div style="display: flex; gap: 16px; align-items: flex-start;">
     <div style="min-width: 140px;">
-      <div style="background: var(--success); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 7</div>
+      <div style="background: var(--success); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP B7</div>
       <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Final output</div>
     </div>
     <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// PUA markers replaced with [1]:</span><br>
+      <span style="color: #6c7086;">// PUA spans replaced by [N] (right-to-left to preserve positions).</span><br>
+      <span style="color: #6c7086;">// strip_all_pua() final pass catches any stragglers.</span><br>
       <span style="color: #cdd6f4;">"The department offers advising</span><span style="color: #a6e3a1; font-weight: bold;">[1]</span><span style="color: #cdd6f4;"> for students"</span>
     </div>
   </div>
 
 </div>
 
-<details class="code-ref">
-  <summary>PUA constants &amp; regex <span class="filepath">citations.py:51-53, 73-74</span></summary>
-  <pre><code><span class="comment"># Private-use-area unicode characters (invisible in display):</span>
-CITATION_START = <span class="string">""</span>     <span class="comment"># marks beginning of citation</span>
-CITATION_DELIMITER = <span class="string">""</span> <span class="comment"># separates fields within citation</span>
-CITATION_STOP = <span class="string">""</span>      <span class="comment"># marks end of citation</span>
-
-<span class="comment"># Regex to parse source_id like "turn0file0":</span>
-_SOURCE_ID_TURN_RE = re.compile(r<span class="string">"^turn(\d+)(file|search|news|url|block|image)(\d+)$"</span>)</code></pre>
-</details>
-
-
-<h4 style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);">How [1] Gets into the Text</h4>
-
-<p>The replacement of PUA markers with readable <code>[N]</code> numbers:</p>
+<h4 style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);">Before / after on the rendered text</h4>
 
 <div class="side-by-side">
   <div class="panel" style="border-top: 4px solid var(--danger);">
-    <h4 style="color: var(--danger);">Before (raw from model)</h4>
+    <h4 style="color: var(--danger);">Before (raw model output)</h4>
     <div style="font-family: monospace; font-size: 12px; line-height: 1.8; background: #f8f9fa; padding: 12px; border-radius: 6px;">
       "...advising<span style="background: rgba(22,163,74,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">START</span>cite<span style="background: rgba(74,144,217,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">DELIM</span>turn0file0<span style="background: rgba(74,144,217,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">DELIM</span>Block5<span style="background: rgba(22,163,74,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">STOP</span> for students<span style="background: rgba(22,163,74,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">START</span>cite<span style="background: rgba(74,144,217,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">DELIM</span>turn0file1<span style="background: rgba(74,144,217,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">DELIM</span>Block2<span style="background: rgba(22,163,74,0.2); padding: 1px 3px; border-radius: 2px; font-size: 10px;">STOP</span>..."
     </div>
@@ -4495,220 +4480,29 @@ _SOURCE_ID_TURN_RE = re.compile(r<span class="string">"^turn(\d+)(file|search|ne
   </div>
 </div>
 
-<details class="code-ref">
-  <summary>Number assignment &amp; replacement logic <span class="filepath">citations.py:336-359</span></summary>
-  <pre><code><span class="comment"># Assign numbers by first appearance:</span>
-pair_to_num = {}
-next_num = <span class="number">1</span>
+<h3>Prompt-driven citation overrides (<code>[CITATION_OVERRIDES]</code>)</h3>
 
-<span class="keyword">for</span> m <span class="keyword">in</span> sorted(markers, key=<span class="keyword">lambda</span> x: x[<span class="string">"start"</span>]):
-    key = (m[<span class="string">"source_id"</span>], m[<span class="string">"locator"</span>])
-    <span class="keyword">if</span> key <span class="keyword">not in</span> pair_to_num:
-        pair_to_num[key] = next_num
-        next_num += <span class="number">1</span>
+<p>Owner-facing block placed in the system prompt that maps filenames to a section label and/or canonical URL. Parsed by <code>core/citations.py::parse_citation_overrides</code>; the block is <strong>stripped from the prompt before it reaches the model</strong> (no token cost). Four shapes:</p>
 
-<span class="comment"># Replace PUA spans with [N] (process right-to-left to preserve positions):</span>
-<span class="keyword">for</span> m <span class="keyword">in</span> sorted(markers, key=<span class="keyword">lambda</span> x: x[<span class="string">"start"</span>], reverse=True):
-    nums = [pair_to_num[(m[<span class="string">"source_id"</span>], m[<span class="string">"locator"</span>])]]
-    replacement = <span class="string">"["</span> + <span class="string">","</span>.join(str(n) <span class="keyword">for</span> n <span class="keyword">in</span> nums) + <span class="string">"]"</span>
-    cleaned_text = cleaned_text[:m[<span class="string">"start"</span>]] + replacement + cleaned_text[m[<span class="string">"end"</span>]:]</code></pre>
-</details>
+<pre><code>[CITATION_OVERRIDES]
+filename | section | url     // replace with label + link
+filename | section |         // replace with label, no link
+filename |         | url     // filename becomes the link text, points to url
++filename | section | url    // additive &mdash; keep filename AND show section/link
+[/CITATION_OVERRIDES]</code></pre>
 
-<h4 style="margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border);">How the Sources Panel is Built</h4>
-
-<p>The resolved citations become the <strong>Sources panel</strong> &mdash; a structured UI element separate from the message text:</p>
-
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
-
-  <div style="font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;">Data Flow</div>
-
-  <!-- Input -->
-  <div style="background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 11px; color: var(--code-text); line-height: 1.8; margin-bottom: 12px;">
-    <span style="color: #6c7086;">// Resolved citations passed to frontend:</span><br>
-    sources = [{<br>
-    &nbsp;&nbsp;source_type: <span style="color: #a6e3a1;">"file"</span>,<br>
-    &nbsp;&nbsp;file_id: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
-    &nbsp;&nbsp;filename: <span style="color: #a6e3a1;">"advising.txt"</span>,<br>
-    &nbsp;&nbsp;url: <span style="color: #f38ba8;">None</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// &larr; would be clickable link if populated</span><br>
-    &nbsp;&nbsp;locator: <span style="color: #a6e3a1;">"Block5"</span>,&nbsp;&nbsp;&nbsp;<span style="color: #6c7086;">// &larr; shows which block was cited</span><br>
-    &nbsp;&nbsp;quote: <span style="color: #a6e3a1;">"The department..."</span><br>
-    }]
-  </div>
-
-  <div style="text-align: center; font-size: 20px; color: var(--muted); margin: 8px 0;">&darr;</div>
-
-  <!-- Frontend rendering mockup -->
-  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-top: 12px;">
-    <div style="font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 12px;">SOURCES</div>
-    <div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
-      <span style="display: inline-block; background: var(--chunk1); color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 12px; font-weight: bold;">1</span>
-      <span style="font-size: 13px; font-weight: 600;">advising.txt</span>
-      <code style="font-size: 10px; background: #e2e8f0; padding: 2px 6px; border-radius: 3px;">Block5</code>
-      <span style="font-size: 12px; color: var(--danger); font-style: italic;">no link (url is null)</span>
-    </div>
-  </div>
-
-</div>
-
-<div class="callout info">
-  <strong>The <code>url</code> and <code>title</code> fields already exist in the citation schema</strong> &mdash; they&rsquo;re just set to <code>None</code> for file citations today. If we populate them (via the <code>include</code> parameter fix), the frontend would render them as clickable links automatically.
-</div>
-
-</details><!-- end V2 collapsible -->
-
-<h3 style="color: var(--muted);">Historical: V1 Pipeline (Removed)</h3>
-
-<details>
-<summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 0;">&#9660; V1 trace (historical reference only &mdash; this code has been removed)</summary>
-
-<p style="color: var(--muted);"><em>V1 was the simpler fallback path that ran when V2 was off. It has since been removed from the codebase.</em></p>
-
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
-
-  <!-- V1 Step 1 -->
-  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
-    <div style="min-width: 140px;">
-      <div style="background: var(--muted); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 1</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Model writes</div>
-    </div>
-    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #cdd6f4;">"The department offers advising for students"</span><br>
-      <span style="color: #6c7086;">// Plain text &mdash; no PUA markers, no citation instructions appended</span>
-    </div>
-  </div>
-
-  <!-- V1 Step 2 -->
-  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
-    <div style="min-width: 140px;">
-      <div style="background: var(--muted); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 2</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">OpenAI attaches</div>
-    </div>
-    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// annotations[] on the response (OpenAI generates these):</span><br>
-      [{<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">type</span>: <span style="color: #a6e3a1;">"file_citation"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">file_id</span>: <span style="color: #a6e3a1;">"file-abc123"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">filename</span>: <span style="color: #a6e3a1;">"advising.txt"</span>,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">index</span>: <span style="color: #fab387;">38</span>&nbsp;&nbsp;<span style="color: #6c7086;">// character position in text</span><br>
-      }]
-    </div>
-  </div>
-
-  <!-- V1 Step 3 -->
-  <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
-    <div style="min-width: 140px;">
-      <div style="background: var(--muted); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 3</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Post-processor</div>
-    </div>
-    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// Group by unique filename, assign numbers by first appearance:</span><br>
-      <span style="color: #a6e3a1;">"advising.txt"</span> &rarr; citation <span style="color: #fab387;">1</span><br>
-      <span style="color: #6c7086;">// Inject *[1]* at character position 38:</span><br>
-      <span style="color: #cdd6f4;">"The department offers advising for students</span><span style="color: #a6e3a1; font-weight: bold;"> *[1]*</span><span style="color: #cdd6f4;">"</span>
-    </div>
-  </div>
-
-  <!-- V1 Step 4 -->
-  <div style="display: flex; gap: 16px; align-items: flex-start;">
-    <div style="min-width: 140px;">
-      <div style="background: var(--muted); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; display: inline-block;">STEP 4</div>
-      <div style="font-size: 12px; font-weight: 600; margin-top: 4px;">Returns</div>
-    </div>
-    <div style="flex: 1; background: var(--code-bg); border-radius: 6px; padding: 12px; font-family: monospace; font-size: 12px; color: var(--code-text); line-height: 1.8;">
-      <span style="color: #6c7086;">// Citation metadata (what the frontend gets):</span><br>
-      [{<span style="color: #89b4fa;">file_id</span>: <span style="color: #a6e3a1;">"file-abc123"</span>, <span style="color: #89b4fa;">filename</span>: <span style="color: #a6e3a1;">"advising.txt"</span>}]<br>
-      <span style="color: #f38ba8;">// No url. No locator. No quote. Just filename.</span>
-    </div>
-  </div>
-
-</div>
-
-</details><!-- end V1 collapsible -->
-
-<details>
-<summary style="cursor: pointer; font-size: 16px; font-weight: 600; padding: 8px 0;"><h3 style="display: inline; font-size: 16px;">The Annotations Schema (Fixed by OpenAI)</h3></summary>
-
-<p>The annotation schema is defined by OpenAI&rsquo;s SDK &mdash; it&rsquo;s a <strong>fixed structure that cannot be extended</strong>. <code>AnnotationFileCitation</code> (from file_search) has no url/title fields. <code>AnnotationURLCitation</code> (from web_search) does. This is why we need attributes + the join.</p>
-
-<div class="side-by-side">
-  <div class="panel" style="border-top: 4px solid var(--danger);">
-    <h4 style="color: var(--danger);">AnnotationFileCitation</h4>
-    <div style="background: var(--code-bg); border-radius: 6px; padding: 16px; font-family: monospace; font-size: 13px; color: var(--code-text); line-height: 2;">
-      {<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">file_id</span>: str,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">filename</span>: str,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">index</span>: int,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">type</span>: <span style="color: #a6e3a1;">"file_citation"</span><br>
-      }<br>
-      <br>
-      <span style="color: #f38ba8; font-weight: bold;">No url field. No title field.</span><br>
-      <span style="color: #f38ba8; font-weight: bold;">No custom fields possible.</span>
-    </div>
-  </div>
-  <div class="panel" style="border-top: 4px solid var(--success);">
-    <h4 style="color: var(--success);">AnnotationURLCitation</h4>
-    <div style="background: var(--code-bg); border-radius: 6px; padding: 16px; font-family: monospace; font-size: 13px; color: var(--code-text); line-height: 2;">
-      {<br>
-      &nbsp;&nbsp;<span style="color: #a6e3a1;">url</span>: str,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">// &larr; HAS url</span><br>
-      &nbsp;&nbsp;<span style="color: #a6e3a1;">title</span>: str,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: #a6e3a1;">// &larr; HAS title</span><br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">start_index</span>: int,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">end_index</span>: int,<br>
-      &nbsp;&nbsp;<span style="color: #89b4fa;">type</span>: <span style="color: #a6e3a1;">"url_citation"</span><br>
-      }
-    </div>
-    <p style="font-size: 12px; color: var(--success); margin: 8px 0 0;">URL citations (from web_search) have url and title. File citations don&rsquo;t.</p>
-  </div>
-</div>
-
-<div class="callout warning">
-  <strong>This schema is fixed by OpenAI.</strong> You cannot extend <code>AnnotationFileCitation</code> to include <code>url</code> or <code>title</code>. The only fields available are <code>file_id</code>, <code>filename</code>, <code>index</code>, and <code>type</code>. Any solution must work around this constraint.
-</div>
-
-</details><!-- end annotations schema collapsible -->
-
-<details>
-<summary style="cursor: pointer; font-size: 16px; font-weight: 600; padding: 8px 0;"><h3 style="display: inline; font-size: 16px;">How ### References Are Built (Model-Generated)</h3></summary>
-
-<p>Completely separate from the Sources panel &mdash; the <strong>### References</strong> section is written by the model based on the agent&rsquo;s system prompt:</p>
-
-<div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 24px 0;">
-
-  <div class="side-by-side" style="margin: 0;">
-    <div class="panel" style="border-top: 3px solid var(--chunk3);">
-      <h4 style="font-size: 13px; color: var(--chunk3);">What drives it</h4>
-      <ol style="font-size: 13px; padding-left: 20px; line-height: 2;">
-        <li>Admin writes in system prompt: &ldquo;cite with inline markers&rdquo;</li>
-        <li>Admin writes: &ldquo;include ### References at end&rdquo;</li>
-        <li>Model reads chunk content</li>
-        <li>Model writes reference labels from what it can see</li>
-      </ol>
-    </div>
-    <div class="panel" style="border-top: 3px solid var(--chunk3);">
-      <h4 style="font-size: 13px; color: var(--chunk3);">What it produces</h4>
-      <div style="background: #f8f9fa; border-radius: 6px; padding: 12px; font-size: 12px; line-height: 1.8;">
-        <strong>### References</strong><br>
-        *[1]* Advising | Dept of Germanic Languages,<br>
-        <span style="color: var(--success);">german.fas.harvard.edu/advising</span><br>
-        <span style="font-size: 11px; color: var(--muted);">&uarr; URL present &mdash; model saw it in chunk</span><br><br>
-        *[2]* German Studies advising content<br>
-        <span style="color: var(--danger);">NO URL</span><br>
-        <span style="font-size: 11px; color: var(--muted);">&uarr; URL missing &mdash; model didn&rsquo;t see it in chunk</span>
-      </div>
-    </div>
-  </div>
-
-</div>
+<p style="font-size: 13px; color: var(--muted);">Filenames are basename-normalized; override keys match on basename, case-insensitive. Companion to <code>[OFF_TOPIC_REPLY]</code>; both tags documented in &ldquo;Supported prompt tags&rdquo; section under the System Prompt textarea.</p>
 
 <div class="key-rule">
-  <div class="rule-title">Two Parallel Citation Outputs</div>
+  <div class="rule-title">Summary &mdash; one pipeline, two surfaces</div>
   <table style="margin: 0; font-size: 13px;">
-    <tr><td style="padding: 6px 12px;"><strong>Sources Panel</strong></td><td style="padding: 6px;">Built by code (post-processor)</td><td style="padding: 6px;">Has locators, file_id, structure</td><td style="padding: 6px; color: var(--danger);">No url today</td></tr>
-    <tr><td style="padding: 6px 12px;"><strong>### References</strong></td><td style="padding: 6px;">Written by model (prompt-driven)</td><td style="padding: 6px;">Has whatever model could see in chunks</td><td style="padding: 6px; color: var(--chunk3);">URL only if in chunk</td></tr>
+    <tr><td style="padding: 6px 12px;"><strong>Inline <code>[N]</code></strong></td><td style="padding: 6px;">Backend post-processor replaces PUA marker spans</td><td style="padding: 6px; color: var(--success);"><strong>1:1 with panel</strong></td></tr>
+    <tr><td style="padding: 6px 12px;"><strong>Sources panel</strong></td><td style="padding: 6px;">Typed <code>citations[]</code> from backend; frontend renders verbatim</td><td style="padding: 6px; color: var(--success);"><strong>backend authoritative</strong></td></tr>
+    <tr><td style="padding: 6px 12px;">Model <code>### References</code></td><td style="padding: 6px;">Model-written prose section &mdash; only if the owner asks for it in their custom prompt</td><td style="padding: 6px; color: var(--muted);"><strong>opt-in, no platform support</strong></td></tr>
   </table>
-  <p style="margin: 8px 0 0; font-size: 13px;">These are <strong>not connected</strong>. They run in parallel, numbered independently, from different data sources.</p>
 </div>
 
-</details><!-- end references collapsible -->
+
 
 </section>
 
