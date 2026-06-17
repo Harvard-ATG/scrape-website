@@ -15,5 +15,8 @@ dependencies = [
     "trafilatura>=2.0.0",
 ]
 
+[project.optional-dependencies]
+s3 = ["boto3>=1.34.0"]
+
 [project.scripts]
 scrape-website = "scrape_website.cli:run"

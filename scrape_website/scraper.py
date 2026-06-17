@@ -15,12 +15,23 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Deque
 import mimetypes
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 
 import lxml.html
 import trafilatura
 from trafilatura.deduplication import LRU_TEST
+
+from scrape_website.filename import generate_filename_web, generate_filename_binary
+from scrape_website.manifest import build_manifest, write_manifest
+
+
+def compute_hash(content: bytes | str) -> str:
+    """Return hash in algorithm:digest format, e.g. 'sha256:a1b2c3...' — industry standard (Docker, OCI, SRI)."""
+    if isinstance(content, str):
+        content = content.encode()
+    return f"sha256:{hashlib.sha256(content).hexdigest()}"
+
 
 # Configuration defaults
 CONFIG = {
@@ -350,8 +361,17 @@ class URLStore:
         self.conn.execute("PRAGMA synchronous=NORMAL")
         self.conn.execute("CREATE TABLE IF NOT EXISTS visited (url TEXT PRIMARY KEY)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS downloaded_files (hash TEXT PRIMARY KEY)")
-        self.conn.execute("CREATE TABLE IF NOT EXISTS queue (url TEXT PRIMARY KEY)")
+        self.conn.execute("CREATE TABLE IF NOT EXISTS queue (url TEXT PRIMARY KEY, found_on TEXT)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS stats (key TEXT PRIMARY KEY, value TEXT)")
+        for col, col_type in [
+            ("filename", "TEXT"), ("hostname", "TEXT"), ("title", "TEXT"),
+            ("found_on", "TEXT"), ("file_type", "TEXT"),
+            ("content_hash", "TEXT"), ("file_size", "INTEGER"),
+        ]:
+            try:
+                self.conn.execute(f"ALTER TABLE visited ADD COLUMN {col} {col_type}")
+            except sqlite3.OperationalError:
+                pass
         # In-memory cache for fast lookups
         self._cache: set[str] = set()
         self._cache_limit = 100_000
@@ -396,13 +416,51 @@ class URLStore:
         except sqlite3.IntegrityError:
             pass
 
-    def save_queue(self, urls: Deque[str]):
-        self.conn.execute("DELETE FROM queue")
-        self.conn.executemany("INSERT OR IGNORE INTO queue (url) VALUES (?)", [(u,) for u in urls])
+    def upsert_metadata(self, url: str, *, filename: str, hostname: str,
+                        title: str | None = None, found_on: str | None = None,
+                        file_type: str = "web", content_hash: str | None = None,
+                        file_size: int | None = None):
+        self.conn.execute("""
+            UPDATE visited SET filename=?, hostname=?, title=?, found_on=?,
+                file_type=?, content_hash=?, file_size=?
+            WHERE url=?
+        """, (filename, hostname, title, found_on, file_type, content_hash, file_size, url))
 
-    def load_queue(self) -> Deque[str]:
-        rows = self.conn.execute("SELECT url FROM queue").fetchall()
-        return deque(row[0] for row in rows)
+    def export_manifest(self, base_hostname: str) -> dict:
+        rows = self.conn.execute("""
+            SELECT filename, url, hostname, title, found_on, file_type, content_hash
+            FROM visited WHERE filename IS NOT NULL
+        """).fetchall()
+        files = {}
+        for filename, url, hostname, title, found_on, file_type, content_hash in rows:
+            content_type = "webpage" if file_type == "web" else "document"
+            entry = {
+                "source_url": url,
+                "hostname": hostname or base_hostname,
+                "title": title or "Unknown",
+                "content_type": content_type,
+            }
+            if file_type != "web":
+                ext = os.path.splitext(filename)[1]
+                if ext:
+                    entry["file_type"] = ext.lstrip(".")
+            if found_on:
+                entry["found_on"] = found_on
+            if content_hash:
+                entry["content_hash"] = content_hash
+            files[filename] = entry
+        return files
+
+    def save_queue(self, urls):
+        self.conn.execute("DELETE FROM queue")
+        self.conn.executemany(
+            "INSERT OR IGNORE INTO queue (url, found_on) VALUES (?, ?)",
+            [(u, f) for u, f in urls]
+        )
+
+    def load_queue(self):
+        rows = self.conn.execute("SELECT url, found_on FROM queue").fetchall()
+        return deque((row[0], row[1]) for row in rows)
 
     def save_stats(self, stats: dict):
         self.conn.execute("INSERT OR REPLACE INTO stats (key, value) VALUES (?, ?)",
@@ -440,8 +498,10 @@ class WebsiteScraper:
                  timeout: int | None = None,
                  delay: float | None = None,
                  output_dir: str | Path | None = None,
-                 scope_to_path: bool | None = None):
+                 scope_to_path: bool | None = None,
+                 s3_bucket: str | None = None):
         self.start_url = start_url
+        self.s3_bucket = s3_bucket
         self.base_domain = self.extract_domain(start_url)
 
         _start_path = urlparse(start_url).path
@@ -525,7 +585,7 @@ class WebsiteScraper:
         # Handle fresh start vs resume
         if fresh:
             self.url_store.clear()
-            self.urls_to_visit: Deque[str] = deque([start_url])
+            self.urls_to_visit: Deque[tuple[str, str | None]] = deque([(start_url, None)])
             self.logger.info("Fresh start (--fresh): cleared previous state")
         else:
             # Try to resume from checkpoint
@@ -537,7 +597,7 @@ class WebsiteScraper:
                     self.stats.update(saved_stats)
                 self.logger.info(f"Resuming: {self.url_store.count} URLs visited, {len(saved_queue)} in queue")
             else:
-                self.urls_to_visit = deque([start_url])
+                self.urls_to_visit = deque([(start_url, None)])
 
         # ProcessPoolExecutor for CPU-bound parsing
         self.executor = ProcessPoolExecutor(max_workers=os.cpu_count())
@@ -581,30 +641,10 @@ class WebsiteScraper:
         return '.bin'
 
     def generate_filename(self, url: str, content_type: str = None) -> str:
-        parsed = urlparse(url)
-        path = parsed.path
-        if path and path != '/':
-            original_name = path.split('/')[-1]
-            original_name = original_name.split('?')[0]
-            if original_name:
-                original_name = re.sub(r'[^\w\s\-\.]', '_', original_name)
-                return original_name
-        url_hash = hashlib.md5(url.encode()).hexdigest()[:12]
-        ext = self.get_file_extension(url, content_type)
-        return f"file_{url_hash}{ext}"
+        return generate_filename_binary(url, content_type)
 
     def generate_html_filename(self, url: str) -> str:
-        """Generate filename stem for HTML content (used for both .html and .txt)."""
-        parsed = urlparse(url)
-        path = parsed.path.strip('/')
-        if not path:
-            filename = 'index'
-        else:
-            filename = path.replace('/', '_')
-            if filename.endswith('.html'):
-                filename = filename[:-5]
-        filename = re.sub(r'[^\w\s\-\.]', '_', filename)
-        return filename
+        return generate_filename_web(url)
 
     async def init_session(self):
         connector = aiohttp.TCPConnector(
@@ -661,19 +701,14 @@ class WebsiteScraper:
                     await asyncio.sleep(1 * (attempt + 1))
         raise Exception(f"Failed after {self.max_retries} attempts: {last_error}")
 
-    async def download_file(self, url: str, content: bytes, content_type: str):
-        file_hash = hashlib.md5(content).hexdigest()
+    async def download_file(self, url: str, content: bytes, content_type: str,
+                            found_on: str | None = None):
+        file_hash = compute_hash(content)
         if self.url_store.has_file_hash(file_hash):
             return
 
-        filename = self.generate_filename(url, content_type)
+        filename = generate_filename_binary(url, content_type)
         filepath = self.files_dir / filename
-
-        counter = 1
-        while filepath.exists():
-            name, ext = os.path.splitext(filename)
-            filepath = self.files_dir / f"{name}_{counter}{ext}"
-            counter += 1
 
         async with aiofiles.open(filepath, 'wb') as f:
             await f.write(content)
@@ -681,17 +716,21 @@ class WebsiteScraper:
         self.stats['files_downloaded'] += 1
         self.stats['total_bytes'] += len(content)
 
+        name_part = Path(filename).stem.split('__')[-1].rsplit('_', 1)[0]
+        title = name_part.replace('-', ' ').replace('_', ' ').title()
+        self.url_store.upsert_metadata(
+            url, filename=filename, hostname=self.base_domain,
+            title=title, found_on=found_on, file_type="binary",
+            content_hash=file_hash, file_size=len(content),
+        )
+
         size_mb = len(content) / (1024 * 1024)
         self.logger.debug(f"Downloaded file: {filepath.name} ({size_mb:.2f} MB)")
 
     async def save_html(self, url: str, content: str):
-        stem = self.generate_html_filename(url)
-        filepath = self.pages_dir / f"{stem}.html"
-
-        counter = 1
-        while filepath.exists():
-            filepath = self.pages_dir / f"{stem}_{counter}.html"
-            counter += 1
+        filename = generate_filename_web(url)
+        html_filename = Path(filename).with_suffix('.html').name
+        filepath = self.pages_dir / html_filename
 
         async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
             await f.write(content)
@@ -700,17 +739,28 @@ class WebsiteScraper:
         self.logger.debug(f"Saved page: {filepath.name}")
 
     async def save_text(self, url: str, text: str):
-        """Save extracted clean text for LLM consumption."""
-        stem = self.generate_html_filename(url)
-        filepath = self.text_dir / f"{stem}.md"
-
-        counter = 1
-        while filepath.exists():
-            filepath = self.text_dir / f"{stem}_{counter}.md"
-            counter += 1
+        """Save extracted markdown and record metadata."""
+        filename = generate_filename_web(url)
+        filepath = self.text_dir / filename
 
         async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
             await f.write(text)
+
+        title = None
+        if text.startswith('---'):
+            for line in text.split('\n')[1:20]:
+                if line.startswith('title:'):
+                    title = line[6:].strip().strip('"').strip("'")
+                    break
+                if line.strip() == '---':
+                    break
+
+        self.url_store.upsert_metadata(
+            url, filename=filename, hostname=self.base_domain,
+            title=title, file_type="web",
+            content_hash=compute_hash(text),
+            file_size=len(text.encode()),
+        )
         self.stats['text_extracted'] += 1
         self.logger.debug(f"Saved text: {filepath.name}")
 
@@ -721,7 +771,7 @@ class WebsiteScraper:
             return True
         return False
 
-    async def process_url(self, url: str):
+    async def process_url(self, url: str, found_on: str | None = None):
         async with self.semaphore:
             try:
                 await asyncio.sleep(self.delay)
@@ -732,7 +782,7 @@ class WebsiteScraper:
                     if len(content) > self.max_file_size:
                         self.logger.debug(f"Skipping large file: {url} ({len(content) / (1024*1024):.2f} MB)")
                         return
-                    await self.download_file(url, content, content_type)
+                    await self.download_file(url, content, content_type, found_on=found_on)
                 else:
                     if self.is_access_denied(content, status):
                         self.stats['denied'] += 1
@@ -756,10 +806,10 @@ class WebsiteScraper:
                     if extracted_text and extracted_text.strip():
                         await self.save_text(url, extracted_text)
 
-                    # Queue new links
+                    # Queue new links (with current url as found_on)
                     for link in links:
                         if not self.url_store.contains(link):
-                            self.urls_to_visit.append(link)
+                            self.urls_to_visit.append((link, url))
 
             except Exception as e:
                 self.stats['errors'] += 1
@@ -822,7 +872,7 @@ class WebsiteScraper:
                     if _url_excluded(normalized, self._compiled_exclude_patterns):
                         continue
                     if not self.url_store.contains(normalized):
-                        self.urls_to_visit.append(normalized)
+                        self.urls_to_visit.append((normalized, None))
                         added += 1
                 if added:
                     self.logger.info(f"Sitemap: seeded {added} URLs from sitemap.xml")
@@ -836,11 +886,11 @@ class WebsiteScraper:
 
             while self.urls_to_visit or tasks:
                 while self.urls_to_visit and len(tasks) < self.max_concurrent:
-                    url = self.urls_to_visit.popleft()
+                    url, found_on = self.urls_to_visit.popleft()
 
                     if not self.url_store.contains(url):
                         self.url_store.add(url)
-                        task = asyncio.create_task(self.process_url(url))
+                        task = asyncio.create_task(self.process_url(url, found_on=found_on))
                         tasks.append(task)
 
                 if tasks:
@@ -860,6 +910,19 @@ class WebsiteScraper:
         self.logger.info(f"Starting scraper at {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
         await self.crawl()
+
+        # Generate manifest.json
+        manifest_files = self.url_store.export_manifest(self.base_domain)
+        if manifest_files:
+            manifest = build_manifest(manifest_files, self.base_domain)
+            manifest_path = self.base_dir / "manifest.json"
+            write_manifest(manifest, manifest_path)
+            self.logger.info(f"Generated manifest.json: {len(manifest_files)} entries")
+
+        # Upload to S3 if configured
+        if self.s3_bucket:
+            from scrape_website.s3 import upload_to_s3
+            upload_to_s3(self.base_dir, self.s3_bucket)
 
         end_time = datetime.now()
         duration = (end_time - start_time).total_seconds()
@@ -934,6 +997,8 @@ def parse_args():
                         help=f"Delay between requests in seconds (default: {CONFIG['delay_between_requests']})")
     parser.add_argument('--output-dir', '-o', default=None,
                         help='Root directory for output (default: data/). Output goes to <output-dir>/<domain>/.')
+    parser.add_argument('--s3-bucket', default=None,
+                        help='S3 bucket to upload results to after scrape completes (optional)')
     parser.add_argument('--fresh', action='store_true',
                         help='Ignore any saved checkpoint and start fresh')
     parser.add_argument('--exclude-pattern', action='append', default=None,
@@ -1005,10 +1070,11 @@ async def main():
                 delay=args.delay,
                 output_dir=args.output_dir,
                 scope_to_path=args.scope_to_path,
+                s3_bucket=args.s3_bucket,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:
                 normalized = scraper.normalize_url(extra)
                 if not scraper.url_store.contains(normalized):
-                    scraper.urls_to_visit.append(normalized)
+                    scraper.urls_to_visit.append((normalized, None))
             tg.create_task(scraper.run())
