@@ -363,6 +363,7 @@ class URLStore:
         self.conn.execute("CREATE TABLE IF NOT EXISTS downloaded_files (hash TEXT PRIMARY KEY)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS queue (url TEXT PRIMARY KEY, found_on TEXT)")
         self.conn.execute("CREATE TABLE IF NOT EXISTS stats (key TEXT PRIMARY KEY, value TEXT)")
+        # Migrate existing tables from pre-manifest schema
         for col, col_type in [
             ("filename", "TEXT"), ("hostname", "TEXT"), ("title", "TEXT"),
             ("found_on", "TEXT"), ("file_type", "TEXT"),
@@ -372,6 +373,10 @@ class URLStore:
                 self.conn.execute(f"ALTER TABLE visited ADD COLUMN {col} {col_type}")
             except sqlite3.OperationalError:
                 pass
+        try:
+            self.conn.execute("ALTER TABLE queue ADD COLUMN found_on TEXT")
+        except sqlite3.OperationalError:
+            pass
         # In-memory cache for fast lookups
         self._cache: set[str] = set()
         self._cache_limit = 100_000
