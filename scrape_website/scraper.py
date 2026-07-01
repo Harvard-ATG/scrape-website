@@ -83,6 +83,7 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/comments/",
     r"/page/\d+",
     r"/cdn-cgi/",
+    r"/search\?",
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
