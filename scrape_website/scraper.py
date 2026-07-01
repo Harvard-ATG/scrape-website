@@ -84,6 +84,7 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/page/\d+",
     r"/cdn-cgi/",
     r"/search\?",
+    r"\.ics$"
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
