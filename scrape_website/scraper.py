@@ -38,7 +38,7 @@ CONFIG = {
     'max_concurrent': 100,  # Number of concurrent downloads
     'timeout': 30,  # Request timeout in seconds
     'max_retries': 3,  # Max retries for failed requests
-    'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:151.0) Gecko/20100101 Firefox/151.0',
+    'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
     'delay_between_requests': 0.1,  # Politeness delay in seconds
     'max_file_size': 100 * 1024 * 1024,  # 100MB max file size
     'checkpoint_interval': 30,  # Seconds between queue checkpoints
@@ -663,7 +663,15 @@ class WebsiteScraper:
         self.session = aiohttp.ClientSession(
             connector=connector,
             timeout=timeout,
-            headers={'User-Agent': self.user_agent},
+            headers={
+                'User-Agent': self.user_agent,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Encoding': 'gzip, deflate',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+            },
             max_field_size=32768,
         )
 
