@@ -748,9 +748,14 @@ class WebsiteScraper:
                 status = resp.status_code
                 content_type = resp.headers.get('Content-Type', '')
 
-                # Still blocked or server error
-                if status == 403 or status >= 500:
-                    self.logger.debug(f"curl_cffi still blocked ({status}): {url}")
+                # Still blocked by WAF
+                if status == 403:
+                    self.logger.debug(f"curl_cffi still blocked (403): {url}")
+                    return None
+
+                # Return server errors to caller for retry handling
+                if status >= 500:
+                    self.logger.debug(f"curl_cffi server error ({status}): {url}")
                     return None
 
                 # Determine file vs HTML
@@ -802,7 +807,8 @@ class WebsiteScraper:
             await page.route('**/*', _route_handler)
 
             # Navigate (handles both HTML and PDFs via real page navigation)
-            response = await page.goto(url, wait_until='networkidle', timeout=25000)
+            # Use self.timeout (in seconds) converted to milliseconds
+            response = await page.goto(url, wait_until='networkidle', timeout=self.timeout * 1000)
             if response is None:
                 self.logger.warning(f"Playwright navigation returned None: {url}")
                 return None
@@ -851,6 +857,8 @@ class WebsiteScraper:
 
                     # Retry transient server errors with backoff
                     if status in RETRYABLE_STATUS and attempt < self.max_retries - 1:
+                        # Must read response body before continuing to avoid unclosed response warnings
+                        await response.read()
                         retry_after = response.headers.get('Retry-After')
                         try:
                             wait = float(retry_after) if retry_after else self._backoff(attempt)
@@ -1242,6 +1250,8 @@ def parse_args():
                             action='store_false',
                             help='Crawl the entire domain regardless of starting URL path')
     parser.set_defaults(scope_to_path=None)
+    parser.add_argument('--render-mode', choices=['never', 'auto', 'always'], default='auto',
+                        help="Browser rendering mode: 'never' (disable Playwright), 'auto' (escalate on 403), 'always' (force Playwright for all URLs)")
     return parser.parse_args()
 
 
@@ -1282,6 +1292,7 @@ async def main():
                 output_dir=args.output_dir,
                 scope_to_path=args.scope_to_path,
                 s3_bucket=args.s3_bucket,
+                render_mode=args.render_mode,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:
