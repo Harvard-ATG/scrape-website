@@ -687,6 +687,54 @@ class WebsiteScraper:
         """Exponential backoff with full jitter (prevents thundering herd)."""
         return random.uniform(0, min(8.0, 1.0 * (2 ** attempt)))
 
+    async def _fetch_via_curl_cffi(self, url: str) -> tuple | None:
+        """Tier 2: Fetch with Chrome TLS/HTTP2 fingerprint via curl_cffi.
+
+        Returns same 4-tuple as aiohttp, or None if still blocked/unavailable.
+        """
+        try:
+            from curl_cffi.requests import AsyncSession
+        except ImportError:
+            self.logger.debug("curl_cffi not available, skipping Tier 2")
+            return None
+
+        try:
+            async with AsyncSession() as session:
+                resp = await session.get(
+                    url,
+                    impersonate='chrome',  # Chrome 124+ TLS fingerprint
+                    allow_redirects=True,
+                    timeout=self.timeout,
+                )
+                status = resp.status_code
+                content_type = resp.headers.get('Content-Type', '')
+
+                # Still blocked or server error
+                if status == 403 or status >= 500:
+                    self.logger.debug(f"curl_cffi still blocked ({status}): {url}")
+                    return None
+
+                # Determine file vs HTML
+                if self.should_download_file(url, content_type):
+                    self.logger.info(f"Fetched via curl_cffi (Tier 2, file): {url}")
+                    return resp.content, content_type, 'file', status
+
+                # Charset-safe decode (reuse same logic as aiohttp)
+                raw = resp.content
+                declared = (resp.encoding or '').lower()
+                encoding = declared if declared and declared not in ('iso-8859-1', 'windows-1252') else 'utf-8'
+                try:
+                    content = raw.decode(encoding)
+                except (UnicodeDecodeError, LookupError):
+                    content = raw.decode('utf-8', errors='replace')
+
+                self.logger.info(f"Fetched via curl_cffi (Tier 2, HTML): {url}")
+                return content, content_type, 'html', status
+
+        except Exception as e:
+            self.logger.debug(f"curl_cffi failed for {url}: {e}")
+            return None
+
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
         """Fetch with Tier 1 (aiohttp) with exponential backoff and Retry-After support.
 
@@ -713,6 +761,14 @@ class WebsiteScraper:
                         self.logger.debug(f"Status {status}, retrying after {wait:.1f}s: {url}")
                         await asyncio.sleep(min(wait, 30.0))
                         continue
+
+                    # Escalate 403 to Tier 2 (curl_cffi Chrome fingerprint)
+                    if status == 403:
+                        self.logger.debug(f"403 from aiohttp, escalating to Tier 2: {url}")
+                        tier2_result = await self._fetch_via_curl_cffi(url)
+                        if tier2_result is not None:
+                            return tier2_result
+                        # Tier 2 failed, will return 403 below (Tier 3 comes later)
 
                     # Determine if this is a downloadable file or HTML
                     if self.should_download_file(url, content_type):
