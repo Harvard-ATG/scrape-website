@@ -927,6 +927,15 @@ class WebsiteScraper:
         filename = generate_filename_binary(url, content_type)
         filepath = self.files_dir / filename
 
+        # Handle filename collisions (rare but possible with 8-char hash)
+        counter = 1
+        while filepath.exists():
+            stem = Path(filename).stem
+            ext = Path(filename).suffix
+            filename = f"{stem}_{counter}{ext}"
+            filepath = self.files_dir / filename
+            counter += 1
+
         async with aiofiles.open(filepath, 'wb') as f:
             await f.write(content)
         self.url_store.add_file_hash(file_hash)
@@ -948,6 +957,14 @@ class WebsiteScraper:
         filename = generate_filename_web(url)
         html_filename = Path(filename).with_suffix('.html').name
         filepath = self.pages_dir / html_filename
+
+        # Handle filename collisions
+        counter = 1
+        while filepath.exists():
+            stem = Path(html_filename).stem
+            html_filename = f"{stem}_{counter}.html"
+            filepath = self.pages_dir / html_filename
+            counter += 1
 
         async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
             await f.write(content)
