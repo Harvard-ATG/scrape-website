@@ -3,6 +3,7 @@ import asyncio
 import aiohttp
 import aiofiles
 import os
+import random
 import re
 import sqlite3
 import logging
@@ -44,6 +45,9 @@ CONFIG = {
     'checkpoint_interval': 30,  # Seconds between queue checkpoints
     'progress_interval': 5,  # Seconds between progress reports
 }
+
+# HTTP status codes that warrant retry (transient server issues)
+RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 
 # File extensions to download
 DOWNLOADABLE_EXTENSIONS = {
@@ -679,15 +683,41 @@ class WebsiteScraper:
         if self.session:
             await self.session.close()
 
+    def _backoff(self, attempt: int) -> float:
+        """Exponential backoff with full jitter (prevents thundering herd)."""
+        return random.uniform(0, min(8.0, 1.0 * (2 ** attempt)))
+
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
+        """Fetch with Tier 1 (aiohttp) with exponential backoff and Retry-After support.
+
+        Returns (content, content_type, kind, status) where:
+        - content: bytes (file) or str (HTML)
+        - content_type: from Content-Type header
+        - kind: 'file' or 'html'
+        - status: HTTP status code
+        """
         last_error = None
         for attempt in range(self.max_retries):
             try:
                 async with self.session.request(method, url, allow_redirects=True) as response:
                     content_type = response.headers.get('Content-Type', '')
                     status = response.status
+
+                    # Retry transient server errors with backoff
+                    if status in RETRYABLE_STATUS and attempt < self.max_retries - 1:
+                        retry_after = response.headers.get('Retry-After')
+                        try:
+                            wait = float(retry_after) if retry_after else self._backoff(attempt)
+                        except (ValueError, TypeError):
+                            wait = self._backoff(attempt)
+                        self.logger.debug(f"Status {status}, retrying after {wait:.1f}s: {url}")
+                        await asyncio.sleep(min(wait, 30.0))
+                        continue
+
+                    # Determine if this is a downloadable file or HTML
                     if self.should_download_file(url, content_type):
                         content = await response.read()
+                        self.logger.info(f"Fetched via aiohttp (Tier 1, file): {url}")
                         return content, content_type, 'file', status
                     else:
                         # Charset-safe decode: aiohttp's resp.text() falls back to
@@ -703,15 +733,20 @@ class WebsiteScraper:
                             content = raw.decode(encoding)
                         except (UnicodeDecodeError, LookupError):
                             content = raw.decode('utf-8', errors='replace')
+                        self.logger.info(f"Fetched via aiohttp (Tier 1, HTML): {url}")
                         return content, content_type, 'html', status
             except asyncio.TimeoutError:
                 last_error = "Timeout"
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(1 * (attempt + 1))
+                    wait = self._backoff(attempt)
+                    self.logger.debug(f"Timeout, retrying after {wait:.1f}s: {url}")
+                    await asyncio.sleep(wait)
             except Exception as e:
                 last_error = str(e)
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(1 * (attempt + 1))
+                    wait = self._backoff(attempt)
+                    self.logger.debug(f"Error ({e}), retrying after {wait:.1f}s: {url}")
+                    await asyncio.sleep(wait)
         raise Exception(f"Failed after {self.max_retries} attempts: {last_error}")
 
     async def download_file(self, url: str, content: bytes, content_type: str,
