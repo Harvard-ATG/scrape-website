@@ -508,7 +508,8 @@ class WebsiteScraper:
                  delay: float | None = None,
                  output_dir: str | Path | None = None,
                  scope_to_path: bool | None = None,
-                 s3_bucket: str | None = None):
+                 s3_bucket: str | None = None,
+                 render_mode: str = 'auto'):
         self.start_url = start_url
         self.s3_bucket = s3_bucket
         self.base_domain = self.extract_domain(start_url)
@@ -531,6 +532,7 @@ class WebsiteScraper:
         # Crawl-quality knobs
         self.strip_tracking_params = strip_tracking_params
         self.use_sitemap = use_sitemap
+        self.render_mode = render_mode  # 'never', 'auto' (escalate on 403), 'always'
         # Store patterns as strings (for pickling to process pool)
         self._exclude_pattern_strings: list[str] = (
             exclude_patterns if exclude_patterns is not None
@@ -548,6 +550,11 @@ class WebsiteScraper:
         self.semaphore = asyncio.Semaphore(self.max_concurrent)
         self.denied_urls: list[str] = []
         self.failed_urls: list[str] = []
+
+        # Browser state (Tier 3: Playwright headed)
+        self._browser = None
+        self._playwright = None
+        self._browser_lock = asyncio.Lock()
 
         # Stats
         self.stats = {
@@ -683,6 +690,38 @@ class WebsiteScraper:
         if self.session:
             await self.session.close()
 
+    async def _ensure_browser(self):
+        """Lazy-init Playwright browser (headed Chromium). Thread-safe."""
+        if self._browser is not None:
+            return
+
+        async with self._browser_lock:
+            if self._browser is not None:  # Double-check after acquiring lock
+                return
+
+            try:
+                from playwright.async_api import async_playwright
+            except ImportError:
+                self.logger.warning(
+                    "Playwright not installed; cannot use Tier 3 (headed browser). "
+                    "Install with: uv add playwright && uv run playwright install chromium"
+                )
+                return
+
+            self._playwright = await async_playwright().start()
+            # headless=False works under xvfb (DISPLAY set by xvfb-run wrapper)
+            self._browser = await self._playwright.chromium.launch(headless=False)
+            self.logger.info("Playwright browser launched (headed mode under xvfb)")
+
+    async def _close_browser(self):
+        """Clean shutdown of browser resources."""
+        if self._browser:
+            await self._browser.close()
+            self._browser = None
+        if self._playwright:
+            await self._playwright.stop()
+            self._playwright = None
+
     def _backoff(self, attempt: int) -> float:
         """Exponential backoff with full jitter (prevents thundering herd)."""
         return random.uniform(0, min(8.0, 1.0 * (2 ** attempt)))
@@ -735,6 +774,65 @@ class WebsiteScraper:
             self.logger.debug(f"curl_cffi failed for {url}: {e}")
             return None
 
+    async def _fetch_via_playwright(self, url: str) -> tuple | None:
+        """Tier 3: Fetch via headed browser (proven to beat Akamai from AWS).
+
+        Uses page.goto() for both HTML and files (PDFs require real navigation).
+        Returns same 4-tuple as aiohttp, or None on failure.
+        """
+        await self._ensure_browser()
+        if self._browser is None:
+            return None
+
+        page = None
+        context = None
+        try:
+            # Create new context (cookies/state isolated per page)
+            context = await self._browser.new_context(
+                user_agent=self.user_agent
+            )
+            page = await context.new_page()
+
+            # Block non-content resources for speed
+            async def _route_handler(route):
+                if route.request.resource_type in {'image', 'font', 'stylesheet'}:
+                    await route.abort()
+                else:
+                    await route.continue_()
+            await page.route('**/*', _route_handler)
+
+            # Navigate (handles both HTML and PDFs via real page navigation)
+            response = await page.goto(url, wait_until='networkidle', timeout=25000)
+            if response is None:
+                self.logger.warning(f"Playwright navigation returned None: {url}")
+                return None
+
+            status = response.status
+            content_type = response.headers.get('content-type', '')
+
+            # Determine if file or HTML
+            is_file = self.should_download_file(url, content_type)
+
+            if is_file:
+                # For PDFs/files, get response body
+                body = await response.body()
+                self.logger.info(f"Fetched via Playwright (Tier 3, file): {url}")
+                return body, content_type, 'file', status
+            else:
+                # For HTML, get rendered content
+                html = await page.content()
+                self.logger.info(f"Fetched via Playwright (Tier 3, HTML): {url}")
+                return html, content_type, 'html', status
+
+        except Exception as e:
+            self.logger.warning(f"Playwright fetch failed for {url}: {e}")
+            return None
+        finally:
+            if page:
+                await page.close()
+            if context:
+                await context.close()
+
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
         """Fetch with Tier 1 (aiohttp) with exponential backoff and Retry-After support.
 
@@ -768,7 +866,15 @@ class WebsiteScraper:
                         tier2_result = await self._fetch_via_curl_cffi(url)
                         if tier2_result is not None:
                             return tier2_result
-                        # Tier 2 failed, will return 403 below (Tier 3 comes later)
+
+                        # Tier 2 failed, escalate to Tier 3 (Playwright headed) if allowed
+                        if self.render_mode in {'auto', 'always'}:
+                            self.logger.debug(f"Tier 2 failed, escalating to Tier 3: {url}")
+                            tier3_result = await self._fetch_via_playwright(url)
+                            if tier3_result is not None:
+                                return tier3_result
+
+                        # All tiers failed, will return 403 below
 
                     # Determine if this is a downloadable file or HTML
                     if self.should_download_file(url, content_type):
@@ -1008,6 +1114,7 @@ class WebsiteScraper:
             self.url_store.save_queue(self.urls_to_visit)
             self.url_store.save_stats(self.stats)
             await self.close_session()
+            await self._close_browser()
 
     async def run(self):
         start_time = datetime.now()
