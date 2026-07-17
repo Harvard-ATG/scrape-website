@@ -807,8 +807,7 @@ class WebsiteScraper:
             await page.route('**/*', _route_handler)
 
             # Navigate (handles both HTML and PDFs via real page navigation)
-            # Use self.timeout (in seconds) converted to milliseconds
-            response = await page.goto(url, wait_until='networkidle', timeout=self.timeout * 1000)
+            response = await page.goto(url, wait_until='networkidle', timeout=25000)
             if response is None:
                 self.logger.warning(f"Playwright navigation returned None: {url}")
                 return None
