@@ -509,7 +509,7 @@ class WebsiteScraper:
                  output_dir: str | Path | None = None,
                  scope_to_path: bool | None = None,
                  s3_bucket: str | None = None,
-                 render_mode: str = 'auto'):
+                 playwright_enabled: bool = True):
         self.start_url = start_url
         self.s3_bucket = s3_bucket
         self.base_domain = self.extract_domain(start_url)
@@ -532,7 +532,7 @@ class WebsiteScraper:
         # Crawl-quality knobs
         self.strip_tracking_params = strip_tracking_params
         self.use_sitemap = use_sitemap
-        self.render_mode = render_mode  # 'never', 'auto' (escalate on 403), 'always'
+        self.playwright_enabled = playwright_enabled
         # Store patterns as strings (for pickling to process pool)
         self._exclude_pattern_strings: list[str] = (
             exclude_patterns if exclude_patterns is not None
@@ -874,8 +874,8 @@ class WebsiteScraper:
                         if tier2_result is not None:
                             return tier2_result
 
-                        # Tier 2 failed, escalate to Tier 3 (Playwright headed) if allowed
-                        if self.render_mode in {'auto', 'always'}:
+                        # Tier 2 failed, escalate to Tier 3 (Playwright headed)
+                        if self.playwright_enabled:
                             self.logger.debug(f"Tier 2 failed, escalating to Tier 3: {url}")
                             tier3_result = await self._fetch_via_playwright(url)
                             if tier3_result is not None:
@@ -1266,8 +1266,8 @@ def parse_args():
                             action='store_false',
                             help='Crawl the entire domain regardless of starting URL path')
     parser.set_defaults(scope_to_path=None)
-    parser.add_argument('--render-mode', choices=['never', 'auto', 'always'], default='auto',
-                        help="Browser rendering mode: 'never' (disable Playwright), 'auto' (escalate on 403), 'always' (force Playwright for all URLs)")
+    parser.add_argument('--no-playwright', action='store_true', default=False,
+                        help="Disable Tier 3 Playwright escalation (stop at curl_cffi)")
     return parser.parse_args()
 
 
@@ -1308,7 +1308,7 @@ async def main():
                 output_dir=args.output_dir,
                 scope_to_path=args.scope_to_path,
                 s3_bucket=args.s3_bucket,
-                render_mode=args.render_mode,
+                playwright_enabled=not args.no_playwright,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:
