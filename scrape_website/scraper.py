@@ -532,6 +532,8 @@ class WebsiteScraper:
         # Crawl-quality knobs
         self.strip_tracking_params = strip_tracking_params
         self.use_sitemap = use_sitemap
+        # Kill switch for Tier 3: set False (or --no-playwright CLI) to cap escalation
+        # at curl_cffi. Useful if Playwright causes issues on specific sites.
         self.playwright_enabled = playwright_enabled
         # Store patterns as strings (for pickling to process pool)
         self._exclude_pattern_strings: list[str] = (
@@ -551,7 +553,9 @@ class WebsiteScraper:
         self.denied_urls: list[str] = []
         self.failed_urls: list[str] = []
 
-        # Browser state (Tier 3: Playwright headed)
+        # Browser state (Tier 3: Playwright headed browser under xvfb).
+        # Lazy-initialized on first 403 that Tier 2 can't handle.
+        # Lock prevents multiple concurrent pages from each launching a browser.
         self._browser = None
         self._playwright = None
         self._browser_lock = asyncio.Lock()
@@ -690,13 +694,19 @@ class WebsiteScraper:
         if self.session:
             await self.session.close()
 
+    # --- TIER 3: BROWSER LIFECYCLE ---
+    # Browser startup is expensive (~500ms + 100MB memory). We share one browser
+    # instance across all pages in a crawl, launching it only on the first 403 that
+    # Tier 2 can't handle. The async lock prevents a race where multiple concurrent
+    # fetches each try to launch their own browser.
+
     async def _ensure_browser(self):
-        """Lazy-init Playwright browser (headed Chromium). Thread-safe."""
+        """Lazy-init Playwright browser (headed Chromium). Thread-safe via double-check lock."""
         if self._browser is not None:
             return
 
         async with self._browser_lock:
-            if self._browser is not None:  # Double-check after acquiring lock
+            if self._browser is not None:  # Another coroutine launched it while we waited
                 return
 
             try:
@@ -709,12 +719,15 @@ class WebsiteScraper:
                 return
 
             self._playwright = await async_playwright().start()
-            # headless=False works under xvfb (DISPLAY set by xvfb-run wrapper)
+            # headless=False is required — headless Chromium leaks "HeadlessChrome" in
+            # the UA string and gets 403'd by Akamai. Headed mode under xvfb (DISPLAY=:99)
+            # passes Bot Manager's automation detection.
             self._browser = await self._playwright.chromium.launch(headless=False)
             self.logger.info("Playwright browser launched (headed mode under xvfb)")
 
     async def _close_browser(self):
-        """Clean shutdown of browser resources."""
+        """Clean shutdown of browser resources. Called in crawl() finally block
+        to prevent zombie Chromium processes in ECS tasks."""
         if self._browser:
             await self._browser.close()
             self._browser = None
@@ -723,13 +736,21 @@ class WebsiteScraper:
             self._playwright = None
 
     def _backoff(self, attempt: int) -> float:
-        """Exponential backoff with full jitter (prevents thundering herd)."""
+        """Exponential backoff with full jitter. Caps at 8s to avoid excessive waits.
+        Full jitter (uniform 0..max) prevents thundering herd when multiple
+        scrapers hit rate limits simultaneously."""
         return random.uniform(0, min(8.0, 1.0 * (2 ** attempt)))
+
+    # --- TIER 2: curl_cffi (Chrome TLS fingerprint) ---
+    # curl_cffi impersonates Chrome's TLS handshake (JA3 fingerprint) and HTTP/2
+    # settings. This beats WAFs that inspect TLS fingerprints but don't require
+    # full JS execution. Much faster than a real browser (~0.5s vs ~2s per page).
 
     async def _fetch_via_curl_cffi(self, url: str) -> tuple | None:
         """Tier 2: Fetch with Chrome TLS/HTTP2 fingerprint via curl_cffi.
 
-        Returns same 4-tuple as aiohttp, or None if still blocked/unavailable.
+        Returns same 4-tuple as aiohttp path, or None if still blocked/unavailable.
+        None signals the caller to escalate to Tier 3.
         """
         try:
             from curl_cffi.requests import AsyncSession
@@ -779,11 +800,19 @@ class WebsiteScraper:
             self.logger.debug(f"curl_cffi failed for {url}: {e}")
             return None
 
+    # --- TIER 3: Playwright headed browser ---
+    # Last resort when curl_cffi's TLS fingerprint isn't enough. A real headed
+    # browser passes Akamai Bot Manager's automation detection because it has a
+    # full JS engine, DOM, and doesn't leak headless signals.
+    # Each page gets its own browser context (isolated cookies/state) but shares
+    # the single browser instance launched by _ensure_browser().
+
     async def _fetch_via_playwright(self, url: str) -> tuple | None:
         """Tier 3: Fetch via headed browser (proven to beat Akamai from AWS).
 
-        Uses page.goto() for both HTML and files (PDFs require real navigation).
-        Returns same 4-tuple as aiohttp, or None on failure.
+        Uses page.goto() for both HTML and files — FAS PDFs require real navigation
+        (direct HTTP download of PDF URLs gets 403'd by Akamai too).
+        Returns same 4-tuple as aiohttp path, or None on failure.
         """
         await self._ensure_browser()
         if self._browser is None:
@@ -792,13 +821,14 @@ class WebsiteScraper:
         page = None
         context = None
         try:
-            # Create new context (cookies/state isolated per page)
+            # Isolated context per page — no cookie bleed between URLs
             context = await self._browser.new_context(
                 user_agent=self.user_agent
             )
             page = await context.new_page()
 
-            # Block non-content resources for speed
+            # Block images/fonts/stylesheets — we only need HTML/file content,
+            # not visual rendering. Cuts ~40% of network time.
             async def _route_handler(route):
                 if route.request.resource_type in {'image', 'font', 'stylesheet'}:
                     await route.abort()
@@ -806,7 +836,8 @@ class WebsiteScraper:
                     await route.continue_()
             await page.route('**/*', _route_handler)
 
-            # Navigate (handles both HTML and PDFs via real page navigation)
+            # 25s timeout (separate from aiohttp's --timeout setting) —
+            # headed browsers need more time for page load + networkidle
             response = await page.goto(url, wait_until='networkidle', timeout=25000)
             if response is None:
                 self.logger.warning(f"Playwright navigation returned None: {url}")
@@ -815,16 +846,15 @@ class WebsiteScraper:
             status = response.status
             content_type = response.headers.get('content-type', '')
 
-            # Determine if file or HTML
             is_file = self.should_download_file(url, content_type)
 
             if is_file:
-                # For PDFs/files, get response body
+                # PDFs/docs: get raw response body (not rendered DOM)
                 body = await response.body()
                 self.logger.info(f"Fetched via Playwright (Tier 3, file): {url}")
                 return body, content_type, 'file', status
             else:
-                # For HTML, get rendered content
+                # HTML: get fully rendered DOM (after JS execution)
                 html = await page.content()
                 self.logger.info(f"Fetched via Playwright (Tier 3, HTML): {url}")
                 return html, content_type, 'html', status
@@ -838,14 +868,16 @@ class WebsiteScraper:
             if context:
                 await context.close()
 
-    async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
-        """Fetch with Tier 1 (aiohttp) with exponential backoff and Retry-After support.
+    # --- FETCH WITH TIER ESCALATION ---
+    # Tier 1 (aiohttp) handles most sites. On 403, escalates to Tier 2 (curl_cffi),
+    # then Tier 3 (Playwright) if still blocked. Non-403 errors use exponential
+    # backoff with jitter and Retry-After header support.
 
-        Returns (content, content_type, kind, status) where:
-        - content: bytes (file) or str (HTML)
-        - content_type: from Content-Type header
-        - kind: 'file' or 'html'
-        - status: HTTP status code
+    async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
+        """Fetch a URL, escalating through tiers on 403.
+
+        Flow: aiohttp → (on 403) → curl_cffi → (on fail) → Playwright → (on fail) → return 403
+        Returns (content, content_type, kind, status) for all paths.
         """
         last_error = None
         for attempt in range(self.max_retries):
