@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import aiohttp
 import aiofiles
+import fcntl
 import os
 import random
 import re
@@ -97,6 +98,70 @@ _DEFAULT_TRACKING_PARAMS: frozenset[str] = frozenset({
     "gclid", "fbclid", "mc_eid", "mc_cid", "ref",
     "_ga", "_gl", "igshid", "msclkid", "dclid",
 })
+
+
+# ---------------------------------------------------------------------------
+# Cross-process browser slot limiter
+# ---------------------------------------------------------------------------
+# When scrape_and_ingest.py runs 8 workers in parallel, each is a separate OS
+# process with its own WebsiteScraper. Without coordination, all 8 could launch
+# a headed Chromium (~300 MB each), risking OOM on the 8 GB Fargate task.
+#
+# We cap concurrent browsers across all processes using POSIX advisory locks
+# (fcntl.flock). Each slot is a file: /tmp/scrape-browser-{0,1,2}.lock
+# A process holds LOCK_EX on one file while its browser is alive. If all slots
+# are taken, the next process skips Tier 3 (graceful degradation — URLs get
+# logged as denied, same as if Playwright weren't installed).
+#
+# Why flock and not a semaphore or lockdir:
+# - Kernel auto-releases on process crash or OOM-kill (no stale locks)
+# - Visible for debugging: lsof /tmp/scrape-browser-*.lock
+# - Works across unrelated processes (multiprocessing.Semaphore doesn't)
+# ---------------------------------------------------------------------------
+
+_BROWSER_SLOT_DIR = Path("/tmp/scrape-browser-slots")
+_MAX_BROWSER_SLOTS = int(os.environ.get("SCRAPE_MAX_BROWSERS", "3"))
+
+
+def _acquire_browser_slot(logger: logging.Logger) -> int | None:
+    """Try to acquire an exclusive lock on one of the N browser slot files.
+
+    Returns the file descriptor (held for the lifetime of the browser) or None
+    if all slots are taken. The caller MUST pass the fd to _release_browser_slot
+    when the browser is closed.
+    """
+    _BROWSER_SLOT_DIR.mkdir(parents=True, exist_ok=True)
+    for i in range(_MAX_BROWSER_SLOTS):
+        lock_path = _BROWSER_SLOT_DIR / f"browser-{i}.lock"
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR)
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            logger.info(f"Acquired browser slot {i}/{_MAX_BROWSER_SLOTS}")
+            return fd
+        except OSError:
+            # LOCK_NB raises OSError (EAGAIN/EWOULDBLOCK) if already held
+            try:
+                os.close(fd)
+            except Exception:
+                pass
+            continue
+    logger.warning(
+        f"All {_MAX_BROWSER_SLOTS} browser slots taken — skipping Tier 3 for this worker. "
+        f"(Set SCRAPE_MAX_BROWSERS env var to increase limit)"
+    )
+    return None
+
+
+def _release_browser_slot(fd: int | None, logger: logging.Logger) -> None:
+    """Release a browser slot by closing the lock file descriptor."""
+    if fd is None:
+        return
+    try:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+        logger.debug("Released browser slot")
+    except OSError as e:
+        logger.debug(f"Error releasing browser slot: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -556,9 +621,14 @@ class WebsiteScraper:
         # Browser state (Tier 3: Playwright headed browser under xvfb).
         # Lazy-initialized on first 403 that Tier 2 can't handle.
         # Lock prevents multiple concurrent pages from each launching a browser.
+        # _browser_slot_fd holds the flock fd for cross-process slot limiting.
+        # _browser_unavailable is set True after a failed attempt (slot denied or
+        # import error) so we don't retry on every subsequent 403.
         self._browser = None
         self._playwright = None
         self._browser_lock = asyncio.Lock()
+        self._browser_slot_fd: int | None = None
+        self._browser_unavailable = False
 
         # Stats
         self.stats = {
@@ -701,12 +771,28 @@ class WebsiteScraper:
     # fetches each try to launch their own browser.
 
     async def _ensure_browser(self):
-        """Lazy-init Playwright browser (headed Chromium). Thread-safe via double-check lock."""
+        """Lazy-init Playwright browser (headed Chromium). Thread-safe via double-check lock.
+
+        Acquires a cross-process browser slot (flock) before launching. If all
+        slots are taken (default: 3 concurrent browsers across all workers),
+        sets _browser_unavailable so we don't retry on every subsequent 403.
+        """
         if self._browser is not None:
+            return
+        if self._browser_unavailable:
             return
 
         async with self._browser_lock:
-            if self._browser is not None:  # Another coroutine launched it while we waited
+            if self._browser is not None:
+                return
+            if self._browser_unavailable:
+                return
+
+            # Acquire a cross-process slot before launching the browser.
+            # This caps total Chromium instances across all parallel workers.
+            self._browser_slot_fd = _acquire_browser_slot(self.logger)
+            if self._browser_slot_fd is None:
+                self._browser_unavailable = True
                 return
 
             try:
@@ -716,6 +802,9 @@ class WebsiteScraper:
                     "Playwright not installed; cannot use Tier 3 (headed browser). "
                     "Install with: uv add playwright && uv run playwright install chromium"
                 )
+                _release_browser_slot(self._browser_slot_fd, self.logger)
+                self._browser_slot_fd = None
+                self._browser_unavailable = True
                 return
 
             self._playwright = await async_playwright().start()
@@ -727,13 +816,16 @@ class WebsiteScraper:
 
     async def _close_browser(self):
         """Clean shutdown of browser resources. Called in crawl() finally block
-        to prevent zombie Chromium processes in ECS tasks."""
+        to prevent zombie Chromium processes in ECS tasks. Releases the
+        cross-process browser slot so another worker can use it."""
         if self._browser:
             await self._browser.close()
             self._browser = None
         if self._playwright:
             await self._playwright.stop()
             self._playwright = None
+        _release_browser_slot(self._browser_slot_fd, self.logger)
+        self._browser_slot_fd = None
 
     def _backoff(self, attempt: int) -> float:
         """Exponential backoff with full jitter. Caps at 8s to avoid excessive waits.
