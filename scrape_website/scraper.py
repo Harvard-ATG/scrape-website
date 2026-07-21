@@ -833,6 +833,23 @@ class WebsiteScraper:
         scrapers hit rate limits simultaneously."""
         return random.uniform(0, min(8.0, 1.0 * (2 ** attempt)))
 
+    def _parse_retry_after(self, header: str | None, attempt: int) -> float:
+        """Parse Retry-After header (seconds or HTTP-date), fall back to backoff."""
+        if not header:
+            return self._backoff(attempt)
+        try:
+            return float(header)
+        except ValueError:
+            pass
+        # HTTP-date format: "Thu, 01 Jan 2026 00:00:00 GMT"
+        from email.utils import parsedate_to_datetime
+        try:
+            target = parsedate_to_datetime(header)
+            delta = (target - datetime.now(timezone.utc)).total_seconds()
+            return max(0.0, delta)
+        except (ValueError, TypeError):
+            return self._backoff(attempt)
+
     # --- TIER 2: curl_cffi (Chrome TLS fingerprint) ---
     # curl_cffi impersonates Chrome's TLS handshake (JA3 fingerprint) and HTTP/2
     # settings. This beats WAFs that inspect TLS fingerprints but don't require
@@ -921,7 +938,7 @@ class WebsiteScraper:
 
             # Block images/fonts/stylesheets — we only need HTML/file content,
             # not visual rendering. Cuts ~40% of network time.
-            async def _route_handler(route):
+            async def _route_handler(route, request=None):
                 if route.request.resource_type in {'image', 'font', 'stylesheet'}:
                     await route.abort()
                 else:
@@ -983,16 +1000,18 @@ class WebsiteScraper:
                         # Must read response body before continuing to avoid unclosed response warnings
                         await response.read()
                         retry_after = response.headers.get('Retry-After')
-                        try:
-                            wait = float(retry_after) if retry_after else self._backoff(attempt)
-                        except (ValueError, TypeError):
-                            wait = self._backoff(attempt)
+                        wait = self._parse_retry_after(retry_after, attempt)
                         self.logger.debug(f"Status {status}, retrying after {wait:.1f}s: {url}")
                         await asyncio.sleep(min(wait, 30.0))
                         continue
 
                     # Escalate 403 to Tier 2 (curl_cffi Chrome fingerprint)
                     if status == 403:
+                        # Release the aiohttp connection before slow Tier 2/3 work.
+                        # Without this, the connection pool slot stays occupied during
+                        # potentially multi-second browser fetches.
+                        await response.read()
+
                         self.logger.debug(f"403 from aiohttp, escalating to Tier 2: {url}")
                         tier2_result = await self._fetch_via_curl_cffi(url)
                         if tier2_result is not None:
@@ -1051,12 +1070,13 @@ class WebsiteScraper:
         filename = generate_filename_binary(url, content_type)
         filepath = self.files_dir / filename
 
-        # Handle filename collisions (rare but possible with 8-char hash)
+        # Handle filename collisions (rare but possible with 8-char hash).
+        # Preserve original stem/ext outside the loop to avoid compounding suffixes.
+        orig_stem = Path(filename).stem
+        orig_ext = Path(filename).suffix
         counter = 1
         while filepath.exists():
-            stem = Path(filename).stem
-            ext = Path(filename).suffix
-            filename = f"{stem}_{counter}{ext}"
+            filename = f"{orig_stem}_{counter}{orig_ext}"
             filepath = self.files_dir / filename
             counter += 1
 
@@ -1082,11 +1102,12 @@ class WebsiteScraper:
         html_filename = Path(filename).with_suffix('.html').name
         filepath = self.pages_dir / html_filename
 
-        # Handle filename collisions
+        # Handle filename collisions.
+        # Preserve original stem outside the loop to avoid compounding suffixes.
+        orig_stem = Path(html_filename).stem
         counter = 1
         while filepath.exists():
-            stem = Path(html_filename).stem
-            html_filename = f"{stem}_{counter}.html"
+            html_filename = f"{orig_stem}_{counter}.html"
             filepath = self.pages_dir / html_filename
             counter += 1
 
