@@ -31,6 +31,39 @@ Added three-tier fetch escalation to `WebsiteScraper`:
 - `scrape.py`: removed `render_mode` config plumbing (was dead code)
 - `sites.toml`: removed `render_mode` comment
 
+## Cross-Process Browser Slot Cap
+
+When `scrape_and_ingest.py` runs 8 workers in parallel, each is a separate OS process. Without coordination, all 8 could launch a headed Chromium (~300 MB each), risking OOM on the 8 GB Fargate task.
+
+**Solution:** POSIX advisory locks (`fcntl.flock`) on numbered files in `/tmp/scrape-browser-slots/`. Each process holds `LOCK_EX` on one file while its browser is alive. Default cap: 3 concurrent browsers (tunable via `SCRAPE_MAX_BROWSERS` env var).
+
+| Property | Behavior |
+|----------|----------|
+| Slot denied | Worker skips Tier 3 gracefully (URLs logged as denied) |
+| Process crash / OOM-kill | Kernel auto-releases the lock — no stale state |
+| Debugging | `ls /tmp/scrape-browser-slots/` or `lsof browser-*.lock` |
+| Cap exhausted | Worker sets `_browser_unavailable=True`, never retries |
+
+## PR Review Fixes (2026-07-21)
+
+Five corrections from the PR #6 code review:
+
+**1. aiohttp connection released before Tier 2/3 escalation**
+
+The `async with session.request(url)` block holds a TCP connection from the pool. When a 403 triggers escalation, the code now calls `await response.read()` before doing Tier 2/3 work. Without this, slow Playwright fetches (2-5s) hold idle connections hostage, starving other coroutines waiting for pool slots.
+
+**2. Retry-After HTTP-date parsing**
+
+`Retry-After` can legally be seconds (`120`) or an HTTP-date (`Thu, 01 Jan 2026 00:00:00 GMT`). Previously only handled seconds; date form silently fell back to backoff. Now uses `email.utils.parsedate_to_datetime` to compute delta.
+
+**3. Playwright route handler signature**
+
+Playwright's `page.route()` may call the handler with `(route)` or `(route, request)` depending on version. Single-arg definition would raise `TypeError` at runtime, silently breaking all Tier 3 fetches. Fixed by adding optional `request=None` parameter.
+
+**4 & 5. Filename collision loop compounding**
+
+Both binary and HTML collision loops re-read `stem` from the already-modified filename inside the loop, producing `name_1_2.ext` on multiple collisions. Fixed by hoisting `orig_stem`/`orig_ext` before the loop so collisions produce `name_1.ext`, `name_2.ext`, `name_3.ext`.
+
 ## Commits (scrape-website)
 
 | Hash | Description |
@@ -42,6 +75,8 @@ Added three-tier fetch escalation to `WebsiteScraper`:
 | `85192a3` | Revert Playwright timeout to 25s |
 | `6724604` | Restore filename collision counter |
 | `37bce63` | Replace render_mode with playwright_enabled bool |
+| `1876676` | Cross-process browser slot cap (flock) |
+| `38c65c3` | PR review fixes (5 items) |
 
 ## Commits (apo-mcp-server)
 
@@ -63,6 +98,9 @@ Added three-tier fetch escalation to `WebsiteScraper`:
 | Required deps (not optional) | Simpler — no lazy import complexity |
 | 25s Playwright timeout | Separate from aiohttp timeout; headed browser needs more time for page load |
 | Container size +400MB | Acceptable tradeoff for Chromium + xvfb |
+| flock cap (not bump resources) | 3 browsers in 8 GB is safe; bumping to 16 GB doubles cost and makes the scrape task 8x the cluster baseline |
+| flock (not lockdir or semaphore) | Kernel auto-releases on crash; multiprocessing.Semaphore doesn't work across unrelated processes |
+| Cap at 3 (not 1 shared browser) | Keeps implementation self-contained in scrape-website; shared browser requires changes in both repos |
 
 ## What render_mode Was (and Why It's Gone)
 
