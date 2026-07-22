@@ -938,6 +938,8 @@ class WebsiteScraper:
 
             # Block images/fonts/stylesheets — we only need HTML/file content,
             # not visual rendering. Cuts ~40% of network time.
+            # Optional request param: Playwright may call with (route) or (route, request)
+            # depending on version — omitting it raises TypeError at runtime.
             async def _route_handler(route, request=None):
                 if route.request.resource_type in {'image', 'font', 'stylesheet'}:
                     await route.abort()
