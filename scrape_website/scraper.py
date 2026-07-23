@@ -316,6 +316,22 @@ def _decide_crawl_gen(baseline: int, *, fresh: bool, resuming: bool) -> int:
     return baseline + 1
 
 
+def _should_fetch(url: str, seen_this_run: set[str], url_store: "URLStore") -> bool:
+    """Decide whether to fetch a URL during this pass.
+
+    Foundation behavior (zero regression):
+      - skip if already fetched this run (`seen_this_run`, in-run loop prevention), OR
+      - skip if visited in a prior run (`url_store.contains`, cross-run skip).
+
+    The deferred --update flag later extends ONLY the cross-run half to re-fetch
+    rows whose crawl_gen < the current generation. Resume vs. new-pass is decided
+    by the queue, never here.
+    """
+    if url in seen_this_run:
+        return False
+    return not url_store.contains(url)
+
+
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         strip_tracking: bool = False,
                         exclude_patterns: list[str] | None = None,

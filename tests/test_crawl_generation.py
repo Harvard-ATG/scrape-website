@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-from scrape_website.scraper import URLStore, _decide_crawl_gen
+from scrape_website.scraper import URLStore, _decide_crawl_gen, _should_fetch
 
 
 def _columns(store: URLStore) -> set[str]:
@@ -93,4 +93,24 @@ def test_upsert_without_gen_leaves_fields_null(tmp_path):
     ).fetchone()
     assert gen is None
     assert fetched_at is None
+    store.close()
+
+
+def test_should_fetch_unseen_url(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    assert _should_fetch("https://x/a", set(), store) is True
+    store.close()
+
+
+def test_should_fetch_skips_seen_this_run(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    seen = {"https://x/a"}
+    assert _should_fetch("https://x/a", seen, store) is False
+    store.close()
+
+
+def test_should_fetch_skips_already_visited(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    store.add("https://x/a")
+    assert _should_fetch("https://x/a", set(), store) is False
     store.close()
