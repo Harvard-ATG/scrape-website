@@ -298,6 +298,24 @@ def _normalize_url(url: str, strip_tracking: bool = False) -> str:
     return url
 
 
+def _decide_crawl_gen(baseline: int, *, fresh: bool, resuming: bool) -> int:
+    """Choose this run's crawl generation from the highest one recorded.
+
+    `baseline` = COALESCE(MAX(crawl_gen), 0) from state.db.
+      - fresh:    state was cleared → start at generation 1.
+      - resuming: continue the in-flight pass (its rows already carry `baseline`);
+                  max(baseline, 1) guards the one-time post-migration case.
+      - update:   the last pass completed → new pass, advance to baseline + 1.
+
+    The queue (not this value) decides fresh/resume/update; see _should_fetch.
+    """
+    if fresh:
+        return 1
+    if resuming:
+        return max(baseline, 1)
+    return baseline + 1
+
+
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         strip_tracking: bool = False,
                         exclude_patterns: list[str] | None = None,

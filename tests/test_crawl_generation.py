@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 
-from scrape_website.scraper import URLStore
+from scrape_website.scraper import URLStore, _decide_crawl_gen
 
 
 def _columns(store: URLStore) -> set[str]:
@@ -50,3 +50,19 @@ def test_max_crawl_gen_ignores_null_and_returns_max(tmp_path):
     store.conn.execute("UPDATE visited SET crawl_gen=3 WHERE url='https://x/b'")
     assert store.max_crawl_gen() == 3
     store.close()
+
+
+def test_decide_crawl_gen_fresh_always_one():
+    assert _decide_crawl_gen(5, fresh=True, resuming=False) == 1
+    assert _decide_crawl_gen(0, fresh=True, resuming=False) == 1
+
+
+def test_decide_crawl_gen_resume_continues_pass():
+    assert _decide_crawl_gen(5, fresh=False, resuming=True) == 5
+    # Post-migration: baseline 0 but resuming → floor at 1.
+    assert _decide_crawl_gen(0, fresh=False, resuming=True) == 1
+
+
+def test_decide_crawl_gen_new_pass_advances():
+    assert _decide_crawl_gen(5, fresh=False, resuming=False) == 6
+    assert _decide_crawl_gen(0, fresh=False, resuming=False) == 1
