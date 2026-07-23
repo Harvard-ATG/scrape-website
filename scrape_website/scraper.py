@@ -9,7 +9,7 @@ import re
 import sqlite3
 import logging
 import json
-from urllib.parse import urlparse, urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import urlparse, urlsplit, urlunsplit, parse_qsl, urlencode
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from collections import deque
@@ -18,7 +18,6 @@ from typing import Deque
 import mimetypes
 import hashlib
 from datetime import datetime, timezone
-from functools import lru_cache
 
 import lxml.html
 import trafilatura
@@ -298,6 +297,51 @@ def _normalize_url(url: str, strip_tracking: bool = False) -> str:
     return url
 
 
+def _decide_crawl_gen(baseline: int, *, fresh: bool, resuming: bool) -> int:
+    """Choose this run's crawl generation from the highest one recorded.
+
+    `baseline` = COALESCE(MAX(crawl_gen), 0) from state.db.
+      - fresh:    state was cleared → start at generation 1.
+      - resuming: continue the in-flight pass (its rows already carry `baseline`);
+                  max(baseline, 1) guards the one-time post-migration case.
+      - update:   the last pass completed → new pass, advance to baseline + 1.
+
+    The queue (not this value) decides fresh/resume/update; see _should_fetch.
+    """
+    if fresh:
+        return 1
+    if resuming:
+        return max(baseline, 1)
+    return baseline + 1
+
+
+def _should_fetch(url: str, seen_this_run: set[str], url_store: "URLStore") -> bool:
+    """Decide whether to fetch a URL during this pass.
+
+    Foundation behavior (zero regression):
+      - skip if already fetched this run (`seen_this_run`, in-run loop prevention), OR
+      - skip if visited in a prior run (`url_store.contains`, cross-run skip).
+
+    The deferred --update flag later extends ONLY the cross-run half to re-fetch
+    rows whose crawl_gen < the current generation. Resume vs. new-pass is decided
+    by the queue, never here.
+    """
+    if url in seen_this_run:
+        return False
+    return not url_store.contains(url)
+
+
+def _should_write_manifest(*, crawl_complete: bool, capped: bool, has_entries: bool) -> bool:
+    """Only (re)write manifest.json after a complete, non-capped pass with entries.
+
+    Guards the 'complete & authoritative' invariant: a partial, crashed, or capped
+    run leaves the last complete manifest untouched, so downstream ingest /
+    deprecate_removed_urls never sees a shrunken set. `capped` is always False
+    today; the guard is installed for the deferred --max-pages stream.
+    """
+    return crawl_complete and not capped and has_entries
+
+
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         strip_tracking: bool = False,
                         exclude_patterns: list[str] | None = None,
@@ -419,6 +463,34 @@ def _parse_and_extract(html_content: str, url: str, base_domain: str,
 # SQLite-backed URL store
 # ---------------------------------------------------------------------------
 
+# --- Crawl generations & fetch pathways -------------------------------------
+# state.db tracks a per-URL `crawl_gen` (integer) and `last_fetched_at` (UTC
+# ISO-8601). A "generation" is one scoped, monotonic crawl pass over the site.
+#
+#   crawl_gen (control)  — which generation last fetched this row.
+#   last_fetched_at (data) — when that fetch happened (freshness/debugging).
+#
+# Three fetch pathways, selected by --fresh and the queue (NOT by crawl_gen):
+#   * fresh   (--fresh)              → clear state, crawl_gen = 1, re-fetch all.
+#   * resume  (no flag, queue full)  → an interrupted pass; continue the SAME
+#                                       generation (max(baseline, 1)) on the
+#                                       leftover queue.
+#   * update  (no flag, queue empty) → the last pass completed; start a new
+#                                       generation (baseline + 1), discover new
+#                                       pages, skip existing ones. This is the
+#                                       "run again without wiping" path — it has
+#                                       no dedicated flag.
+#
+# The current generation is DERIVED (see _decide_crawl_gen) from
+# COALESCE(MAX(crawl_gen), 0); nothing is stored in the `stats` table. Two
+# independent axes: the `queue` table owns resume-vs-new-pass; `crawl_gen` owns
+# re-fetch-vs-skip (see _should_fetch). Today `_should_fetch` skips any
+# already-visited URL, so `update` only picks up NEW pages. The deferred
+# `--update` flag will re-fetch pages whose sitemap <lastmod> changed by making
+# `_should_fetch` re-fetch rows with crawl_gen < current — this foundation lays
+# that seam WITHOUT changing behavior.
+# ----------------------------------------------------------------------------
+
 class URLStore:
     """SQLite-backed visited URL tracking with in-memory LRU cache."""
 
@@ -437,6 +509,9 @@ class URLStore:
             ("filename", "TEXT"), ("hostname", "TEXT"), ("title", "TEXT"),
             ("found_on", "TEXT"), ("file_type", "TEXT"),
             ("content_hash", "TEXT"), ("file_size", "INTEGER"),
+            # Crawl-generation foundation (see comment block above class URLStore):
+            ("crawl_gen", "INTEGER"),      # which crawl generation last fetched this row
+            ("last_fetched_at", "TEXT"),   # UTC ISO-8601 of the most recent successful fetch
         ]:
             try:
                 self.conn.execute(f"ALTER TABLE visited ADD COLUMN {col} {col_type}")
@@ -480,6 +555,17 @@ class URLStore:
     def count(self) -> int:
         return self._count
 
+    def max_crawl_gen(self) -> int:
+        """Highest crawl generation recorded, or 0 if none.
+
+        COALESCE guards both an empty table and the one-time post-migration
+        state where existing rows have NULL crawl_gen.
+        """
+        row = self.conn.execute(
+            "SELECT COALESCE(MAX(crawl_gen), 0) FROM visited"
+        ).fetchone()
+        return row[0]
+
     def has_file_hash(self, file_hash: str) -> bool:
         row = self.conn.execute("SELECT 1 FROM downloaded_files WHERE hash=?", (file_hash,)).fetchone()
         return row is not None
@@ -493,12 +579,19 @@ class URLStore:
     def upsert_metadata(self, url: str, *, filename: str, hostname: str,
                         title: str | None = None, found_on: str | None = None,
                         file_type: str = "web", content_hash: str | None = None,
-                        file_size: int | None = None):
+                        file_size: int | None = None, crawl_gen: int | None = None):
+        # last_fetched_at stamps the UTC instant of this successful save (freshness);
+        # crawl_gen records which crawl generation last fetched the row (control).
+        # Only stamp them on a real fetch save (crawl_gen provided).
+        fetched_at = (
+            datetime.now(timezone.utc).isoformat() if crawl_gen is not None else None
+        )
         self.conn.execute("""
             UPDATE visited SET filename=?, hostname=?, title=?, found_on=?,
-                file_type=?, content_hash=?, file_size=?
+                file_type=?, content_hash=?, file_size=?, crawl_gen=?, last_fetched_at=?
             WHERE url=?
-        """, (filename, hostname, title, found_on, file_type, content_hash, file_size, url))
+        """, (filename, hostname, title, found_on, file_type, content_hash,
+              file_size, crawl_gen, fetched_at, url))
 
     def export_manifest(self, base_hostname: str) -> dict:
         rows = self.conn.execute("""
@@ -673,6 +766,7 @@ class WebsiteScraper:
         self.url_store = URLStore(self.logs_dir / 'state.db')
 
         # Handle fresh start vs resume
+        resuming = False
         if fresh:
             self.url_store.clear()
             self.urls_to_visit: Deque[tuple[str, str | None]] = deque([(start_url, None)])
@@ -685,9 +779,20 @@ class WebsiteScraper:
                 self.urls_to_visit = saved_queue
                 if saved_stats:
                     self.stats.update(saved_stats)
+                resuming = True
                 self.logger.info(f"Resuming: {self.url_store.count} URLs visited, {len(saved_queue)} in queue")
             else:
                 self.urls_to_visit = deque([(start_url, None)])
+
+        # Crawl-generation state. The queue above (not this value) decides
+        # fresh/resume/new-pass; crawl_gen only marks which rows this pass fetched.
+        self.crawl_gen = _decide_crawl_gen(
+            self.url_store.max_crawl_gen(), fresh=fresh, resuming=resuming
+        )
+        self.seen_this_run: set[str] = set()   # in-run loop prevention (see _should_fetch)
+        self.capped = False                    # --max-pages sets this (deferred stream)
+        self.crawl_complete = False            # set True only on normal crawl() completion
+        self.logger.info(f"Crawl generation: {self.crawl_gen}")
 
         # ProcessPoolExecutor for CPU-bound parsing
         self.executor = ProcessPoolExecutor(max_workers=os.cpu_count())
@@ -1094,6 +1199,7 @@ class WebsiteScraper:
             url, filename=filename, hostname=self.base_domain,
             title=title, found_on=found_on, file_type="binary",
             content_hash=file_hash, file_size=len(content),
+            crawl_gen=self.crawl_gen,
         )
 
         size_mb = len(content) / (1024 * 1024)
@@ -1141,6 +1247,7 @@ class WebsiteScraper:
             title=title, file_type="web",
             content_hash=compute_hash(text),
             file_size=len(text.encode()),
+            crawl_gen=self.crawl_gen,
         )
         self.stats['text_extracted'] += 1
         self.logger.debug(f"Saved text: {filepath.name}")
@@ -1153,6 +1260,12 @@ class WebsiteScraper:
         return False
 
     async def process_url(self, url: str, found_on: str | None = None):
+        """Fetch one URL, persist its content, and queue its outbound links.
+
+        Files are downloaded as-is; HTML is parsed off-thread, saved, its
+        extracted text stamped at the current crawl generation, and any new
+        (not-yet-visited) links appended to the queue. All errors are caught and
+        recorded so one bad page never aborts the crawl."""
         async with self.semaphore:
             try:
                 await asyncio.sleep(self.delay)
@@ -1221,6 +1334,14 @@ class WebsiteScraper:
             self.logger.debug(f"Checkpoint saved: {len(self.urls_to_visit)} URLs in queue")
 
     async def crawl(self):
+        """Run the breadth-first crawl loop until the queue and in-flight tasks drain.
+
+        Optionally seeds new URLs from the sitemap, then fetches each queued URL
+        through the `_should_fetch` gate (skips already-visited and this-run
+        duplicates). `crawl_complete` is set True ONLY on a clean loop exit — a
+        crash propagates out with it still False, which keeps the last complete
+        manifest intact (see run()). The finally block always checkpoints the
+        queue and tears down the session/browser."""
         await self.init_session()
 
         # Seed from sitemap if enabled (best-effort, non-blocking)
@@ -1269,7 +1390,8 @@ class WebsiteScraper:
                 while self.urls_to_visit and len(tasks) < self.max_concurrent:
                     url, found_on = self.urls_to_visit.popleft()
 
-                    if not self.url_store.contains(url):
+                    if _should_fetch(url, self.seen_this_run, self.url_store):
+                        self.seen_this_run.add(url)
                         self.url_store.add(url)
                         task = asyncio.create_task(self.process_url(url, found_on=found_on))
                         tasks.append(task)
@@ -1277,6 +1399,9 @@ class WebsiteScraper:
                 if tasks:
                     done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                     tasks = list(tasks)
+
+            # Loop exited normally (queue drained, no in-flight tasks) → complete pass.
+            self.crawl_complete = True
 
         finally:
             progress_task.cancel()
@@ -1288,18 +1413,34 @@ class WebsiteScraper:
             await self._close_browser()
 
     async def run(self):
+        """Drive a full crawl, then regenerate the manifest and upload — atomically.
+
+        The manifest is rewritten only after a complete, non-capped pass
+        (`_should_write_manifest`), so a partial or crashed run leaves the last
+        complete manifest.json — and any S3 copy — untouched. The S3 upload runs
+        only if the crawl returned normally; a crash short-circuits both."""
         start_time = datetime.now()
         self.logger.info(f"Starting scraper at {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
         await self.crawl()
 
-        # Generate manifest.json
+        # Generate manifest.json — only after a complete, non-capped pass, so a
+        # partial/crashed/capped run leaves the last complete manifest intact.
         manifest_files = self.url_store.export_manifest(self.base_domain)
-        if manifest_files:
+        if _should_write_manifest(
+            crawl_complete=self.crawl_complete,
+            capped=self.capped,
+            has_entries=bool(manifest_files),
+        ):
             manifest = build_manifest(manifest_files, self.base_domain)
             manifest_path = self.base_dir / "manifest.json"
             write_manifest(manifest, manifest_path)
             self.logger.info(f"Generated manifest.json: {len(manifest_files)} entries")
+        elif manifest_files:
+            self.logger.info(
+                "Skipped manifest regeneration (incomplete or capped pass); "
+                "kept last complete manifest.json"
+            )
 
         # Upload to S3 if configured
         if self.s3_bucket:
