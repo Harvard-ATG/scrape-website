@@ -1,6 +1,10 @@
-# Exploration: Scraper Scope Limits + Incremental Mode
+# Exploration: Scraper Scope Limits + Update Mode
 
 **Date**: 2026-07-22/23 | **Scope**: Large (multi-repo) | **Status**: Discovery complete, implementation not started
+
+> **Terminology (2026-07-23):** what this discovery doc calls "incremental mode" / "intermittent
+> mode" throughout is now named **update mode** / the **`--update`** flag. Read every "incremental"
+> below as "update." See `DESIGN_crawl-generation-foundation.md` §8.
 
 ## 1. Motivation
 

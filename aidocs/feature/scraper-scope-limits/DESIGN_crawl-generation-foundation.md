@@ -32,9 +32,9 @@ will build on, with **zero change to default fetch behavior**.
 **Non-goals (deferred to follow-on streams)**
 - `--max-pages` and its partial/non-authoritative S3-mirror signal (max-pages stream).
 - Sitemap `<lastmod>` comparison, new/changed/unchanged/removed handling, removal reconciliation,
-  content-hash write-skip (incremental-mode stream).
+  content-hash write-skip (update-mode stream; see §8 terminology note).
 - Any change to *which* URLs are fetched on a normal run. The re-fetch switch is flipped by
-  incremental mode, not here.
+  update mode, not here.
 
 ## 3. Design
 
@@ -174,7 +174,12 @@ all four places, kept consistent:
 
 ## 8. Deferred hooks this foundation exposes
 
+> **Terminology:** what this doc (and EPCC_EXPLORE) originally called "incremental mode" is now
+> named **update mode** / the **`--update`** flag. The foundation adds no flag; a plain re-run with
+> a drained queue is already an "update pass" (new generation, discover-new, skip-existing). The
+> `--update` flag only adds re-fetching of *changed* pages on top.
+
 - **`--max-pages`**: consumes the `capped` guard (§3.6) and the "complete authoritative pass" signal.
-- **Incremental mode**: flips the `should_fetch` seam (§3.5) to re-fetch `crawl_gen < current`, adds
-  sitemap `<lastmod>` comparison and removal reconciliation over old-gen rows, and content-hash
+- **`--update` (update mode)**: flips the `should_fetch` seam (§3.5) to re-fetch `crawl_gen < current`,
+  adds sitemap `<lastmod>` comparison and removal reconciliation over old-gen rows, and content-hash
   write-skip keyed on the already-computed hash.
