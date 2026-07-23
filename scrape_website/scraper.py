@@ -437,6 +437,9 @@ class URLStore:
             ("filename", "TEXT"), ("hostname", "TEXT"), ("title", "TEXT"),
             ("found_on", "TEXT"), ("file_type", "TEXT"),
             ("content_hash", "TEXT"), ("file_size", "INTEGER"),
+            # Crawl-generation foundation (see comment block above class URLStore):
+            ("crawl_gen", "INTEGER"),      # which crawl generation last fetched this row
+            ("last_fetched_at", "TEXT"),   # UTC ISO-8601 of the most recent successful fetch
         ]:
             try:
                 self.conn.execute(f"ALTER TABLE visited ADD COLUMN {col} {col_type}")
