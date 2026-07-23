@@ -35,3 +35,18 @@ def test_migration_adds_columns_to_legacy_db(tmp_path):
     ).fetchone()
     assert row == (None, None)
     store.close()
+
+
+def test_max_crawl_gen_empty_is_zero(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    assert store.max_crawl_gen() == 0
+    store.close()
+
+
+def test_max_crawl_gen_ignores_null_and_returns_max(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    store.add("https://x/a")  # crawl_gen stays NULL
+    store.add("https://x/b")
+    store.conn.execute("UPDATE visited SET crawl_gen=3 WHERE url='https://x/b'")
+    assert store.max_crawl_gen() == 3
+    store.close()

@@ -483,6 +483,17 @@ class URLStore:
     def count(self) -> int:
         return self._count
 
+    def max_crawl_gen(self) -> int:
+        """Highest crawl generation recorded, or 0 if none.
+
+        COALESCE guards both an empty table and the one-time post-migration
+        state where existing rows have NULL crawl_gen.
+        """
+        row = self.conn.execute(
+            "SELECT COALESCE(MAX(crawl_gen), 0) FROM visited"
+        ).fetchone()
+        return row[0]
+
     def has_file_hash(self, file_hash: str) -> bool:
         row = self.conn.execute("SELECT 1 FROM downloaded_files WHERE hash=?", (file_hash,)).fetchone()
         return row is not None
