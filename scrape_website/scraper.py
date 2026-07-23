@@ -464,6 +464,34 @@ def _parse_and_extract(html_content: str, url: str, base_domain: str,
 # SQLite-backed URL store
 # ---------------------------------------------------------------------------
 
+# --- Crawl generations & fetch pathways -------------------------------------
+# state.db tracks a per-URL `crawl_gen` (integer) and `last_fetched_at` (UTC
+# ISO-8601). A "generation" is one scoped, monotonic crawl pass over the site.
+#
+#   crawl_gen (control)  — which generation last fetched this row.
+#   last_fetched_at (data) — when that fetch happened (freshness/debugging).
+#
+# Three fetch pathways, selected by --fresh and the queue (NOT by crawl_gen):
+#   * fresh   (--fresh)              → clear state, crawl_gen = 1, re-fetch all.
+#   * resume  (no flag, queue full)  → an interrupted pass; continue the SAME
+#                                       generation (max(baseline, 1)) on the
+#                                       leftover queue.
+#   * update  (no flag, queue empty) → the last pass completed; start a new
+#                                       generation (baseline + 1), discover new
+#                                       pages, skip existing ones. This is the
+#                                       "run again without wiping" path — it has
+#                                       no dedicated flag.
+#
+# The current generation is DERIVED (see _decide_crawl_gen) from
+# COALESCE(MAX(crawl_gen), 0); nothing is stored in the `stats` table. Two
+# independent axes: the `queue` table owns resume-vs-new-pass; `crawl_gen` owns
+# re-fetch-vs-skip (see _should_fetch). Today `_should_fetch` skips any
+# already-visited URL, so `update` only picks up NEW pages. The deferred
+# `--update` flag will re-fetch pages whose sitemap <lastmod> changed by making
+# `_should_fetch` re-fetch rows with crawl_gen < current — this foundation lays
+# that seam WITHOUT changing behavior.
+# ----------------------------------------------------------------------------
+
 class URLStore:
     """SQLite-backed visited URL tracking with in-memory LRU cache."""
 
