@@ -739,6 +739,7 @@ class WebsiteScraper:
         self.url_store = URLStore(self.logs_dir / 'state.db')
 
         # Handle fresh start vs resume
+        resuming = False
         if fresh:
             self.url_store.clear()
             self.urls_to_visit: Deque[tuple[str, str | None]] = deque([(start_url, None)])
@@ -751,9 +752,20 @@ class WebsiteScraper:
                 self.urls_to_visit = saved_queue
                 if saved_stats:
                     self.stats.update(saved_stats)
+                resuming = True
                 self.logger.info(f"Resuming: {self.url_store.count} URLs visited, {len(saved_queue)} in queue")
             else:
                 self.urls_to_visit = deque([(start_url, None)])
+
+        # Crawl-generation state. The queue above (not this value) decides
+        # fresh/resume/new-pass; crawl_gen only marks which rows this pass fetched.
+        self.crawl_gen = _decide_crawl_gen(
+            self.url_store.max_crawl_gen(), fresh=fresh, resuming=resuming
+        )
+        self.seen_this_run: set[str] = set()   # in-run loop prevention (see _should_fetch)
+        self.capped = False                    # --max-pages sets this (deferred stream)
+        self.crawl_complete = False            # set True only on normal crawl() completion
+        self.logger.info(f"Crawl generation: {self.crawl_gen}")
 
         # ProcessPoolExecutor for CPU-bound parsing
         self.executor = ProcessPoolExecutor(max_workers=os.cpu_count())
@@ -1160,6 +1172,7 @@ class WebsiteScraper:
             url, filename=filename, hostname=self.base_domain,
             title=title, found_on=found_on, file_type="binary",
             content_hash=file_hash, file_size=len(content),
+            crawl_gen=self.crawl_gen,
         )
 
         size_mb = len(content) / (1024 * 1024)
@@ -1207,6 +1220,7 @@ class WebsiteScraper:
             title=title, file_type="web",
             content_hash=compute_hash(text),
             file_size=len(text.encode()),
+            crawl_gen=self.crawl_gen,
         )
         self.stats['text_extracted'] += 1
         self.logger.debug(f"Saved text: {filepath.name}")
@@ -1335,7 +1349,8 @@ class WebsiteScraper:
                 while self.urls_to_visit and len(tasks) < self.max_concurrent:
                     url, found_on = self.urls_to_visit.popleft()
 
-                    if not self.url_store.contains(url):
+                    if _should_fetch(url, self.seen_this_run, self.url_store):
+                        self.seen_this_run.add(url)
                         self.url_store.add(url)
                         task = asyncio.create_task(self.process_url(url, found_on=found_on))
                         tasks.append(task)
@@ -1343,6 +1358,9 @@ class WebsiteScraper:
                 if tasks:
                     done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                     tasks = list(tasks)
+
+            # Loop exited normally (queue drained, no in-flight tasks) → complete pass.
+            self.crawl_complete = True
 
         finally:
             progress_task.cancel()
@@ -1359,13 +1377,23 @@ class WebsiteScraper:
 
         await self.crawl()
 
-        # Generate manifest.json
+        # Generate manifest.json — only after a complete, non-capped pass, so a
+        # partial/crashed/capped run leaves the last complete manifest intact.
         manifest_files = self.url_store.export_manifest(self.base_domain)
-        if manifest_files:
+        if _should_write_manifest(
+            crawl_complete=self.crawl_complete,
+            capped=self.capped,
+            has_entries=bool(manifest_files),
+        ):
             manifest = build_manifest(manifest_files, self.base_domain)
             manifest_path = self.base_dir / "manifest.json"
             write_manifest(manifest, manifest_path)
             self.logger.info(f"Generated manifest.json: {len(manifest_files)} entries")
+        elif manifest_files:
+            self.logger.info(
+                "Skipped manifest regeneration (incomplete or capped pass); "
+                "kept last complete manifest.json"
+            )
 
         # Upload to S3 if configured
         if self.s3_bucket:
