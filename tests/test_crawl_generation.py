@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 from datetime import datetime
 
-from scrape_website.scraper import URLStore, _decide_crawl_gen, _should_fetch
+from scrape_website.scraper import URLStore, _decide_crawl_gen, _should_fetch, _should_write_manifest
 
 
 def _columns(store: URLStore) -> set[str]:
@@ -114,3 +114,19 @@ def test_should_fetch_skips_already_visited(tmp_path):
     store.add("https://x/a")
     assert _should_fetch("https://x/a", set(), store) is False
     store.close()
+
+
+def test_should_write_manifest_complete_uncapped_with_entries():
+    assert _should_write_manifest(crawl_complete=True, capped=False, has_entries=True) is True
+
+
+def test_should_write_manifest_blocks_incomplete():
+    assert _should_write_manifest(crawl_complete=False, capped=False, has_entries=True) is False
+
+
+def test_should_write_manifest_blocks_capped():
+    assert _should_write_manifest(crawl_complete=True, capped=True, has_entries=True) is False
+
+
+def test_should_write_manifest_blocks_no_entries():
+    assert _should_write_manifest(crawl_complete=True, capped=False, has_entries=False) is False

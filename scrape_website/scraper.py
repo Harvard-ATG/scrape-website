@@ -332,6 +332,17 @@ def _should_fetch(url: str, seen_this_run: set[str], url_store: "URLStore") -> b
     return not url_store.contains(url)
 
 
+def _should_write_manifest(*, crawl_complete: bool, capped: bool, has_entries: bool) -> bool:
+    """Only (re)write manifest.json after a complete, non-capped pass with entries.
+
+    Guards the 'complete & authoritative' invariant: a partial, crashed, or capped
+    run leaves the last complete manifest untouched, so downstream ingest /
+    deprecate_removed_urls never sees a shrunken set. `capped` is always False
+    today; the guard is installed for the deferred --max-pages stream.
+    """
+    return crawl_complete and not capped and has_entries
+
+
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
                         strip_tracking: bool = False,
                         exclude_patterns: list[str] | None = None,
