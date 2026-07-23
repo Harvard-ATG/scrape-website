@@ -1261,6 +1261,12 @@ class WebsiteScraper:
         return False
 
     async def process_url(self, url: str, found_on: str | None = None):
+        """Fetch one URL, persist its content, and queue its outbound links.
+
+        Files are downloaded as-is; HTML is parsed off-thread, saved, its
+        extracted text stamped at the current crawl generation, and any new
+        (not-yet-visited) links appended to the queue. All errors are caught and
+        recorded so one bad page never aborts the crawl."""
         async with self.semaphore:
             try:
                 await asyncio.sleep(self.delay)
@@ -1329,6 +1335,14 @@ class WebsiteScraper:
             self.logger.debug(f"Checkpoint saved: {len(self.urls_to_visit)} URLs in queue")
 
     async def crawl(self):
+        """Run the breadth-first crawl loop until the queue and in-flight tasks drain.
+
+        Optionally seeds new URLs from the sitemap, then fetches each queued URL
+        through the `_should_fetch` gate (skips already-visited and this-run
+        duplicates). `crawl_complete` is set True ONLY on a clean loop exit — a
+        crash propagates out with it still False, which keeps the last complete
+        manifest intact (see run()). The finally block always checkpoints the
+        queue and tears down the session/browser."""
         await self.init_session()
 
         # Seed from sitemap if enabled (best-effort, non-blocking)
@@ -1400,6 +1414,12 @@ class WebsiteScraper:
             await self._close_browser()
 
     async def run(self):
+        """Drive a full crawl, then regenerate the manifest and upload — atomically.
+
+        The manifest is rewritten only after a complete, non-capped pass
+        (`_should_write_manifest`), so a partial or crashed run leaves the last
+        complete manifest.json — and any S3 copy — untouched. The S3 upload runs
+        only if the crawl returned normally; a crash short-circuits both."""
         start_time = datetime.now()
         self.logger.info(f"Starting scraper at {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
