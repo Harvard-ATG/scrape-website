@@ -9,7 +9,7 @@ import re
 import sqlite3
 import logging
 import json
-from urllib.parse import urlparse, urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import urlparse, urlsplit, urlunsplit, parse_qsl, urlencode
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from collections import deque
@@ -18,7 +18,6 @@ from typing import Deque
 import mimetypes
 import hashlib
 from datetime import datetime, timezone
-from functools import lru_cache
 
 import lxml.html
 import trafilatura
