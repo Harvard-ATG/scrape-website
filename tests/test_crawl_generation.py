@@ -1,5 +1,4 @@
 import sqlite3
-from pathlib import Path
 from datetime import datetime
 
 from scrape_website.scraper import URLStore, _decide_crawl_gen, _should_fetch, _should_write_manifest
@@ -40,6 +39,16 @@ def test_migration_adds_columns_to_legacy_db(tmp_path):
 
 def test_max_crawl_gen_empty_is_zero(tmp_path):
     store = URLStore(tmp_path / "state.db")
+    assert store.max_crawl_gen() == 0
+    store.close()
+
+
+def test_max_crawl_gen_all_null_rows_is_zero(tmp_path):
+    # Post-migration headline case: rows exist but every crawl_gen is NULL.
+    # COALESCE must fold this to 0 (bare MAX would return NULL → fresh derives wrong gen).
+    store = URLStore(tmp_path / "state.db")
+    store.add("https://x/a")  # crawl_gen stays NULL
+    store.add("https://x/b")  # crawl_gen stays NULL
     assert store.max_crawl_gen() == 0
     store.close()
 
