@@ -525,12 +525,19 @@ class URLStore:
     def upsert_metadata(self, url: str, *, filename: str, hostname: str,
                         title: str | None = None, found_on: str | None = None,
                         file_type: str = "web", content_hash: str | None = None,
-                        file_size: int | None = None):
+                        file_size: int | None = None, crawl_gen: int | None = None):
+        # last_fetched_at stamps the UTC instant of this successful save (freshness);
+        # crawl_gen records which crawl generation last fetched the row (control).
+        # Only stamp them on a real fetch save (crawl_gen provided).
+        fetched_at = (
+            datetime.now(timezone.utc).isoformat() if crawl_gen is not None else None
+        )
         self.conn.execute("""
             UPDATE visited SET filename=?, hostname=?, title=?, found_on=?,
-                file_type=?, content_hash=?, file_size=?
+                file_type=?, content_hash=?, file_size=?, crawl_gen=?, last_fetched_at=?
             WHERE url=?
-        """, (filename, hostname, title, found_on, file_type, content_hash, file_size, url))
+        """, (filename, hostname, title, found_on, file_type, content_hash,
+              file_size, crawl_gen, fetched_at, url))
 
     def export_manifest(self, base_hostname: str) -> dict:
         rows = self.conn.execute("""

@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from datetime import datetime
 
 from scrape_website.scraper import URLStore, _decide_crawl_gen
 
@@ -66,3 +67,30 @@ def test_decide_crawl_gen_resume_continues_pass():
 def test_decide_crawl_gen_new_pass_advances():
     assert _decide_crawl_gen(5, fresh=False, resuming=False) == 6
     assert _decide_crawl_gen(0, fresh=False, resuming=False) == 1
+
+
+def test_upsert_stamps_gen_and_timestamp(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    store.add("https://x/a")
+    store.upsert_metadata(
+        "https://x/a", filename="a.md", hostname="x", crawl_gen=2,
+    )
+    gen, fetched_at = store.conn.execute(
+        "SELECT crawl_gen, last_fetched_at FROM visited WHERE url='https://x/a'"
+    ).fetchone()
+    assert gen == 2
+    parsed = datetime.fromisoformat(fetched_at)  # valid ISO-8601
+    assert parsed.tzinfo is not None             # tz-aware / UTC
+    store.close()
+
+
+def test_upsert_without_gen_leaves_fields_null(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    store.add("https://x/a")
+    store.upsert_metadata("https://x/a", filename="a.md", hostname="x")
+    gen, fetched_at = store.conn.execute(
+        "SELECT crawl_gen, last_fetched_at FROM visited WHERE url='https://x/a'"
+    ).fetchone()
+    assert gen is None
+    assert fetched_at is None
+    store.close()
