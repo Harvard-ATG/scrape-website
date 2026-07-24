@@ -201,6 +201,25 @@ def _url_within_path_prefix(path: str, prefix: str) -> bool:
     return path == p or path.startswith(p + '/')
 
 
+def _parse_robots_sitemaps(robots_bytes: bytes | None) -> list[str]:
+    """Extract absolute sitemap URLs from a robots.txt body.
+
+    Parses the ``Sitemap:`` directive (case-insensitive, may appear multiple
+    times and anywhere in the file). Returns [] on empty/undecodable input.
+    """
+    urls: list[str] = []
+    if not robots_bytes:
+        return urls
+    text = robots_bytes.decode("utf-8", errors="replace")
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.lower().startswith("sitemap:"):
+            url = stripped[len("sitemap:"):].strip()
+            if url:
+                urls.append(url)
+    return urls
+
+
 async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
                               scheme: str = "https",
                               max_urls: int = 5000) -> list[str]:
