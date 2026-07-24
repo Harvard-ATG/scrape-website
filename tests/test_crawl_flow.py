@@ -221,3 +221,38 @@ def test_crash_midcrawl_preserves_manifest_and_skips_upload(tmp_path, monkeypatc
     finally:
         scraper.executor.shutdown(wait=False)
         scraper.url_store.close()
+
+
+def test_sitemap_fetch_routes_through_tier_fetcher(tmp_path, monkeypatch):
+    """_sitemap_fetch returns bytes on 200 (str or bytes body), None on
+    non-200 or error — proving discovery rides the tier-escalating fetcher."""
+    scraper = _make(tmp_path, fresh=True, use_sitemap=False)
+    try:
+        async def ok_html(url, method="GET"):
+            return "<urlset/>", "application/xml", "html", 200
+
+        monkeypatch.setattr(scraper, "fetch_with_retry", ok_html)
+        assert asyncio.run(scraper._sitemap_fetch("https://x/s.xml")) == b"<urlset/>"
+
+        async def ok_bytes(url, method="GET"):
+            return b"Sitemap: https://x/s.xml", "text/plain", "file", 200
+
+        monkeypatch.setattr(scraper, "fetch_with_retry", ok_bytes)
+        assert asyncio.run(
+            scraper._sitemap_fetch("https://x/robots.txt")
+        ) == b"Sitemap: https://x/s.xml"
+
+        async def blocked(url, method="GET"):
+            return "", "text/html", "html", 403
+
+        monkeypatch.setattr(scraper, "fetch_with_retry", blocked)
+        assert asyncio.run(scraper._sitemap_fetch("https://x/s.xml")) is None
+
+        async def boom(url, method="GET"):
+            raise RuntimeError("all tiers failed")
+
+        monkeypatch.setattr(scraper, "fetch_with_retry", boom)
+        assert asyncio.run(scraper._sitemap_fetch("https://x/s.xml")) is None
+    finally:
+        scraper.executor.shutdown(wait=False)
+        scraper.url_store.close()

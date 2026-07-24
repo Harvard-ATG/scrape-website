@@ -1117,6 +1117,24 @@ class WebsiteScraper:
             if context:
                 await context.close()
 
+    async def _sitemap_fetch(self, url: str) -> bytes | None:
+        """Fetch a discovery URL (robots.txt / sitemap) as bytes via the
+        tier-escalating fetcher, so Akamai-gated hosts resolve at Tier 2.
+
+        Returns the body as bytes on HTTP 200, else None (non-200 or error) —
+        the best-effort contract _fetch_sitemap_urls expects. .xml comes back
+        as 'html' (str); robots.txt (.txt) comes back as 'file' (bytes).
+        """
+        try:
+            content, _content_type, _kind, status = await self.fetch_with_retry(url)
+        except Exception:
+            return None
+        if status != 200:
+            return None
+        if isinstance(content, bytes):
+            return content
+        return content.encode("utf-8", errors="replace")
+
     # --- FETCH WITH TIER ESCALATION ---
     # Tier 1 (aiohttp) handles most sites. On 403, escalates to Tier 2 (curl_cffi),
     # then Tier 3 (Playwright) if still blocked. Non-403 errors use exponential
@@ -1377,17 +1395,19 @@ class WebsiteScraper:
         queue and tears down the session/browser."""
         await self.init_session()
 
-        # Seed from sitemap if enabled (best-effort, non-blocking)
+        # Seed from sitemap if enabled (best-effort, non-blocking).
+        # Routes through _sitemap_fetch so Akamai-gated hosts resolve at Tier 2;
+        # a naive Tier-1 client 403s and returns [] (silent no-op in prod).
         if self.use_sitemap:
             parsed_start = urlparse(self.start_url)
             try:
                 sitemap_urls = await asyncio.wait_for(
                     _fetch_sitemap_urls(
-                        self.session,
+                        self._sitemap_fetch,
                         self.base_domain,
                         parsed_start.scheme or "https",
                     ),
-                    timeout=15,
+                    timeout=60,
                 )
             except Exception:
                 sitemap_urls = []
@@ -1410,7 +1430,7 @@ class WebsiteScraper:
                         self.urls_to_visit.append((normalized, None))
                         added += 1
                 if added:
-                    self.logger.info(f"Sitemap: seeded {added} URLs from sitemap.xml")
+                    self.logger.info(f"Sitemap: seeded {added} URLs from sitemap discovery")
 
         # Start background tasks
         progress_task = asyncio.create_task(self._progress_reporter())
