@@ -15,6 +15,7 @@ from pathlib import Path
 from collections import deque
 from concurrent.futures import ProcessPoolExecutor
 from typing import Deque
+from collections.abc import Awaitable, Callable
 import mimetypes
 import hashlib
 from datetime import datetime, timezone
@@ -220,25 +221,26 @@ def _parse_robots_sitemaps(robots_bytes: bytes | None) -> list[str]:
     return urls
 
 
-async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
+async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
+                              host: str,
                               scheme: str = "https",
                               max_urls: int = 5000) -> list[str]:
-    """Best-effort sitemap discovery.
+    """Best-effort sitemap discovery via a tier-escalating fetch callable.
 
-    Tries ``{scheme}://{host}/sitemap.xml`` then
-    ``{scheme}://{host}/sitemap_index.xml``.  Recurses into
-    ``<sitemap><loc>`` entries (sitemap-index format) up to one level.
+    Discovery order:
+      1. ``robots.txt`` ``Sitemap:`` directives (authoritative when present)
+      2. standard fallbacks ``/sitemap.xml``, ``/sitemap_index.xml``,
+         ``/wp-sitemap.xml`` (WordPress)
+    Recurses into ``<sitemap><loc>`` (sitemap-index) entries up to one level.
     Returns a deduped list of ``<loc>`` URLs, capped at *max_urls*.
-    Any fetch/parse failure returns ``[]``.
+
+    *fetch* takes a URL and returns the body as bytes on HTTP 200, else None.
+    Routing discovery through the crawler's tier-escalating fetcher (Tier 1
+    aiohttp -> Tier 2 curl_cffi) is required: a naive client 403s on
+    Akamai-gated hosts and silently returns []. Any fetch/parse failure
+    degrades to [] (caller falls back to BFS).
     """
     ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-
-    async def _get(url: str) -> bytes | None:
-        try:
-            async with session.get(url) as resp:
-                return await resp.read() if resp.status == 200 else None
-        except Exception:
-            return None
 
     def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
         urls: list[str] = []
@@ -254,20 +256,32 @@ async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
             for elem in root.findall(f"{tag}/loc"):
                 if elem.text:
                     urls.append(elem.text.strip())
-            # Also try namespace-stripped approach
+            # Also try namespace-stripped approach: find tag elements, then their loc children
             if not urls:
-                for elem in root.iter():
-                    local = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
-                    if local == "loc" and elem.text:
-                        urls.append(elem.text.strip())
+                for parent in root.iter():
+                    parent_local = parent.tag.split("}")[-1] if "}" in parent.tag else parent.tag
+                    if parent_local == tag:
+                        for child in parent:
+                            child_local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+                            if child_local == "loc" and child.text:
+                                urls.append(child.text.strip())
         return urls
+
+    # robots.txt Sitemap: directives first (authoritative), then fallbacks.
+    robots = await fetch(f"{scheme}://{host}/robots.txt")
+    candidates = _parse_robots_sitemaps(robots)
+    for path in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"):
+        candidates.append(f"{scheme}://{host}{path}")
 
     seen: set[str] = set()
     result: list[str] = []
+    tried: set[str] = set()
 
-    for path in ("/sitemap.xml", "/sitemap_index.xml"):
-        sitemap_url = f"{scheme}://{host}{path}"
-        data = await _get(sitemap_url)
+    for sitemap_url in candidates:
+        if sitemap_url in tried:
+            continue
+        tried.add(sitemap_url)
+        data = await fetch(sitemap_url)
         if not data:
             continue
 
@@ -275,7 +289,7 @@ async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
         sub_sitemaps = _parse_locs(data, tag="sitemap")
         if sub_sitemaps:
             for sub_url in sub_sitemaps:
-                sub_data = await _get(sub_url)
+                sub_data = await fetch(sub_url)
                 if sub_data:
                     for loc in _parse_locs(sub_data, tag="url"):
                         if loc not in seen:

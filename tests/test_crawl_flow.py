@@ -165,7 +165,7 @@ def test_update_pass_discovers_new_page_via_sitemap_at_next_gen(tmp_path, monkey
     seed.url_store.close()
 
     # The site now advertises a fourth page in its sitemap.
-    async def fake_sitemap(session, host, scheme):
+    async def fake_sitemap(fetch, host, scheme):
         return [HOME, PAGE_A, PAGE_B, PAGE_C]
 
     monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", fake_sitemap)
