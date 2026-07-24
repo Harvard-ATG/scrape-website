@@ -257,6 +257,7 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
                 if elem.text:
                     urls.append(elem.text.strip())
             # Also try namespace-stripped approach: find tag elements, then their loc children
+            # (parent-scoped so <sitemap><loc> is not matched when tag="url", and vice versa)
             if not urls:
                 for parent in root.iter():
                     parent_local = parent.tag.split("}")[-1] if "}" in parent.tag else parent.tag
@@ -1129,7 +1130,7 @@ class WebsiteScraper:
             content, _content_type, _kind, status = await self.fetch_with_retry(url)
         except Exception:
             return None
-        if status != 200:
+        if status != 200 or content is None:
             return None
         if isinstance(content, bytes):
             return content
