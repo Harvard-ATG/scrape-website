@@ -2,7 +2,9 @@ import argparse
 import asyncio
 import aiohttp
 import aiofiles
+import fcntl
 import os
+import random
 import re
 import sqlite3
 import logging
@@ -38,12 +40,15 @@ CONFIG = {
     'max_concurrent': 100,  # Number of concurrent downloads
     'timeout': 30,  # Request timeout in seconds
     'max_retries': 3,  # Max retries for failed requests
-    'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:151.0) Gecko/20100101 Firefox/151.0',
+    'user_agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
     'delay_between_requests': 0.1,  # Politeness delay in seconds
     'max_file_size': 100 * 1024 * 1024,  # 100MB max file size
     'checkpoint_interval': 30,  # Seconds between queue checkpoints
     'progress_interval': 5,  # Seconds between progress reports
 }
+
+# HTTP status codes that warrant retry (transient server issues)
+RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 
 # File extensions to download
 DOWNLOADABLE_EXTENSIONS = {
@@ -93,6 +98,70 @@ _DEFAULT_TRACKING_PARAMS: frozenset[str] = frozenset({
     "gclid", "fbclid", "mc_eid", "mc_cid", "ref",
     "_ga", "_gl", "igshid", "msclkid", "dclid",
 })
+
+
+# ---------------------------------------------------------------------------
+# Cross-process browser slot limiter
+# ---------------------------------------------------------------------------
+# When scrape_and_ingest.py runs 8 workers in parallel, each is a separate OS
+# process with its own WebsiteScraper. Without coordination, all 8 could launch
+# a headed Chromium (~300 MB each), risking OOM on the 8 GB Fargate task.
+#
+# We cap concurrent browsers across all processes using POSIX advisory locks
+# (fcntl.flock). Each slot is a file: /tmp/scrape-browser-{0,1,2}.lock
+# A process holds LOCK_EX on one file while its browser is alive. If all slots
+# are taken, the next process skips Tier 3 (graceful degradation — URLs get
+# logged as denied, same as if Playwright weren't installed).
+#
+# Why flock and not a semaphore or lockdir:
+# - Kernel auto-releases on process crash or OOM-kill (no stale locks)
+# - Visible for debugging: lsof /tmp/scrape-browser-*.lock
+# - Works across unrelated processes (multiprocessing.Semaphore doesn't)
+# ---------------------------------------------------------------------------
+
+_BROWSER_SLOT_DIR = Path("/tmp/scrape-browser-slots")
+_MAX_BROWSER_SLOTS = int(os.environ.get("SCRAPE_MAX_BROWSERS", "3"))
+
+
+def _acquire_browser_slot(logger: logging.Logger) -> int | None:
+    """Try to acquire an exclusive lock on one of the N browser slot files.
+
+    Returns the file descriptor (held for the lifetime of the browser) or None
+    if all slots are taken. The caller MUST pass the fd to _release_browser_slot
+    when the browser is closed.
+    """
+    _BROWSER_SLOT_DIR.mkdir(parents=True, exist_ok=True)
+    for i in range(_MAX_BROWSER_SLOTS):
+        lock_path = _BROWSER_SLOT_DIR / f"browser-{i}.lock"
+        try:
+            fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR)
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            logger.info(f"Acquired browser slot {i}/{_MAX_BROWSER_SLOTS}")
+            return fd
+        except OSError:
+            # LOCK_NB raises OSError (EAGAIN/EWOULDBLOCK) if already held
+            try:
+                os.close(fd)
+            except Exception:
+                pass
+            continue
+    logger.warning(
+        f"All {_MAX_BROWSER_SLOTS} browser slots taken — skipping Tier 3 for this worker. "
+        f"(Set SCRAPE_MAX_BROWSERS env var to increase limit)"
+    )
+    return None
+
+
+def _release_browser_slot(fd: int | None, logger: logging.Logger) -> None:
+    """Release a browser slot by closing the lock file descriptor."""
+    if fd is None:
+        return
+    try:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+        logger.debug("Released browser slot")
+    except OSError as e:
+        logger.debug(f"Error releasing browser slot: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -504,7 +573,8 @@ class WebsiteScraper:
                  delay: float | None = None,
                  output_dir: str | Path | None = None,
                  scope_to_path: bool | None = None,
-                 s3_bucket: str | None = None):
+                 s3_bucket: str | None = None,
+                 playwright_enabled: bool = True):
         self.start_url = start_url
         self.s3_bucket = s3_bucket
         self.base_domain = self.extract_domain(start_url)
@@ -527,6 +597,9 @@ class WebsiteScraper:
         # Crawl-quality knobs
         self.strip_tracking_params = strip_tracking_params
         self.use_sitemap = use_sitemap
+        # Kill switch for Tier 3: set False (or --no-playwright CLI) to cap escalation
+        # at curl_cffi. Useful if Playwright causes issues on specific sites.
+        self.playwright_enabled = playwright_enabled
         # Store patterns as strings (for pickling to process pool)
         self._exclude_pattern_strings: list[str] = (
             exclude_patterns if exclude_patterns is not None
@@ -544,6 +617,18 @@ class WebsiteScraper:
         self.semaphore = asyncio.Semaphore(self.max_concurrent)
         self.denied_urls: list[str] = []
         self.failed_urls: list[str] = []
+
+        # Browser state (Tier 3: Playwright headed browser under xvfb).
+        # Lazy-initialized on first 403 that Tier 2 can't handle.
+        # Lock prevents multiple concurrent pages from each launching a browser.
+        # _browser_slot_fd holds the flock fd for cross-process slot limiting.
+        # _browser_unavailable is set True after a failed attempt (slot denied or
+        # import error) so we don't retry on every subsequent 403.
+        self._browser = None
+        self._playwright = None
+        self._browser_lock = asyncio.Lock()
+        self._browser_slot_fd: int | None = None
+        self._browser_unavailable = False
 
         # Stats
         self.stats = {
@@ -663,7 +748,15 @@ class WebsiteScraper:
         self.session = aiohttp.ClientSession(
             connector=connector,
             timeout=timeout,
-            headers={'User-Agent': self.user_agent},
+            headers={
+                'User-Agent': self.user_agent,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Encoding': 'gzip, deflate',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+            },
             max_field_size=32768,
         )
 
@@ -671,15 +764,274 @@ class WebsiteScraper:
         if self.session:
             await self.session.close()
 
+    # --- TIER 3: BROWSER LIFECYCLE ---
+    # Browser startup is expensive (~500ms + 100MB memory). We share one browser
+    # instance across all pages in a crawl, launching it only on the first 403 that
+    # Tier 2 can't handle. The async lock prevents a race where multiple concurrent
+    # fetches each try to launch their own browser.
+
+    async def _ensure_browser(self):
+        """Lazy-init Playwright browser (headed Chromium). Thread-safe via double-check lock.
+
+        Acquires a cross-process browser slot (flock) before launching. If all
+        slots are taken (default: 3 concurrent browsers across all workers),
+        sets _browser_unavailable so we don't retry on every subsequent 403.
+        """
+        if self._browser is not None:
+            return
+        if self._browser_unavailable:
+            return
+
+        async with self._browser_lock:
+            if self._browser is not None:
+                return
+            if self._browser_unavailable:
+                return
+
+            # Acquire a cross-process slot before launching the browser.
+            # This caps total Chromium instances across all parallel workers.
+            self._browser_slot_fd = _acquire_browser_slot(self.logger)
+            if self._browser_slot_fd is None:
+                self._browser_unavailable = True
+                return
+
+            try:
+                from playwright.async_api import async_playwright
+            except ImportError:
+                self.logger.warning(
+                    "Playwright not installed; cannot use Tier 3 (headed browser). "
+                    "Install with: uv add playwright && uv run playwright install chromium"
+                )
+                _release_browser_slot(self._browser_slot_fd, self.logger)
+                self._browser_slot_fd = None
+                self._browser_unavailable = True
+                return
+
+            self._playwright = await async_playwright().start()
+            # headless=False is required — headless Chromium leaks "HeadlessChrome" in
+            # the UA string and gets 403'd by Akamai. Headed mode under xvfb (DISPLAY=:99)
+            # passes Bot Manager's automation detection.
+            self._browser = await self._playwright.chromium.launch(headless=False)
+            self.logger.info("Playwright browser launched (headed mode under xvfb)")
+
+    async def _close_browser(self):
+        """Clean shutdown of browser resources. Called in crawl() finally block
+        to prevent zombie Chromium processes in ECS tasks. Releases the
+        cross-process browser slot so another worker can use it."""
+        if self._browser:
+            await self._browser.close()
+            self._browser = None
+        if self._playwright:
+            await self._playwright.stop()
+            self._playwright = None
+        _release_browser_slot(self._browser_slot_fd, self.logger)
+        self._browser_slot_fd = None
+
+    def _backoff(self, attempt: int) -> float:
+        """Exponential backoff with full jitter. Caps at 8s to avoid excessive waits.
+        Full jitter (uniform 0..max) prevents thundering herd when multiple
+        scrapers hit rate limits simultaneously."""
+        return random.uniform(0, min(8.0, 1.0 * (2 ** attempt)))
+
+    def _parse_retry_after(self, header: str | None, attempt: int) -> float:
+        """Parse Retry-After header (seconds or HTTP-date), fall back to backoff."""
+        if not header:
+            return self._backoff(attempt)
+        try:
+            return float(header)
+        except ValueError:
+            pass
+        # HTTP-date format: "Thu, 01 Jan 2026 00:00:00 GMT"
+        from email.utils import parsedate_to_datetime
+        try:
+            target = parsedate_to_datetime(header)
+            delta = (target - datetime.now(timezone.utc)).total_seconds()
+            return max(0.0, delta)
+        except (ValueError, TypeError):
+            return self._backoff(attempt)
+
+    # --- TIER 2: curl_cffi (Chrome TLS fingerprint) ---
+    # curl_cffi impersonates Chrome's TLS handshake (JA3 fingerprint) and HTTP/2
+    # settings. This beats WAFs that inspect TLS fingerprints but don't require
+    # full JS execution. Much faster than a real browser (~0.5s vs ~2s per page).
+
+    async def _fetch_via_curl_cffi(self, url: str) -> tuple | None:
+        """Tier 2: Fetch with Chrome TLS/HTTP2 fingerprint via curl_cffi.
+
+        Returns same 4-tuple as aiohttp path, or None if still blocked/unavailable.
+        None signals the caller to escalate to Tier 3.
+        """
+        try:
+            from curl_cffi.requests import AsyncSession
+        except ImportError:
+            self.logger.debug("curl_cffi not available, skipping Tier 2")
+            return None
+
+        try:
+            async with AsyncSession() as session:
+                resp = await session.get(
+                    url,
+                    impersonate='chrome',  # Chrome 124+ TLS fingerprint
+                    allow_redirects=True,
+                    timeout=self.timeout,
+                )
+                status = resp.status_code
+                content_type = resp.headers.get('Content-Type', '')
+
+                # Still blocked by WAF
+                if status == 403:
+                    self.logger.debug(f"curl_cffi still blocked (403): {url}")
+                    return None
+
+                # Return server errors to caller for retry handling
+                if status >= 500:
+                    self.logger.debug(f"curl_cffi server error ({status}): {url}")
+                    return None
+
+                # Determine file vs HTML
+                if self.should_download_file(url, content_type):
+                    self.logger.info(f"Fetched via curl_cffi (Tier 2, file): {url}")
+                    return resp.content, content_type, 'file', status
+
+                # Charset-safe decode (reuse same logic as aiohttp)
+                raw = resp.content
+                declared = (resp.encoding or '').lower()
+                encoding = declared if declared and declared not in ('iso-8859-1', 'windows-1252') else 'utf-8'
+                try:
+                    content = raw.decode(encoding)
+                except (UnicodeDecodeError, LookupError):
+                    content = raw.decode('utf-8', errors='replace')
+
+                self.logger.info(f"Fetched via curl_cffi (Tier 2, HTML): {url}")
+                return content, content_type, 'html', status
+
+        except Exception as e:
+            self.logger.debug(f"curl_cffi failed for {url}: {e}")
+            return None
+
+    # --- TIER 3: Playwright headed browser ---
+    # Last resort when curl_cffi's TLS fingerprint isn't enough. A real headed
+    # browser passes Akamai Bot Manager's automation detection because it has a
+    # full JS engine, DOM, and doesn't leak headless signals.
+    # Each page gets its own browser context (isolated cookies/state) but shares
+    # the single browser instance launched by _ensure_browser().
+
+    async def _fetch_via_playwright(self, url: str) -> tuple | None:
+        """Tier 3: Fetch via headed browser (proven to beat Akamai from AWS).
+
+        Uses page.goto() for both HTML and files — FAS PDFs require real navigation
+        (direct HTTP download of PDF URLs gets 403'd by Akamai too).
+        Returns same 4-tuple as aiohttp path, or None on failure.
+        """
+        await self._ensure_browser()
+        if self._browser is None:
+            return None
+
+        page = None
+        context = None
+        try:
+            # Isolated context per page — no cookie bleed between URLs
+            context = await self._browser.new_context(
+                user_agent=self.user_agent
+            )
+            page = await context.new_page()
+
+            # Block images/fonts/stylesheets — we only need HTML/file content,
+            # not visual rendering. Cuts ~40% of network time.
+            # Optional request param: Playwright may call with (route) or (route, request)
+            # depending on version — omitting it raises TypeError at runtime.
+            async def _route_handler(route, request=None):
+                if route.request.resource_type in {'image', 'font', 'stylesheet'}:
+                    await route.abort()
+                else:
+                    await route.continue_()
+            await page.route('**/*', _route_handler)
+
+            # 25s timeout (separate from aiohttp's --timeout setting) —
+            # headed browsers need more time for page load + networkidle
+            response = await page.goto(url, wait_until='networkidle', timeout=25000)
+            if response is None:
+                self.logger.warning(f"Playwright navigation returned None: {url}")
+                return None
+
+            status = response.status
+            content_type = response.headers.get('content-type', '')
+
+            is_file = self.should_download_file(url, content_type)
+
+            if is_file:
+                # PDFs/docs: get raw response body (not rendered DOM)
+                body = await response.body()
+                self.logger.info(f"Fetched via Playwright (Tier 3, file): {url}")
+                return body, content_type, 'file', status
+            else:
+                # HTML: get fully rendered DOM (after JS execution)
+                html = await page.content()
+                self.logger.info(f"Fetched via Playwright (Tier 3, HTML): {url}")
+                return html, content_type, 'html', status
+
+        except Exception as e:
+            self.logger.warning(f"Playwright fetch failed for {url}: {e}")
+            return None
+        finally:
+            if page:
+                await page.close()
+            if context:
+                await context.close()
+
+    # --- FETCH WITH TIER ESCALATION ---
+    # Tier 1 (aiohttp) handles most sites. On 403, escalates to Tier 2 (curl_cffi),
+    # then Tier 3 (Playwright) if still blocked. Non-403 errors use exponential
+    # backoff with jitter and Retry-After header support.
+
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
+        """Fetch a URL, escalating through tiers on 403.
+
+        Flow: aiohttp → (on 403) → curl_cffi → (on fail) → Playwright → (on fail) → return 403
+        Returns (content, content_type, kind, status) for all paths.
+        """
         last_error = None
         for attempt in range(self.max_retries):
             try:
                 async with self.session.request(method, url, allow_redirects=True) as response:
                     content_type = response.headers.get('Content-Type', '')
                     status = response.status
+
+                    # Retry transient server errors with backoff
+                    if status in RETRYABLE_STATUS and attempt < self.max_retries - 1:
+                        # Must read response body before continuing to avoid unclosed response warnings
+                        await response.read()
+                        retry_after = response.headers.get('Retry-After')
+                        wait = self._parse_retry_after(retry_after, attempt)
+                        self.logger.debug(f"Status {status}, retrying after {wait:.1f}s: {url}")
+                        await asyncio.sleep(min(wait, 30.0))
+                        continue
+
+                    # Escalate 403 to Tier 2 (curl_cffi Chrome fingerprint)
+                    if status == 403:
+                        # Release the aiohttp connection before slow Tier 2/3 work.
+                        # Without this, the connection pool slot stays occupied during
+                        # potentially multi-second browser fetches.
+                        await response.read()
+
+                        self.logger.debug(f"403 from aiohttp, escalating to Tier 2: {url}")
+                        tier2_result = await self._fetch_via_curl_cffi(url)
+                        if tier2_result is not None:
+                            return tier2_result
+
+                        # Tier 2 failed, escalate to Tier 3 (Playwright headed)
+                        if self.playwright_enabled:
+                            self.logger.debug(f"Tier 2 failed, escalating to Tier 3: {url}")
+                            tier3_result = await self._fetch_via_playwright(url)
+                            if tier3_result is not None:
+                                return tier3_result
+
+                        # All tiers failed, will return 403 below
+
+                    # Determine if this is a downloadable file or HTML
                     if self.should_download_file(url, content_type):
                         content = await response.read()
+                        self.logger.info(f"Fetched via aiohttp (Tier 1, file): {url}")
                         return content, content_type, 'file', status
                     else:
                         # Charset-safe decode: aiohttp's resp.text() falls back to
@@ -695,15 +1047,20 @@ class WebsiteScraper:
                             content = raw.decode(encoding)
                         except (UnicodeDecodeError, LookupError):
                             content = raw.decode('utf-8', errors='replace')
+                        self.logger.info(f"Fetched via aiohttp (Tier 1, HTML): {url}")
                         return content, content_type, 'html', status
             except asyncio.TimeoutError:
                 last_error = "Timeout"
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(1 * (attempt + 1))
+                    wait = self._backoff(attempt)
+                    self.logger.debug(f"Timeout, retrying after {wait:.1f}s: {url}")
+                    await asyncio.sleep(wait)
             except Exception as e:
                 last_error = str(e)
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(1 * (attempt + 1))
+                    wait = self._backoff(attempt)
+                    self.logger.debug(f"Error ({e}), retrying after {wait:.1f}s: {url}")
+                    await asyncio.sleep(wait)
         raise Exception(f"Failed after {self.max_retries} attempts: {last_error}")
 
     async def download_file(self, url: str, content: bytes, content_type: str,
@@ -714,6 +1071,16 @@ class WebsiteScraper:
 
         filename = generate_filename_binary(url, content_type)
         filepath = self.files_dir / filename
+
+        # Handle filename collisions (rare but possible with 8-char hash).
+        # Preserve original stem/ext outside the loop to avoid compounding suffixes.
+        orig_stem = Path(filename).stem
+        orig_ext = Path(filename).suffix
+        counter = 1
+        while filepath.exists():
+            filename = f"{orig_stem}_{counter}{orig_ext}"
+            filepath = self.files_dir / filename
+            counter += 1
 
         async with aiofiles.open(filepath, 'wb') as f:
             await f.write(content)
@@ -736,6 +1103,15 @@ class WebsiteScraper:
         filename = generate_filename_web(url)
         html_filename = Path(filename).with_suffix('.html').name
         filepath = self.pages_dir / html_filename
+
+        # Handle filename collisions.
+        # Preserve original stem outside the loop to avoid compounding suffixes.
+        orig_stem = Path(html_filename).stem
+        counter = 1
+        while filepath.exists():
+            html_filename = f"{orig_stem}_{counter}.html"
+            filepath = self.pages_dir / html_filename
+            counter += 1
 
         async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
             await f.write(content)
@@ -909,6 +1285,7 @@ class WebsiteScraper:
             self.url_store.save_queue(self.urls_to_visit)
             self.url_store.save_stats(self.stats)
             await self.close_session()
+            await self._close_browser()
 
     async def run(self):
         start_time = datetime.now()
@@ -1036,6 +1413,8 @@ def parse_args():
                             action='store_false',
                             help='Crawl the entire domain regardless of starting URL path')
     parser.set_defaults(scope_to_path=None)
+    parser.add_argument('--no-playwright', action='store_true', default=False,
+                        help="Disable Tier 3 Playwright escalation (stop at curl_cffi)")
     return parser.parse_args()
 
 
@@ -1076,6 +1455,7 @@ async def main():
                 output_dir=args.output_dir,
                 scope_to_path=args.scope_to_path,
                 s3_bucket=args.s3_bucket,
+                playwright_enabled=not args.no_playwright,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:
