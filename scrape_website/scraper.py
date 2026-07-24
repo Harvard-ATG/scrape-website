@@ -107,14 +107,14 @@ _DEFAULT_TRACKING_PARAMS: frozenset[str] = frozenset({
 # a headed Chromium (~300 MB each), risking OOM on the 8 GB Fargate task.
 #
 # We cap concurrent browsers across all processes using POSIX advisory locks
-# (fcntl.flock). Each slot is a file: /tmp/scrape-browser-{0,1,2}.lock
+# (fcntl.flock). Each slot is a file: /tmp/scrape-browser-slots/browser-{0,1,2}.lock
 # A process holds LOCK_EX on one file while its browser is alive. If all slots
 # are taken, the next process skips Tier 3 (graceful degradation — URLs get
 # logged as denied, same as if Playwright weren't installed).
 #
 # Why flock and not a semaphore or lockdir:
 # - Kernel auto-releases on process crash or OOM-kill (no stale locks)
-# - Visible for debugging: lsof /tmp/scrape-browser-*.lock
+# - Visible for debugging: lsof /tmp/scrape-browser-slots/browser-*.lock
 # - Works across unrelated processes (multiprocessing.Semaphore doesn't)
 # ---------------------------------------------------------------------------
 
