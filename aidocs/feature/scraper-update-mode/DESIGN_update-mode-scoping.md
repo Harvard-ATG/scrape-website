@@ -26,8 +26,10 @@ Enable re-scraping that detects and fetches CHANGED pages (not just newly-discov
 2. **`<lastmod>` comparison logic** — fetch sitemap, compare stored vs. current lastmod per URL, mark changed URLs for re-fetch.
 3. **`_should_fetch` extension** — flip the cross-run skip rule from `not contains(url)` to `crawl_gen < current_gen OR lastmod changed` (re-fetch old-gen OR changed pages).
 4. **Removal reconciliation** (optional/risky) — after a known-complete crawl, rows with `crawl_gen < current` are removal candidates; decide how/whether to retire them WITHOUT triggering the §4a cascade on partial crawls.
-5. **No-sitemap fallback** — decide behavior when a site has no sitemap or lastmod data (degrade to discover-new-only? error? force `--fresh`?).
+5. **No-sitemap fallback** — decide behavior when a site has no sitemap or lastmod data (degrade to discover-new-only? error? force `--fresh`?). The corpus audit (§8) found only 5 of 83 hosts truly lack a sitemap, all small — so this fallback is a low-risk edge, not the common path.
 6. **Interaction with `--max-pages`** — a capped update run is inherently partial/non-authoritative; must NOT trigger removal reconciliation.
+7. **Sitemap-discovery robustness (prerequisite)** — `_should_fetch`'s lastmod gate is only as good as sitemap discovery. Today `_fetch_sitemap_urls` tries only `/sitemap.xml` + `/sitemap_index.xml` and ignores `robots.txt`, so it silently misses 6 WordPress hosts whose sitemap lives only at `/wp-sitemap.xml` (§8). Fix = parse the `robots.txt` `Sitemap:` directive and add `/wp-sitemap.xml` as a fallback. This is a shared prerequisite for both sitemap-as-source and `--update`.
+8. **File preservation (design rule + safety net)** — under any sitemap-driven crawl, files (PDF/docx) must still be reached via link-following from crawled pages, and `--update` needs a carry-forward safety net so a valuable orphaned file can't silently vanish. See §5 "File preservation" for the locked rule and the empirical basis in §8.
 
 ## 3. Open Design Questions (Human Must Decide)
 
@@ -57,7 +59,7 @@ Enable re-scraping that detects and fetches CHANGED pages (not just newly-discov
 - **Option B**: treat as unchanged → skip (assume no edit).
 - **Option C**: fall back to HTTP conditional request (rejected in discovery as unreliable due to Akamai cache-regen noise).
 
-**Scenario 3: No sitemap at all**
+**Scenario 3: No sitemap at all** — rare in practice: the corpus audit (§8) found only 5 of 83 hosts lack a sitemap (careerservices.fas, ces.fas, daviscenter.fas, www.hio, + a PDF entry), all small. So this is an edge, not the common path.
 - **Option A**: error out / require `--fresh`.
 - **Option B**: degrade to discover-new-only (same as today's emergent update pass).
 - **Option C**: allow but log a warning; skip all re-fetch logic.
@@ -221,6 +223,12 @@ def _should_fetch(url, seen_this_run, url_store, *, update_mode=False,
 - Foundation uses `COALESCE(MAX(crawl_gen), 0)` in derivation and `COALESCE(crawl_gen, 0) < current` in comparisons.
 - **Update mode must match**: `row.crawl_gen is None` should be treated as `0 < current` → re-fetch.
 
+### File preservation under sitemap-driven crawling (critical — corpus-validated)
+- **The risk**: files (PDF/docx/xls/ppt) are almost never in the sitemap, so a *strict* sitemap-as-source crawl (page frontier = sitemap URLs only) reaches them only via one-hop link extraction from the sitemap pages it crawls. Files whose only referrer is a non-sitemap page are dropped.
+- **Corpus evidence (§8)**: the crossover flagged large raw "at-risk" doc counts (economics 606, sociology 614, history 583), but canonicalization resolved these as an **artifact** — 100% have a `/search?page=N` faceted-search-trap referrer. `found_on` records only the first referrer, and the BFS fell into the search trap early, so it is NOT evidence these files are orphaned. True file-loss under strict sitemap-as-source is UNRESOLVED from `found_on` data (needs a link-graph crawl of sitemap pages; see §8). The design must be safe under that uncertainty.
+- **Locked design rule**: sitemap-as-source restricts the *page* frontier to sitemap URLs but MUST keep extracting and downloading file-asset links from every crawled page — do NOT gate file downloads on sitemap membership. Files ride in via their good parent pages.
+- **`--update` safety net** (Task 17): union prior `state.db` file URLs into the fetch set and re-verify (200 → keep, 404 → drop). This is the primary defense for files whose referrer isn't re-captured, and — per §8 — link-following alone recovers only a minority on the big sites, so the safety net is REQUIRED, not optional.
+
 ### Queue-based resume (unchanged)
 - The `queue` table still owns resume-vs-new-pass (non-empty queue = resume, same gen).
 - **Update mode does NOT change this**: a crashed `--update` run resumes at the same `current_gen`, continues re-fetching changed pages.
@@ -261,6 +269,10 @@ This is a rough starting point for a later `writing-plans` pass. Human must refi
 
 15. **Documentation: code comments** — docstrings for `_should_fetch` extension, `get_metadata`, `lastmod` column lifecycle (when written, what NULL means).
 
+16. **Sitemap-discovery robustness (prerequisite, do FIRST)** — extend `_fetch_sitemap_urls` to (a) fetch `robots.txt` and parse the `Sitemap:` directive, (b) add `/wp-sitemap.xml` to the standard fallback list, recursing one level into any sitemap-index, and **(c) route all sitemap/robots fetches through the tier-escalating fetcher (Tier 1→Tier 2 curl_cffi), NOT the plain `aiohttp.ClientSession`.** Part (c) is not optional: the AWS probe (§8.4) proved a naive client 403s on 51/83 hosts from production and silently returns `[]`, making sitemap-seeding a no-op in prod. Test: WordPress host (`writingprogram.college`) resolves via `robots.txt`→`/wp-sitemap.xml`; Drupal host resolves via `/sitemap.xml`; a 403-gated host resolves only after Tier-2 escalation; no-sitemap host returns empty without error. Evidence: §8.1 (6 WP hosts silently missed) + §8.4 (51 hosts 403 naive from AWS).
+
+17. **File carry-forward safety net** — on an `--update` run, before pruning, union the prior `state.db`'s known file-asset URLs (pdf/docx/xls/ppt) into the fetch set and re-verify each still returns 200; drop only those that 404. Prevents a valuable file from silently vanishing when its referrer page isn't re-captured (the corpus at-risk finding, §8). Test: prior `state.db` has a file whose referrer is dropped from the new crawl → file still re-verified and retained; file that now 404s → dropped.
+
 ---
 
 ## 7. What This Draft Needs from the Human
@@ -275,3 +287,41 @@ This is a **scoping document**, not a spec. Before implementation, decide:
 6. **Q6**: sitemap fetch timing — **rec: startup, in-memory map**.
 
 Once decided, this doc can be refined into an implementation plan and handed to a `writing-plans` / `executing-plans` workflow.
+
+---
+
+## 8. Empirical Evidence (sitemap audit + corpus crossover)
+
+Raw evidence and reproducible scripts live in `evidence/crossover/` next to this doc; the honest synthesis is in `evidence/crossover/FINDINGS.md`. Summary of what backs the decisions above:
+
+### 8.1 Sitemap audit (83 sites.toml hosts, Tier 2 curl_cffi)
+- **78/83 have a sitemap, 5 do not** (careerservices.fas, ces.fas, daviscenter.fas, www.hio, + a PDF entry) — all small. No-sitemap is an edge, not the common path (grounds Q2 Scenario 3).
+- **6 WordPress hosts are silently missed today** — their sitemap is only at `/wp-sitemap.xml`, and `_fetch_sitemap_urls` neither reads `robots.txt` nor tries that path (advising.college, emr.fas, firstyearseminarprogram.college, writingprogram.college, engagedscholarship.fas, placement.college). → **Task 16 (prerequisite).**
+
+### 8.2 Corpus crossover (20 local hosts with a sitemap)
+- **Duplication is universal**: raw `state.db` rows are 1.3–4.2× distinct pages everywhere. The "rows ≫ sitemap" gap is dupes (http/https, `?page=`, slash), not content.
+- **Sitemap recovers missed pages everywhere**: sitemap-only-missed is large across the board (hscrb 1,939, mcb 6,518, seas 1,495). Sitemap-as-source is a net *page* gain on these hosts, not a loss.
+
+### 8.3 The "at-risk file" scare is an artifact (canonicalization sample)
+- Large raw at-risk doc counts (economics 606, sociology 614, history 583, statistics 363) are **100% referred by `/search?page=N`** faceted-search-trap pages (OpenScholar `sites/g/files/omnuum...`), the same pages Jeremy's exclusion work targets. Counts match exactly (e.g. economics 606/606).
+- `found_on` is only the *first* referrer; BFS hit the search trap early. So at-risk ≠ orphaned. **True file-loss under strict sitemap-as-source is UNRESOLVED** from `found_on` — a link-graph crawl of sitemap pages is the only definitive test.
+- **Design consequence**: because provenance is unreliable, the **file carry-forward safety net (Task 17) is REQUIRED, not optional**; it moots the question. sitemap-as-source additionally *eliminates* the `/search?page=N` trap that produced this bias.
+
+### 8.4 AWS reachability — CONFIRMED (2026-07-23, ECS probe)
+- **Resolved the tracked open item.** Ran an ephemeral ECS task in `atg-prod-default` (task def `atg-apo-mcp-qa-task-definition:12`, private subnets, `assignPublicIp=DISABLED` → egress via the **Akamai-gated NAT IP**) that fetched every sites.toml sitemap two ways from the NAT: Tier 1 (plain urllib) and Tier 2 (curl_cffi `impersonate='chrome'`). Result → `s3://atg-apo-mcp-qa-scrape/_sitemap_reachability/result.json`. Evidence: `evidence/aws-reachability/` (AWS_REACHABILITY.md, result.json, probe script).
+- **Findings (83 hosts): reachable 79, naive Tier 1 = 200 on 28, Tier 1 = 403 → Tier 2 = 200 on 51, no-sitemap 4.** The Akamai gate IS live from AWS (51 hosts 403 a naive client); **Tier 2 curl_cffi defeats it 51/51** — every gated sitemap returns 200 with valid content. Tier 3 (Playwright) NOT needed for sitemaps. The 4 "unreachable" (ces, daviscenter, careerservices, www.hio) are genuine no-sitemap hosts (404 at BOTH tiers, all candidate paths), not blocks.
+- **NEW DESIGN REQUIREMENT (LOCKED, folds into Task 16):** `_fetch_sitemap_urls` (scraper.py:217-220) fetches via the plain `aiohttp.ClientSession` — Tier 1 only. From AWS it 403s on those 51 hosts and silently returns `[]`, so **today's sitemap-seeding is a no-op in production for every Akamai-gated host** (the likely reason seas, which HAS a sitemap, still crawls as unbounded BFS from AWS). Sitemap discovery/fetch — `_fetch_sitemap_urls`, Task 16's robots.txt+wp-sitemap discovery, and the future `--update` `<lastmod>` fetch — **MUST route through the tier-escalating fetcher, not a naive aiohttp session**, or sitemap-as-source and `--update` are dead-on-arrival in production.
+
+### 8.5 Open items / caveats
+- **Possibly incomplete sitemaps (needs sample-test)**: histlit (1,579 `distinct-path` non-crossover vs 830 sitemap URLs), classics (516), economics (1,317), history (1,795). Unlike seas (non-crossover = dupes), these may omit real pages — a sitemap-as-source loss risk to confirm before rollout.
+
+## 9. Spun-out streams
+
+- **Remove `.md` frontmatter dependency (consolidate metadata into the
+  manifest)** → `aidocs/feature/frontmatter-removal/BRAINSTORM_metadata-consolidation.md`.
+  Verified 2026-07-23: frontmatter is stripped before vector-store upload
+  (`ingest.py:348`), so it is ingest-plumbing only. `url`/`title` are
+  redundant with the manifest; `http_status` (the skip-non-200 gate) is the
+  sole frontmatter-only field. Converges with the sitemap-llm path — served
+  `.md` also lacks frontmatter, so relocating `http_status` into the manifest
+  unlocks both. Separate stream; brainstorm before implementing.

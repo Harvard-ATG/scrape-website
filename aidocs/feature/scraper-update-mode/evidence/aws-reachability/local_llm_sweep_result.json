@@ -1,0 +1,583 @@
+[
+  {
+    "host": "writingprogram.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "firstyearseminarprogram.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "gened.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "oie.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1177,
+    "md": true
+  },
+  {
+    "host": "placement.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "courses.my.harvard.edu",
+    "status": 200,
+    "ctype": "text/html",
+    "url_count": 17,
+    "md": false
+  },
+  {
+    "host": "handbook.college.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 2,
+    "md": true
+  },
+  {
+    "host": "archaeology.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 520,
+    "md": true
+  },
+  {
+    "host": "celtic.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 176,
+    "md": true
+  },
+  {
+    "host": "edsecondary.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 380,
+    "md": true
+  },
+  {
+    "host": "emr.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "ces.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "ghhp.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 470,
+    "md": true
+  },
+  {
+    "host": "medieval.fas.harvard.edu",
+    "status": "ERR:TimeoutError",
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "msi.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 104,
+    "md": true
+  },
+  {
+    "host": "mbb.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 985,
+    "md": true
+  },
+  {
+    "host": "daviscenter.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "uraf.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 432,
+    "md": true
+  },
+  {
+    "host": "oue.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "incomingstudents.college.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 27,
+    "md": true
+  },
+  {
+    "host": "advising.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "academicresourcecenter.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "registrar.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 875,
+    "md": true
+  },
+  {
+    "host": "qrd.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "language.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 23,
+    "md": true
+  },
+  {
+    "host": "writingcenter.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 94,
+    "md": true
+  },
+  {
+    "host": "oaisc.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "dao.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "library.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "careerservices.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "www.hio.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "engagedscholarship.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "publicservice.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 938,
+    "md": true
+  },
+  {
+    "host": "lpce.college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "ofa.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1079,
+    "md": true
+  },
+  {
+    "host": "dso.college.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 818,
+    "md": true
+  },
+  {
+    "host": "iop.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "summerfunding.college.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 130,
+    "md": true
+  },
+  {
+    "host": "college.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "collegehousing.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "seo.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 183,
+    "md": true
+  },
+  {
+    "host": "aaas.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1402,
+    "md": true
+  },
+  {
+    "host": "anthropology.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 822,
+    "md": true
+  },
+  {
+    "host": "afvs.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 804,
+    "md": true
+  },
+  {
+    "host": "astronomy.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1233,
+    "md": true
+  },
+  {
+    "host": "www.mcb.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "www.chemistry.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 2873,
+    "md": true
+  },
+  {
+    "host": "classics.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 547,
+    "md": true
+  },
+  {
+    "host": "complit.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "studyofreligion.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "csadvising.seas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "eps.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "eas.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 92,
+    "md": true
+  },
+  {
+    "host": "www.economics.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 5942,
+    "md": true
+  },
+  {
+    "host": "english.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1627,
+    "md": true
+  },
+  {
+    "host": "espp.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 457,
+    "md": true
+  },
+  {
+    "host": "folkmyth.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 150,
+    "md": true
+  },
+  {
+    "host": "german.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 431,
+    "md": true
+  },
+  {
+    "host": "www.gov.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "history.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 5765,
+    "md": true
+  },
+  {
+    "host": "histlit.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 829,
+    "md": true
+  },
+  {
+    "host": "histsci.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 859,
+    "md": true
+  },
+  {
+    "host": "haa.fas.harvard.edu",
+    "status": "ERR:TimeoutError",
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "hscrb.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "heb.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 445,
+    "md": true
+  },
+  {
+    "host": "scienceeducation.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 2310,
+    "md": true
+  },
+  {
+    "host": "linguistics.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1832,
+    "md": true
+  },
+  {
+    "host": "www.math.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "music.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 448,
+    "md": true
+  },
+  {
+    "host": "nelc.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1683,
+    "md": true
+  },
+  {
+    "host": "philosophy.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 967,
+    "md": true
+  },
+  {
+    "host": "www.physics.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 836,
+    "md": true
+  },
+  {
+    "host": "undergrad.psychology.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1756,
+    "md": true
+  },
+  {
+    "host": "rll.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 422,
+    "md": true
+  },
+  {
+    "host": "seas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "slavic.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1078,
+    "md": true
+  },
+  {
+    "host": "socialstudies.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 268,
+    "md": true
+  },
+  {
+    "host": "sociology.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 2241,
+    "md": true
+  },
+  {
+    "host": "sas.fas.harvard.edu",
+    "status": 404,
+    "ctype": "",
+    "url_count": null,
+    "md": false
+  },
+  {
+    "host": "specialconcentrations.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 183,
+    "md": true
+  },
+  {
+    "host": "statistics.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 2298,
+    "md": true
+  },
+  {
+    "host": "wgs.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1036,
+    "md": true
+  },
+  {
+    "host": "tdm.fas.harvard.edu",
+    "status": 200,
+    "ctype": "text/markdown",
+    "url_count": 1451,
+    "md": true
+  }
+]
