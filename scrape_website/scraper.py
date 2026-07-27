@@ -88,6 +88,8 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/comments/",
     r"/page/\d+",
     r"/cdn-cgi/",
+    r"/search\?",
+    r"\.ics$"
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
@@ -284,11 +286,15 @@ async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
 def _normalize_url(url: str, strip_tracking: bool = False) -> str:
     """Normalize URL by removing fragments and trailing slashes.
 
+    Canonicalizes the scheme: http is treated as https so that the same
+    page linked under both protocols is not crawled twice.
+
     When *strip_tracking* is True, also removes well-known tracking
     query parameters (utm_*, fbclid, gclid, etc.).
     """
     parsed = urlparse(url)
-    url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+    scheme = "https" if parsed.scheme == "http" else parsed.scheme
+    url = f"{scheme}://{parsed.netloc}{parsed.path}"
     if parsed.query:
         url += f"?{parsed.query}"
     if url.endswith('/') and parsed.path != '/':
