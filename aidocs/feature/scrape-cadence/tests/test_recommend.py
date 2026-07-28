@@ -42,3 +42,13 @@ def test_mode_incremental_when_mostly_additive():
 def test_mode_fresh_when_baseline_unknown_or_empty():
     assert recommend(_cad("low"), _diff(known=False))["mode"] == "fresh"
     assert recommend(_cad("low"), _diff(man=0))["mode"] == "fresh"
+
+
+def test_unknown_rationale_distinguishes_no_sitemap_from_no_lastmod():
+    # cadence is None → no sitemap was fetched at all
+    r_none = recommend(None, None)
+    assert r_none["frequency"] == "monthly" and r_none["mode"] == "fresh"
+    assert "no sitemap" in r_none["rationale"]
+    # cadence present but class unknown → sitemap exists, just no <lastmod> dates
+    r_present = recommend(_cad("unknown"), None)
+    assert "no <lastmod>" in r_present["rationale"]

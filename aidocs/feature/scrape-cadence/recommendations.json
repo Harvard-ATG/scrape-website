@@ -3035,7 +3035,7 @@
     "recommendation": {
       "frequency": "monthly",
       "mode": "fresh",
-      "rationale": "no sitemap / no lastmod signal \u2014 conservative monthly full scrape"
+      "rationale": "sitemap present but no <lastmod> dates \u2014 cannot derive cadence; conservative monthly full scrape"
     }
   },
   {

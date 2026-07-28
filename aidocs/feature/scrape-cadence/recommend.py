@@ -35,8 +35,14 @@ def recommend(cadence: dict | None, diff: dict | None) -> dict:
     cls = cadence.get("cadence_class", "unknown") if cadence else "unknown"
     frequency = FREQ_BY_CLASS.get(cls, "monthly")
     if cls == "unknown":
-        return {"frequency": "monthly", "mode": "fresh",
-                "rationale": "no sitemap / no lastmod signal — conservative monthly full scrape"}
+        # Distinguish a fetched-but-lastmod-less sitemap from a host with no
+        # sitemap at all — both yield class 'unknown' but for different reasons.
+        if cadence is not None:
+            why = ("sitemap present but no <lastmod> dates — cannot derive "
+                   "cadence; conservative monthly full scrape")
+        else:
+            why = "no sitemap / no lastmod signal — conservative monthly full scrape"
+        return {"frequency": "monthly", "mode": "fresh", "rationale": why}
     mode, mode_why = _choose_mode(diff)
     interval = cadence.get("est_update_interval_days")
     rationale = (f"cadence={cls}"
