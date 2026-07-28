@@ -1,0 +1,70 @@
+{
+  "probed": 4,
+  "found_sitemap": [],
+  "still_no_sitemap": [
+    "ces.fas.harvard.edu",
+    "daviscenter.fas.harvard.edu",
+    "careerservices.fas.harvard.edu",
+    "www.hio.harvard.edu"
+  ],
+  "results": [
+    {
+      "host": "ces.fas.harvard.edu",
+      "robots_sitemaps": [],
+      "cms": {
+        "cms": [],
+        "generator": "",
+        "link_rel_sitemap": []
+      },
+      "hits": [],
+      "candidates_tried": 46,
+      "notes": [],
+      "has_sitemap": false
+    },
+    {
+      "host": "daviscenter.fas.harvard.edu",
+      "robots_sitemaps": [],
+      "cms": {
+        "cms": [
+          "drupal"
+        ],
+        "generator": "drupal 10 (https://www.drupal.org)",
+        "link_rel_sitemap": []
+      },
+      "hits": [],
+      "candidates_tried": 46,
+      "notes": [],
+      "has_sitemap": false
+    },
+    {
+      "host": "careerservices.fas.harvard.edu",
+      "robots_sitemaps": [],
+      "cms": {
+        "cms": [
+          "wordpress"
+        ],
+        "generator": "",
+        "link_rel_sitemap": []
+      },
+      "hits": [],
+      "candidates_tried": 46,
+      "notes": [],
+      "has_sitemap": false
+    },
+    {
+      "host": "www.hio.harvard.edu",
+      "robots_sitemaps": [],
+      "cms": {
+        "cms": [
+          "drupal"
+        ],
+        "generator": "drupal 7 (http://drupal.org)",
+        "link_rel_sitemap": []
+      },
+      "hits": [],
+      "candidates_tried": 46,
+      "notes": [],
+      "has_sitemap": false
+    }
+  ]
+}
