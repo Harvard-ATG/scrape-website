@@ -80,6 +80,9 @@ DOWNLOADABLE_MIMES = {
 # These are matched against the full URL (re.search). Override via
 # --exclude-pattern (repeatable) or programmatic API.
 _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
+    r"^http://",  # plain-http duplicate of an https page (_normalize_url keeps scheme,
+                  # so http:// and https:// links to the same path are stored as
+                  # separate URLs — seen on one site as ~48% duplicate fetches)
     r"/tag/",
     r"/author/",
     r"/feed/?$",
