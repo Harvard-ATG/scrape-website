@@ -40,7 +40,7 @@ article PDF, `833` = a 2021 event flyer.)
 | D2 | Baseline for the diff | **QA scrape bucket `manifest.json`** `s3://atg-apo-mcp-qa-scrape/data/{host}/manifest.json` — not `state.db` | The `visited` table in `state.db` has **no timestamp column** (confirmed 2026-07-28: `url, filename, hostname, title, found_on, file_type, content_hash, file_size`), so it cannot date the baseline. `manifest.json` carries `generated_at` (ISO 8601 = when the host was last scraped/ingested) **and** `files{}.source_url` (the exact URL set QA holds) in one small top-level file. QA's per-host `generated_at` is surfaced so a stale/Akamai-blocked baseline is visible, not hidden |
 | D3 | Recommendation objective | **Balanced** | Longest interval that still keeps content acceptably fresh given each site's observed update rate |
 | D4 | Run location | **Local** (Tier 2 curl_cffi `impersonate=chrome`) | The AWS-NAT Akamai 403 problem is irrelevant for *reading* sitemaps from a local IP; S3 pulls use `AWS_PROFILE=tlt-prod` |
-| D5 | Code + artifact location | `aidocs/feature/scrape-cadence/` | Matches the repo's existing `evidence/`-script pattern |
+| D5 | Code + artifact location | `aidocs/feature/scraper-update-mode/evidence/cadence-analysis/` | Discovery/evidence tooling (not a shipped feature); lives beside the `aws-reachability` seed it consumes, matching the repo's `evidence/`-script pattern |
 | D6 | No-sitemap edge set | **Confirmed** (2026-07-28 deep probe, `aidocs/fix/sitemap-discovery-tiered/no-sitemap-deep-probe/`): all 4 flagged hosts (ces, daviscenter, careerservices, www.hio) truly lack a sitemap — 46 candidate paths × apex/www, robots.txt parsed, 0 hits. CMS: careerservices=WordPress (core sitemaps disabled), daviscenter+www.hio=Drupal (no `simple_sitemap`), ces=no CMS fingerprint. These 4 are a permanent no-lastmod edge |
 
 ## 4. Architecture — one orchestrator, five single-purpose stages
@@ -151,7 +151,7 @@ Unit tests on the **pure** functions only, over small fixtures:
 
 Network stages are validated by inspecting the emitted `RECOMMENDATIONS.md`.
 
-## 8. Artifacts (all under `aidocs/feature/scrape-cadence/`)
+## 8. Artifacts (all under `aidocs/feature/scraper-update-mode/evidence/cadence-analysis/`)
 
 ```
 analyze_cadence.py            # orchestrator + 5 stages

@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Python `>=3.13`; run everything via `uv run` or `.venv/bin/python` (deps pinned in `uv.lock`).
-- All code + artifacts live under `aidocs/feature/scrape-cadence/` (repo's evidence-script convention). Tests under `aidocs/feature/scrape-cadence/tests/`.
+- All code + artifacts live under `aidocs/feature/scraper-update-mode/evidence/cadence-analysis/` (discovery/evidence tooling, beside the `aws-reachability` seed it consumes). Tests under that dir's `tests/`. (The `aidocs/feature/scrape-cadence/` paths in the per-task steps below are the original pre-relocation paths — read them relative to the current location.)
 - Network fetches use **Tier 2**: `curl_cffi` `impersonate="chrome"`, `timeout=25`, `allow_redirects=True`. Read-only. Per-host failure isolation — one host's error records a status and never aborts the run.
 - S3 pulls use the **AWS CLI** with `AWS_PROFILE=tlt-prod` against `s3://atg-apo-mcp-qa-scrape/data/{host}/manifest.json`. No `boto3` dependency.
 - Baseline date = manifest `generated_at` (ISO 8601). `state.db` is **not** used — its `visited` table has no timestamp column.

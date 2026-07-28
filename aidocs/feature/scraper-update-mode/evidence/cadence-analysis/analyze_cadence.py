@@ -23,8 +23,8 @@ from recommend import recommend
 from report import render_report
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_SEED = os.path.join(
-    HERE, "..", "scraper-update-mode", "evidence", "aws-reachability", "result.json")
+# aws-reachability is a sibling evidence dir under scraper-update-mode/evidence/
+DEFAULT_SEED = os.path.join(HERE, "..", "aws-reachability", "result.json")
 MANIFEST_CACHE = os.path.join(HERE, "manifest-cache")
 
 DISCOVERED = os.path.join(HERE, "sitemaps_discovered.json")
