@@ -1,0 +1,64 @@
+{
+  "probed": 4,
+  "found_any_sitemap": [],
+  "feeds_available": [
+    "careerservices.fas.harvard.edu",
+    "www.hio.harvard.edu"
+  ],
+  "results": [
+    {
+      "host": "ces.fas.harvard.edu",
+      "homepage_status": 200,
+      "robots_status": 200,
+      "xml_hits": [],
+      "html_sitemaps": [],
+      "anchor_sitemap_links": [],
+      "feeds": [],
+      "link_header_sitemap": [],
+      "found_any_sitemap": false
+    },
+    {
+      "host": "daviscenter.fas.harvard.edu",
+      "homepage_status": 200,
+      "robots_status": 200,
+      "xml_hits": [],
+      "html_sitemaps": [],
+      "anchor_sitemap_links": [],
+      "feeds": [],
+      "link_header_sitemap": [],
+      "found_any_sitemap": false
+    },
+    {
+      "host": "careerservices.fas.harvard.edu",
+      "homepage_status": 200,
+      "robots_status": 200,
+      "xml_hits": [],
+      "html_sitemaps": [],
+      "anchor_sitemap_links": [],
+      "feeds": [
+        {
+          "url": "https://careerservices.fas.harvard.edu/feed/",
+          "date_tags": 11
+        }
+      ],
+      "link_header_sitemap": [],
+      "found_any_sitemap": false
+    },
+    {
+      "host": "www.hio.harvard.edu",
+      "homepage_status": 200,
+      "robots_status": 200,
+      "xml_hits": [],
+      "html_sitemaps": [],
+      "anchor_sitemap_links": [],
+      "feeds": [
+        {
+          "url": "https://www.hio.harvard.edu/rss.xml",
+          "date_tags": 10
+        }
+      ],
+      "link_header_sitemap": [],
+      "found_any_sitemap": false
+    }
+  ]
+}
