@@ -47,8 +47,10 @@ CONFIG = {
     'progress_interval': 5,  # Seconds between progress reports
 }
 
-# HTTP status codes that warrant retry (transient server issues)
-RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+# HTTP status codes that warrant retry (transient server issues).
+# 429 is NOT here — it escalates to Tier 2/3 immediately rather than
+# burning retries against a WAF that won't relent on the same fingerprint.
+RETRYABLE_STATUS = {500, 502, 503, 504}
 
 # File extensions to download
 DOWNLOADABLE_EXTENSIONS = {
