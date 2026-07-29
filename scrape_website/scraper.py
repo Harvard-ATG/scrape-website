@@ -878,9 +878,9 @@ class WebsiteScraper:
                 status = resp.status_code
                 content_type = resp.headers.get('Content-Type', '')
 
-                # Still blocked by WAF
-                if status == 403:
-                    self.logger.debug(f"curl_cffi still blocked (403): {url}")
+                # Still blocked by WAF or rate-limited
+                if status in (403, 429):
+                    self.logger.debug(f"curl_cffi still blocked ({status}): {url}")
                     return None
 
                 # Return server errors to caller for retry handling
@@ -980,14 +980,15 @@ class WebsiteScraper:
                 await context.close()
 
     # --- FETCH WITH TIER ESCALATION ---
-    # Tier 1 (aiohttp) handles most sites. On 403, escalates to Tier 2 (curl_cffi),
-    # then Tier 3 (Playwright) if still blocked. Non-403 errors use exponential
-    # backoff with jitter and Retry-After header support.
+    # Tier 1 (aiohttp) handles most sites. On 403 or 429 (after retries exhausted),
+    # escalates to Tier 2 (curl_cffi), then Tier 3 (Playwright) if still blocked.
+    # Non-escalatable errors use exponential backoff with jitter and Retry-After
+    # header support.
 
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
-        """Fetch a URL, escalating through tiers on 403.
+        """Fetch a URL, escalating through tiers on 403 or 429.
 
-        Flow: aiohttp → (on 403) → curl_cffi → (on fail) → Playwright → (on fail) → return 403
+        Flow: aiohttp → (on 403/429) → curl_cffi → (on fail) → Playwright → (on fail) → return status
         Returns (content, content_type, kind, status) for all paths.
         """
         last_error = None
@@ -1007,14 +1008,14 @@ class WebsiteScraper:
                         await asyncio.sleep(min(wait, 30.0))
                         continue
 
-                    # Escalate 403 to Tier 2 (curl_cffi Chrome fingerprint)
-                    if status == 403:
+                    # Escalate 403/429 to Tier 2 (curl_cffi Chrome fingerprint)
+                    if status in (403, 429):
                         # Release the aiohttp connection before slow Tier 2/3 work.
                         # Without this, the connection pool slot stays occupied during
                         # potentially multi-second browser fetches.
                         await response.read()
 
-                        self.logger.debug(f"403 from aiohttp, escalating to Tier 2: {url}")
+                        self.logger.debug(f"{status} from aiohttp, escalating to Tier 2: {url}")
                         tier2_result = await self._fetch_via_curl_cffi(url)
                         if tier2_result is not None:
                             return tier2_result
@@ -1026,7 +1027,7 @@ class WebsiteScraper:
                             if tier3_result is not None:
                                 return tier3_result
 
-                        # All tiers failed, will return 403 below
+                        # All tiers failed, will return original status below
 
                     # Determine if this is a downloadable file or HTML
                     if self.should_download_file(url, content_type):
@@ -1146,7 +1147,7 @@ class WebsiteScraper:
         self.logger.debug(f"Saved text: {filepath.name}")
 
     def is_access_denied(self, content: str, status: int) -> bool:
-        if status in (401, 403):
+        if status in (401, 403, 429):
             return True
         if len(content) < 2000 and 'Access Denied' in content:
             return True
