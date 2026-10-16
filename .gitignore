@@ -6,3 +6,6 @@ data/
 .DS_Store
 uv.lock
 log.txt
+
+# Cadence tooling runtime scratch (S3-pulled manifests, regenerable)
+aidocs/feature/scraper-update-mode/evidence/cadence-analysis/manifest-cache/

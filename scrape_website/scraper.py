@@ -9,16 +9,16 @@ import re
 import sqlite3
 import logging
 import json
-from urllib.parse import urlparse, urljoin, urlsplit, urlunsplit, parse_qsl, urlencode
+from urllib.parse import urlparse, urlsplit, urlunsplit, parse_qsl, urlencode
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from collections import deque
 from concurrent.futures import ProcessPoolExecutor
 from typing import Deque
+from collections.abc import Awaitable, Callable
 import mimetypes
 import hashlib
 from datetime import datetime, timezone
-from functools import lru_cache
 
 import lxml.html
 import trafilatura
@@ -112,14 +112,14 @@ _DEFAULT_TRACKING_PARAMS: frozenset[str] = frozenset({
 # a headed Chromium (~300 MB each), risking OOM on the 8 GB Fargate task.
 #
 # We cap concurrent browsers across all processes using POSIX advisory locks
-# (fcntl.flock). Each slot is a file: /tmp/scrape-browser-{0,1,2}.lock
+# (fcntl.flock). Each slot is a file: /tmp/scrape-browser-slots/browser-{0,1,2}.lock
 # A process holds LOCK_EX on one file while its browser is alive. If all slots
 # are taken, the next process skips Tier 3 (graceful degradation — URLs get
 # logged as denied, same as if Playwright weren't installed).
 #
 # Why flock and not a semaphore or lockdir:
 # - Kernel auto-releases on process crash or OOM-kill (no stale locks)
-# - Visible for debugging: lsof /tmp/scrape-browser-*.lock
+# - Visible for debugging: lsof /tmp/scrape-browser-slots/browser-*.lock
 # - Works across unrelated processes (multiprocessing.Semaphore doesn't)
 # ---------------------------------------------------------------------------
 
@@ -206,25 +206,45 @@ def _url_within_path_prefix(path: str, prefix: str) -> bool:
     return path == p or path.startswith(p + '/')
 
 
-async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
+def _parse_robots_sitemaps(robots_bytes: bytes | None) -> list[str]:
+    """Extract absolute sitemap URLs from a robots.txt body.
+
+    Parses the ``Sitemap:`` directive (case-insensitive, may appear multiple
+    times and anywhere in the file). Returns [] on empty/undecodable input.
+    """
+    urls: list[str] = []
+    if not robots_bytes:
+        return urls
+    text = robots_bytes.decode("utf-8", errors="replace")
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.lower().startswith("sitemap:"):
+            url = stripped[len("sitemap:"):].strip()
+            if url:
+                urls.append(url)
+    return urls
+
+
+async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
+                              host: str,
                               scheme: str = "https",
                               max_urls: int = 5000) -> list[str]:
-    """Best-effort sitemap discovery.
+    """Best-effort sitemap discovery via a tier-escalating fetch callable.
 
-    Tries ``{scheme}://{host}/sitemap.xml`` then
-    ``{scheme}://{host}/sitemap_index.xml``.  Recurses into
-    ``<sitemap><loc>`` entries (sitemap-index format) up to one level.
+    Discovery order:
+      1. ``robots.txt`` ``Sitemap:`` directives (authoritative when present)
+      2. standard fallbacks ``/sitemap.xml``, ``/sitemap_index.xml``,
+         ``/wp-sitemap.xml`` (WordPress)
+    Recurses into ``<sitemap><loc>`` (sitemap-index) entries up to one level.
     Returns a deduped list of ``<loc>`` URLs, capped at *max_urls*.
-    Any fetch/parse failure returns ``[]``.
+
+    *fetch* takes a URL and returns the body as bytes on HTTP 200, else None.
+    Routing discovery through the crawler's tier-escalating fetcher (Tier 1
+    aiohttp -> Tier 2 curl_cffi) is required: a naive client 403s on
+    Akamai-gated hosts and silently returns []. Any fetch/parse failure
+    degrades to [] (caller falls back to BFS).
     """
     ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-
-    async def _get(url: str) -> bytes | None:
-        try:
-            async with session.get(url) as resp:
-                return await resp.read() if resp.status == 200 else None
-        except Exception:
-            return None
 
     def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
         urls: list[str] = []
@@ -240,20 +260,33 @@ async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
             for elem in root.findall(f"{tag}/loc"):
                 if elem.text:
                     urls.append(elem.text.strip())
-            # Also try namespace-stripped approach
+            # Also try namespace-stripped approach: find tag elements, then their loc children
+            # (parent-scoped so <sitemap><loc> is not matched when tag="url", and vice versa)
             if not urls:
-                for elem in root.iter():
-                    local = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
-                    if local == "loc" and elem.text:
-                        urls.append(elem.text.strip())
+                for parent in root.iter():
+                    parent_local = parent.tag.split("}")[-1] if "}" in parent.tag else parent.tag
+                    if parent_local == tag:
+                        for child in parent:
+                            child_local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+                            if child_local == "loc" and child.text:
+                                urls.append(child.text.strip())
         return urls
+
+    # robots.txt Sitemap: directives first (authoritative), then fallbacks.
+    robots = await fetch(f"{scheme}://{host}/robots.txt")
+    candidates = _parse_robots_sitemaps(robots)
+    for path in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"):
+        candidates.append(f"{scheme}://{host}{path}")
 
     seen: set[str] = set()
     result: list[str] = []
+    tried: set[str] = set()
 
-    for path in ("/sitemap.xml", "/sitemap_index.xml"):
-        sitemap_url = f"{scheme}://{host}{path}"
-        data = await _get(sitemap_url)
+    for sitemap_url in candidates:
+        if sitemap_url in tried:
+            continue
+        tried.add(sitemap_url)
+        data = await fetch(sitemap_url)
         if not data:
             continue
 
@@ -261,7 +294,7 @@ async def _fetch_sitemap_urls(session: aiohttp.ClientSession, host: str,
         sub_sitemaps = _parse_locs(data, tag="sitemap")
         if sub_sitemaps:
             for sub_url in sub_sitemaps:
-                sub_data = await _get(sub_url)
+                sub_data = await fetch(sub_url)
                 if sub_data:
                     for loc in _parse_locs(sub_data, tag="url"):
                         if loc not in seen:
@@ -304,6 +337,51 @@ def _normalize_url(url: str, strip_tracking: bool = False) -> str:
     if strip_tracking:
         url = _strip_tracking_params(url)
     return url
+
+
+def _decide_crawl_gen(baseline: int, *, fresh: bool, resuming: bool) -> int:
+    """Choose this run's crawl generation from the highest one recorded.
+
+    `baseline` = COALESCE(MAX(crawl_gen), 0) from state.db.
+      - fresh:    state was cleared → start at generation 1.
+      - resuming: continue the in-flight pass (its rows already carry `baseline`);
+                  max(baseline, 1) guards the one-time post-migration case.
+      - update:   the last pass completed → new pass, advance to baseline + 1.
+
+    The queue (not this value) decides fresh/resume/update; see _should_fetch.
+    """
+    if fresh:
+        return 1
+    if resuming:
+        return max(baseline, 1)
+    return baseline + 1
+
+
+def _should_fetch(url: str, seen_this_run: set[str], url_store: "URLStore") -> bool:
+    """Decide whether to fetch a URL during this pass.
+
+    Foundation behavior (zero regression):
+      - skip if already fetched this run (`seen_this_run`, in-run loop prevention), OR
+      - skip if visited in a prior run (`url_store.contains`, cross-run skip).
+
+    The deferred --update flag later extends ONLY the cross-run half to re-fetch
+    rows whose crawl_gen < the current generation. Resume vs. new-pass is decided
+    by the queue, never here.
+    """
+    if url in seen_this_run:
+        return False
+    return not url_store.contains(url)
+
+
+def _should_write_manifest(*, crawl_complete: bool, capped: bool, has_entries: bool) -> bool:
+    """Only (re)write manifest.json after a complete, non-capped pass with entries.
+
+    Guards the 'complete & authoritative' invariant: a partial, crashed, or capped
+    run leaves the last complete manifest untouched, so downstream ingest /
+    deprecate_removed_urls never sees a shrunken set. `capped` is always False
+    today; the guard is installed for the deferred --max-pages stream.
+    """
+    return crawl_complete and not capped and has_entries
 
 
 def _extract_links_lxml(html_content: str, base_url: str, base_domain: str,
@@ -427,6 +505,34 @@ def _parse_and_extract(html_content: str, url: str, base_domain: str,
 # SQLite-backed URL store
 # ---------------------------------------------------------------------------
 
+# --- Crawl generations & fetch pathways -------------------------------------
+# state.db tracks a per-URL `crawl_gen` (integer) and `last_fetched_at` (UTC
+# ISO-8601). A "generation" is one scoped, monotonic crawl pass over the site.
+#
+#   crawl_gen (control)  — which generation last fetched this row.
+#   last_fetched_at (data) — when that fetch happened (freshness/debugging).
+#
+# Three fetch pathways, selected by --fresh and the queue (NOT by crawl_gen):
+#   * fresh   (--fresh)              → clear state, crawl_gen = 1, re-fetch all.
+#   * resume  (no flag, queue full)  → an interrupted pass; continue the SAME
+#                                       generation (max(baseline, 1)) on the
+#                                       leftover queue.
+#   * update  (no flag, queue empty) → the last pass completed; start a new
+#                                       generation (baseline + 1), discover new
+#                                       pages, skip existing ones. This is the
+#                                       "run again without wiping" path — it has
+#                                       no dedicated flag.
+#
+# The current generation is DERIVED (see _decide_crawl_gen) from
+# COALESCE(MAX(crawl_gen), 0); nothing is stored in the `stats` table. Two
+# independent axes: the `queue` table owns resume-vs-new-pass; `crawl_gen` owns
+# re-fetch-vs-skip (see _should_fetch). Today `_should_fetch` skips any
+# already-visited URL, so `update` only picks up NEW pages. The deferred
+# `--update` flag will re-fetch pages whose sitemap <lastmod> changed by making
+# `_should_fetch` re-fetch rows with crawl_gen < current — this foundation lays
+# that seam WITHOUT changing behavior.
+# ----------------------------------------------------------------------------
+
 class URLStore:
     """SQLite-backed visited URL tracking with in-memory LRU cache."""
 
@@ -445,6 +551,9 @@ class URLStore:
             ("filename", "TEXT"), ("hostname", "TEXT"), ("title", "TEXT"),
             ("found_on", "TEXT"), ("file_type", "TEXT"),
             ("content_hash", "TEXT"), ("file_size", "INTEGER"),
+            # Crawl-generation foundation (see comment block above class URLStore):
+            ("crawl_gen", "INTEGER"),      # which crawl generation last fetched this row
+            ("last_fetched_at", "TEXT"),   # UTC ISO-8601 of the most recent successful fetch
         ]:
             try:
                 self.conn.execute(f"ALTER TABLE visited ADD COLUMN {col} {col_type}")
@@ -488,6 +597,17 @@ class URLStore:
     def count(self) -> int:
         return self._count
 
+    def max_crawl_gen(self) -> int:
+        """Highest crawl generation recorded, or 0 if none.
+
+        COALESCE guards both an empty table and the one-time post-migration
+        state where existing rows have NULL crawl_gen.
+        """
+        row = self.conn.execute(
+            "SELECT COALESCE(MAX(crawl_gen), 0) FROM visited"
+        ).fetchone()
+        return row[0]
+
     def has_file_hash(self, file_hash: str) -> bool:
         row = self.conn.execute("SELECT 1 FROM downloaded_files WHERE hash=?", (file_hash,)).fetchone()
         return row is not None
@@ -501,12 +621,19 @@ class URLStore:
     def upsert_metadata(self, url: str, *, filename: str, hostname: str,
                         title: str | None = None, found_on: str | None = None,
                         file_type: str = "web", content_hash: str | None = None,
-                        file_size: int | None = None):
+                        file_size: int | None = None, crawl_gen: int | None = None):
+        # last_fetched_at stamps the UTC instant of this successful save (freshness);
+        # crawl_gen records which crawl generation last fetched the row (control).
+        # Only stamp them on a real fetch save (crawl_gen provided).
+        fetched_at = (
+            datetime.now(timezone.utc).isoformat() if crawl_gen is not None else None
+        )
         self.conn.execute("""
             UPDATE visited SET filename=?, hostname=?, title=?, found_on=?,
-                file_type=?, content_hash=?, file_size=?
+                file_type=?, content_hash=?, file_size=?, crawl_gen=?, last_fetched_at=?
             WHERE url=?
-        """, (filename, hostname, title, found_on, file_type, content_hash, file_size, url))
+        """, (filename, hostname, title, found_on, file_type, content_hash,
+              file_size, crawl_gen, fetched_at, url))
 
     def export_manifest(self, base_hostname: str) -> dict:
         rows = self.conn.execute("""
@@ -681,6 +808,7 @@ class WebsiteScraper:
         self.url_store = URLStore(self.logs_dir / 'state.db')
 
         # Handle fresh start vs resume
+        resuming = False
         if fresh:
             self.url_store.clear()
             self.urls_to_visit: Deque[tuple[str, str | None]] = deque([(start_url, None)])
@@ -693,9 +821,20 @@ class WebsiteScraper:
                 self.urls_to_visit = saved_queue
                 if saved_stats:
                     self.stats.update(saved_stats)
+                resuming = True
                 self.logger.info(f"Resuming: {self.url_store.count} URLs visited, {len(saved_queue)} in queue")
             else:
                 self.urls_to_visit = deque([(start_url, None)])
+
+        # Crawl-generation state. The queue above (not this value) decides
+        # fresh/resume/new-pass; crawl_gen only marks which rows this pass fetched.
+        self.crawl_gen = _decide_crawl_gen(
+            self.url_store.max_crawl_gen(), fresh=fresh, resuming=resuming
+        )
+        self.seen_this_run: set[str] = set()   # in-run loop prevention (see _should_fetch)
+        self.capped = False                    # --max-pages sets this (deferred stream)
+        self.crawl_complete = False            # set True only on normal crawl() completion
+        self.logger.info(f"Crawl generation: {self.crawl_gen}")
 
         # ProcessPoolExecutor for CPU-bound parsing
         self.executor = ProcessPoolExecutor(max_workers=os.cpu_count())
@@ -987,6 +1126,24 @@ class WebsiteScraper:
             if context:
                 await context.close()
 
+    async def _sitemap_fetch(self, url: str) -> bytes | None:
+        """Fetch a discovery URL (robots.txt / sitemap) as bytes via the
+        tier-escalating fetcher, so Akamai-gated hosts resolve at Tier 2.
+
+        Returns the body as bytes on HTTP 200, else None (non-200 or error) —
+        the best-effort contract _fetch_sitemap_urls expects. .xml comes back
+        as 'html' (str); robots.txt (.txt) comes back as 'file' (bytes).
+        """
+        try:
+            content, _content_type, _kind, status = await self.fetch_with_retry(url)
+        except Exception:
+            return None
+        if status != 200 or content is None:
+            return None
+        if isinstance(content, bytes):
+            return content
+        return content.encode("utf-8", errors="replace")
+
     # --- FETCH WITH TIER ESCALATION ---
     # Tier 1 (aiohttp) handles most sites. On 403 or 429 (after retries exhausted),
     # escalates to Tier 2 (curl_cffi), then Tier 3 (Playwright) if still blocked.
@@ -1103,6 +1260,7 @@ class WebsiteScraper:
             url, filename=filename, hostname=self.base_domain,
             title=title, found_on=found_on, file_type="binary",
             content_hash=file_hash, file_size=len(content),
+            crawl_gen=self.crawl_gen,
         )
 
         size_mb = len(content) / (1024 * 1024)
@@ -1150,6 +1308,7 @@ class WebsiteScraper:
             title=title, file_type="web",
             content_hash=compute_hash(text),
             file_size=len(text.encode()),
+            crawl_gen=self.crawl_gen,
         )
         self.stats['text_extracted'] += 1
         self.logger.debug(f"Saved text: {filepath.name}")
@@ -1162,6 +1321,12 @@ class WebsiteScraper:
         return False
 
     async def process_url(self, url: str, found_on: str | None = None):
+        """Fetch one URL, persist its content, and queue its outbound links.
+
+        Files are downloaded as-is; HTML is parsed off-thread, saved, its
+        extracted text stamped at the current crawl generation, and any new
+        (not-yet-visited) links appended to the queue. All errors are caught and
+        recorded so one bad page never aborts the crawl."""
         async with self.semaphore:
             try:
                 await asyncio.sleep(self.delay)
@@ -1230,19 +1395,29 @@ class WebsiteScraper:
             self.logger.debug(f"Checkpoint saved: {len(self.urls_to_visit)} URLs in queue")
 
     async def crawl(self):
+        """Run the breadth-first crawl loop until the queue and in-flight tasks drain.
+
+        Optionally seeds new URLs from the sitemap, then fetches each queued URL
+        through the `_should_fetch` gate (skips already-visited and this-run
+        duplicates). `crawl_complete` is set True ONLY on a clean loop exit — a
+        crash propagates out with it still False, which keeps the last complete
+        manifest intact (see run()). The finally block always checkpoints the
+        queue and tears down the session/browser."""
         await self.init_session()
 
-        # Seed from sitemap if enabled (best-effort, non-blocking)
+        # Seed from sitemap if enabled (best-effort, non-blocking).
+        # Routes through _sitemap_fetch so Akamai-gated hosts resolve at Tier 2;
+        # a naive Tier-1 client 403s and returns [] (silent no-op in prod).
         if self.use_sitemap:
             parsed_start = urlparse(self.start_url)
             try:
                 sitemap_urls = await asyncio.wait_for(
                     _fetch_sitemap_urls(
-                        self.session,
+                        self._sitemap_fetch,
                         self.base_domain,
                         parsed_start.scheme or "https",
                     ),
-                    timeout=15,
+                    timeout=60,
                 )
             except Exception:
                 sitemap_urls = []
@@ -1265,7 +1440,7 @@ class WebsiteScraper:
                         self.urls_to_visit.append((normalized, None))
                         added += 1
                 if added:
-                    self.logger.info(f"Sitemap: seeded {added} URLs from sitemap.xml")
+                    self.logger.info(f"Sitemap: seeded {added} URLs from sitemap discovery")
 
         # Start background tasks
         progress_task = asyncio.create_task(self._progress_reporter())
@@ -1278,7 +1453,8 @@ class WebsiteScraper:
                 while self.urls_to_visit and len(tasks) < self.max_concurrent:
                     url, found_on = self.urls_to_visit.popleft()
 
-                    if not self.url_store.contains(url):
+                    if _should_fetch(url, self.seen_this_run, self.url_store):
+                        self.seen_this_run.add(url)
                         self.url_store.add(url)
                         task = asyncio.create_task(self.process_url(url, found_on=found_on))
                         tasks.append(task)
@@ -1286,6 +1462,9 @@ class WebsiteScraper:
                 if tasks:
                     done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                     tasks = list(tasks)
+
+            # Loop exited normally (queue drained, no in-flight tasks) → complete pass.
+            self.crawl_complete = True
 
         finally:
             progress_task.cancel()
@@ -1297,18 +1476,34 @@ class WebsiteScraper:
             await self._close_browser()
 
     async def run(self):
+        """Drive a full crawl, then regenerate the manifest and upload — atomically.
+
+        The manifest is rewritten only after a complete, non-capped pass
+        (`_should_write_manifest`), so a partial or crashed run leaves the last
+        complete manifest.json — and any S3 copy — untouched. The S3 upload runs
+        only if the crawl returned normally; a crash short-circuits both."""
         start_time = datetime.now()
         self.logger.info(f"Starting scraper at {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
         await self.crawl()
 
-        # Generate manifest.json
+        # Generate manifest.json — only after a complete, non-capped pass, so a
+        # partial/crashed/capped run leaves the last complete manifest intact.
         manifest_files = self.url_store.export_manifest(self.base_domain)
-        if manifest_files:
+        if _should_write_manifest(
+            crawl_complete=self.crawl_complete,
+            capped=self.capped,
+            has_entries=bool(manifest_files),
+        ):
             manifest = build_manifest(manifest_files, self.base_domain)
             manifest_path = self.base_dir / "manifest.json"
             write_manifest(manifest, manifest_path)
             self.logger.info(f"Generated manifest.json: {len(manifest_files)} entries")
+        elif manifest_files:
+            self.logger.info(
+                "Skipped manifest regeneration (incomplete or capped pass); "
+                "kept last complete manifest.json"
+            )
 
         # Upload to S3 if configured
         if self.s3_bucket:
