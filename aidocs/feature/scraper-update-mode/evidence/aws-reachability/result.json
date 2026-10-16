@@ -1,0 +1,761 @@
+{
+  "total": 83,
+  "reachable": 79,
+  "tier1_direct_200": 28,
+  "needed_tier2": 51,
+  "unreachable_hosts": [
+    "ces.fas.harvard.edu",
+    "daviscenter.fas.harvard.edu",
+    "careerservices.fas.harvard.edu",
+    "www.hio.harvard.edu"
+  ],
+  "results": [
+    {
+      "host": "writingprogram.college.harvard.edu",
+      "sitemap_url": "https://writingprogram.college.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 5,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "firstyearseminarprogram.college.harvard.edu",
+      "sitemap_url": "https://firstyearseminarprogram.college.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 6,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "gened.college.harvard.edu",
+      "sitemap_url": "https://gened.college.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 4,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "oie.fas.harvard.edu",
+      "sitemap_url": "https://oie.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1179,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "placement.college.harvard.edu",
+      "sitemap_url": "https://placement.college.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 3,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "courses.my.harvard.edu",
+      "sitemap_url": "https://courses.my.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 0,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "handbook.college.harvard.edu",
+      "sitemap_url": "https://handbook.college.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 3,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "archaeology.harvard.edu",
+      "sitemap_url": "https://archaeology.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 521,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "celtic.fas.harvard.edu",
+      "sitemap_url": "https://celtic.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 177,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "edsecondary.fas.harvard.edu",
+      "sitemap_url": "https://edsecondary.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 381,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "emr.fas.harvard.edu",
+      "sitemap_url": "https://emr.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 7,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "ces.fas.harvard.edu",
+      "sitemap_url": "https://ces.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 404,
+      "tier2": 404,
+      "loc_count": null,
+      "is_index": null,
+      "reachable": false
+    },
+    {
+      "host": "ghhp.fas.harvard.edu",
+      "sitemap_url": "https://ghhp.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 474,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "medieval.fas.harvard.edu",
+      "sitemap_url": "https://medieval.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1523,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "msi.harvard.edu",
+      "sitemap_url": "https://msi.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 105,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "mbb.harvard.edu",
+      "sitemap_url": "https://mbb.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 986,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "daviscenter.fas.harvard.edu",
+      "sitemap_url": "https://daviscenter.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 404,
+      "tier2": 404,
+      "loc_count": null,
+      "is_index": null,
+      "reachable": false
+    },
+    {
+      "host": "uraf.harvard.edu",
+      "sitemap_url": "https://uraf.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 436,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "oue.fas.harvard.edu",
+      "sitemap_url": "https://oue.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 8,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "incomingstudents.college.harvard.edu",
+      "sitemap_url": "https://incomingstudents.college.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 30,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "advising.college.harvard.edu",
+      "sitemap_url": "https://advising.college.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 6,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "academicresourcecenter.harvard.edu",
+      "sitemap_url": "https://academicresourcecenter.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 7,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "registrar.fas.harvard.edu",
+      "sitemap_url": "https://registrar.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 881,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "qrd.college.harvard.edu",
+      "sitemap_url": "https://qrd.college.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 4,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "language.fas.harvard.edu",
+      "sitemap_url": "https://language.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 25,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "writingcenter.fas.harvard.edu",
+      "sitemap_url": "https://writingcenter.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 95,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "oaisc.fas.harvard.edu",
+      "sitemap_url": "https://oaisc.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 5,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "dao.fas.harvard.edu",
+      "sitemap_url": "https://dao.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 6,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "library.harvard.edu",
+      "sitemap_url": "https://library.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 258,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "careerservices.fas.harvard.edu",
+      "sitemap_url": "https://careerservices.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 404,
+      "tier2": 404,
+      "loc_count": null,
+      "is_index": null,
+      "reachable": false
+    },
+    {
+      "host": "www.hio.harvard.edu",
+      "sitemap_url": "https://www.hio.harvard.edu/wp-sitemap.xml",
+      "tier1": 404,
+      "tier2": 404,
+      "loc_count": null,
+      "is_index": null,
+      "reachable": false
+    },
+    {
+      "host": "engagedscholarship.fas.harvard.edu",
+      "sitemap_url": "https://engagedscholarship.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 5,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "publicservice.fas.harvard.edu",
+      "sitemap_url": "https://publicservice.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 939,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "lpce.college.harvard.edu",
+      "sitemap_url": "https://lpce.college.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 8,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "ofa.fas.harvard.edu",
+      "sitemap_url": "https://ofa.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1081,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "dso.college.harvard.edu",
+      "sitemap_url": "https://dso.college.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 818,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "iop.harvard.edu",
+      "sitemap_url": "https://iop.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 4,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "summerfunding.college.harvard.edu",
+      "sitemap_url": "https://summerfunding.college.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 131,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "college.harvard.edu",
+      "sitemap_url": "https://college.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 2,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "collegehousing.fas.harvard.edu",
+      "sitemap_url": "https://collegehousing.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 4,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "seo.harvard.edu",
+      "sitemap_url": "https://seo.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 184,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "aaas.fas.harvard.edu",
+      "sitemap_url": "https://aaas.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1403,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "anthropology.fas.harvard.edu",
+      "sitemap_url": "https://anthropology.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 831,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "afvs.fas.harvard.edu",
+      "sitemap_url": "https://afvs.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 805,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "astronomy.fas.harvard.edu",
+      "sitemap_url": "https://astronomy.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1237,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "www.mcb.harvard.edu",
+      "sitemap_url": "https://www.mcb.harvard.edu/sitemap_index.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 14,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "www.chemistry.harvard.edu",
+      "sitemap_url": "https://www.chemistry.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 2,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "classics.fas.harvard.edu",
+      "sitemap_url": "https://classics.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 549,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "complit.fas.harvard.edu",
+      "sitemap_url": "https://complit.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 29,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "studyofreligion.fas.harvard.edu",
+      "sitemap_url": "https://studyofreligion.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 9,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "csadvising.seas.harvard.edu",
+      "sitemap_url": "https://csadvising.seas.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 38,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "eps.harvard.edu",
+      "sitemap_url": "https://eps.harvard.edu/sitemap_index.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 13,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "eas.fas.harvard.edu",
+      "sitemap_url": "https://eas.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 93,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "www.economics.harvard.edu",
+      "sitemap_url": "https://www.economics.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 3,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "english.fas.harvard.edu",
+      "sitemap_url": "https://english.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1635,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "espp.fas.harvard.edu",
+      "sitemap_url": "https://espp.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 458,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "folkmyth.fas.harvard.edu",
+      "sitemap_url": "https://folkmyth.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 151,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "german.fas.harvard.edu",
+      "sitemap_url": "https://german.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 433,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "www.gov.harvard.edu",
+      "sitemap_url": "https://www.gov.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 16,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "history.fas.harvard.edu",
+      "sitemap_url": "https://history.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 3,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "histlit.fas.harvard.edu",
+      "sitemap_url": "https://histlit.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 830,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "histsci.fas.harvard.edu",
+      "sitemap_url": "https://histsci.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 865,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "haa.fas.harvard.edu",
+      "sitemap_url": "https://haa.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 2,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "hscrb.harvard.edu",
+      "sitemap_url": "https://hscrb.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 13,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "heb.fas.harvard.edu",
+      "sitemap_url": "https://heb.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 446,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "scienceeducation.fas.harvard.edu",
+      "sitemap_url": "https://scienceeducation.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 2,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "linguistics.fas.harvard.edu",
+      "sitemap_url": "https://linguistics.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1833,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "www.math.harvard.edu",
+      "sitemap_url": "https://www.math.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 15,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "music.fas.harvard.edu",
+      "sitemap_url": "https://music.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 463,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "nelc.fas.harvard.edu",
+      "sitemap_url": "https://nelc.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1687,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "philosophy.fas.harvard.edu",
+      "sitemap_url": "https://philosophy.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 976,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "www.physics.harvard.edu",
+      "sitemap_url": "https://www.physics.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 840,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "undergrad.psychology.fas.harvard.edu",
+      "sitemap_url": "https://undergrad.psychology.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1755,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "rll.fas.harvard.edu",
+      "sitemap_url": "https://rll.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 441,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "seas.harvard.edu",
+      "sitemap_url": "https://seas.harvard.edu/sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 3,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "slavic.fas.harvard.edu",
+      "sitemap_url": "https://slavic.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1079,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "socialstudies.fas.harvard.edu",
+      "sitemap_url": "https://socialstudies.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 269,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "sociology.fas.harvard.edu",
+      "sitemap_url": "https://sociology.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 2,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "sas.fas.harvard.edu",
+      "sitemap_url": "https://sas.fas.harvard.edu/wp-sitemap.xml",
+      "tier1": 200,
+      "tier2": 200,
+      "loc_count": 6,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "specialconcentrations.fas.harvard.edu",
+      "sitemap_url": "https://specialconcentrations.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 184,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "statistics.fas.harvard.edu",
+      "sitemap_url": "https://statistics.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 2,
+      "is_index": true,
+      "reachable": true
+    },
+    {
+      "host": "wgs.fas.harvard.edu",
+      "sitemap_url": "https://wgs.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1038,
+      "is_index": false,
+      "reachable": true
+    },
+    {
+      "host": "tdm.fas.harvard.edu",
+      "sitemap_url": "https://tdm.fas.harvard.edu/sitemap.xml",
+      "tier1": 403,
+      "tier2": 200,
+      "loc_count": 1454,
+      "is_index": false,
+      "reachable": true
+    }
+  ]
+}

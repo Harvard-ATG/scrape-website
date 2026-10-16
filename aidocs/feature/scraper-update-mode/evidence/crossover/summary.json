@@ -1,0 +1,759 @@
+[
+  {
+    "host": "anthropology.fas.harvard.edu",
+    "sitemap_source": "standard:https://anthropology.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 831,
+    "sitemap_base": 831,
+    "rows_raw": 1684,
+    "distinct_base": 1149,
+    "dup_collapse_ratio": 1.47,
+    "crossover": 727,
+    "non_crossover_full": 958,
+    "non_crossover_base": 422,
+    "query_bloat": 536,
+    "sitemap_only_missed": 104,
+    "non_crossover_by_type": {
+      "file": 335,
+      "query-string (pagination/facet)": 22,
+      "distinct-path": 65
+    },
+    "docs_provenance": {
+      "total": 107,
+      "not_in_sitemap": 107,
+      "real_recoverable": 19,
+      "real_null": 14,
+      "real_at_risk": 74,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 62,
+      "not_in_sitemap": 62,
+      "real_recoverable": 0,
+      "real_null": 62,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "astronomy.fas.harvard.edu",
+    "sitemap_source": "standard:https://astronomy.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1237,
+    "sitemap_base": 1237,
+    "rows_raw": 5317,
+    "distinct_base": 1791,
+    "dup_collapse_ratio": 2.97,
+    "crossover": 1080,
+    "non_crossover_full": 1782,
+    "non_crossover_base": 711,
+    "query_bloat": 1071,
+    "sitemap_only_missed": 157,
+    "non_crossover_by_type": {
+      "file": 527,
+      "distinct-path": 155,
+      "query-string (pagination/facet)": 29
+    },
+    "docs_provenance": {
+      "total": 301,
+      "not_in_sitemap": 301,
+      "real_recoverable": 10,
+      "real_null": 176,
+      "real_at_risk": 115,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 44,
+      "not_in_sitemap": 44,
+      "real_recoverable": 0,
+      "real_null": 44,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "careerservices.fas.harvard.edu",
+    "sitemap_source": "NONE",
+    "sitemap_urls": 0,
+    "sitemap_base": 0,
+    "rows_raw": 3068,
+    "distinct_base": 1775,
+    "dup_collapse_ratio": 1.73,
+    "crossover": 0,
+    "non_crossover_full": 3051,
+    "non_crossover_base": 1775,
+    "query_bloat": 1276,
+    "sitemap_only_missed": 0,
+    "non_crossover_by_type": {
+      "distinct-path": 1593,
+      "file": 154,
+      "query-string (pagination/facet)": 28
+    },
+    "docs_provenance": {
+      "total": 0,
+      "not_in_sitemap": 0,
+      "real_recoverable": 0,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 0,
+      "not_in_sitemap": 0,
+      "real_recoverable": 0,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "no_sitemap"
+  },
+  {
+    "host": "classics.fas.harvard.edu",
+    "sitemap_source": "standard:https://classics.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 549,
+    "sitemap_base": 549,
+    "rows_raw": 4132,
+    "distinct_base": 984,
+    "dup_collapse_ratio": 4.2,
+    "crossover": 377,
+    "non_crossover_full": 2092,
+    "non_crossover_base": 607,
+    "query_bloat": 1485,
+    "sitemap_only_missed": 172,
+    "non_crossover_by_type": {
+      "distinct-path": 516,
+      "query-string (pagination/facet)": 17,
+      "file": 74
+    },
+    "docs_provenance": {
+      "total": 98,
+      "not_in_sitemap": 98,
+      "real_recoverable": 55,
+      "real_null": 25,
+      "real_at_risk": 18,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 0,
+      "not_in_sitemap": 0,
+      "real_recoverable": 0,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "dso.college.harvard.edu",
+    "sitemap_source": "standard:https://dso.college.harvard.edu/sitemap.xml",
+    "sitemap_urls": 818,
+    "sitemap_base": 818,
+    "rows_raw": 3104,
+    "distinct_base": 1029,
+    "dup_collapse_ratio": 3.02,
+    "crossover": 661,
+    "non_crossover_full": 959,
+    "non_crossover_base": 368,
+    "query_bloat": 591,
+    "sitemap_only_missed": 157,
+    "non_crossover_by_type": {
+      "file": 100,
+      "distinct-path": 240,
+      "query-string (pagination/facet)": 28
+    },
+    "docs_provenance": {
+      "total": 139,
+      "not_in_sitemap": 139,
+      "real_recoverable": 4,
+      "real_null": 53,
+      "real_at_risk": 82,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 1,
+      "not_in_sitemap": 1,
+      "real_recoverable": 0,
+      "real_null": 1,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "english.fas.harvard.edu",
+    "sitemap_source": "standard:https://english.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1635,
+    "sitemap_base": 1635,
+    "rows_raw": 2713,
+    "distinct_base": 1792,
+    "dup_collapse_ratio": 1.51,
+    "crossover": 1248,
+    "non_crossover_full": 1465,
+    "non_crossover_base": 544,
+    "query_bloat": 921,
+    "sitemap_only_missed": 387,
+    "non_crossover_by_type": {
+      "file": 372,
+      "distinct-path": 137,
+      "query-string (pagination/facet)": 35
+    },
+    "docs_provenance": {
+      "total": 241,
+      "not_in_sitemap": 241,
+      "real_recoverable": 28,
+      "real_null": 53,
+      "real_at_risk": 160,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 5,
+      "not_in_sitemap": 5,
+      "real_recoverable": 0,
+      "real_null": 5,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "histlit.fas.harvard.edu",
+    "sitemap_source": "standard:https://histlit.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 830,
+    "sitemap_base": 830,
+    "rows_raw": 6007,
+    "distinct_base": 2579,
+    "dup_collapse_ratio": 2.33,
+    "crossover": 595,
+    "non_crossover_full": 2452,
+    "non_crossover_base": 1984,
+    "query_bloat": 468,
+    "sitemap_only_missed": 235,
+    "non_crossover_by_type": {
+      "file": 276,
+      "distinct-path": 1579,
+      "query-string (pagination/facet)": 129
+    },
+    "docs_provenance": {
+      "total": 477,
+      "not_in_sitemap": 475,
+      "real_recoverable": 18,
+      "real_null": 327,
+      "real_at_risk": 130,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 0,
+      "not_in_sitemap": 0,
+      "real_recoverable": 0,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "history.fas.harvard.edu",
+    "sitemap_source": "standard:https://history.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 5767,
+    "sitemap_base": 5767,
+    "rows_raw": 28172,
+    "distinct_base": 11566,
+    "dup_collapse_ratio": 2.44,
+    "crossover": 4650,
+    "non_crossover_full": 11770,
+    "non_crossover_base": 6916,
+    "query_bloat": 4854,
+    "sitemap_only_missed": 1117,
+    "non_crossover_by_type": {
+      "file": 4938,
+      "distinct-path": 1795,
+      "query-string (pagination/facet)": 183
+    },
+    "docs_provenance": {
+      "total": 2135,
+      "not_in_sitemap": 2135,
+      "real_recoverable": 379,
+      "real_null": 1173,
+      "real_at_risk": 583,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 85,
+      "not_in_sitemap": 85,
+      "real_recoverable": 0,
+      "real_null": 85,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "hscrb.harvard.edu",
+    "sitemap_source": "standard:https://hscrb.harvard.edu/sitemap.xml",
+    "sitemap_urls": 4975,
+    "sitemap_base": 4975,
+    "rows_raw": 5589,
+    "distinct_base": 3177,
+    "dup_collapse_ratio": 1.76,
+    "crossover": 3036,
+    "non_crossover_full": 176,
+    "non_crossover_base": 141,
+    "query_bloat": 35,
+    "sitemap_only_missed": 1939,
+    "non_crossover_by_type": {
+      "file": 59,
+      "distinct-path": 80,
+      "query-string (pagination/facet)": 2
+    },
+    "docs_provenance": {
+      "total": 5,
+      "not_in_sitemap": 5,
+      "real_recoverable": 5,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 53,
+      "not_in_sitemap": 53,
+      "real_recoverable": 0,
+      "real_null": 53,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "linguistics.fas.harvard.edu",
+    "sitemap_source": "standard:https://linguistics.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1833,
+    "sitemap_base": 1833,
+    "rows_raw": 3976,
+    "distinct_base": 3051,
+    "dup_collapse_ratio": 1.3,
+    "crossover": 1437,
+    "non_crossover_full": 2539,
+    "non_crossover_base": 1614,
+    "query_bloat": 925,
+    "sitemap_only_missed": 396,
+    "non_crossover_by_type": {
+      "distinct-path": 338,
+      "file": 1259,
+      "query-string (pagination/facet)": 17
+    },
+    "docs_provenance": {
+      "total": 423,
+      "not_in_sitemap": 423,
+      "real_recoverable": 49,
+      "real_null": 195,
+      "real_at_risk": 179,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 38,
+      "not_in_sitemap": 38,
+      "real_recoverable": 0,
+      "real_null": 38,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "ofa.fas.harvard.edu",
+    "sitemap_source": "standard:https://ofa.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1081,
+    "sitemap_base": 1081,
+    "rows_raw": 2888,
+    "distinct_base": 1343,
+    "dup_collapse_ratio": 2.15,
+    "crossover": 877,
+    "non_crossover_full": 748,
+    "non_crossover_base": 466,
+    "query_bloat": 282,
+    "sitemap_only_missed": 204,
+    "non_crossover_by_type": {
+      "distinct-path": 227,
+      "file": 224,
+      "query-string (pagination/facet)": 15
+    },
+    "docs_provenance": {
+      "total": 239,
+      "not_in_sitemap": 239,
+      "real_recoverable": 40,
+      "real_null": 84,
+      "real_at_risk": 115,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 8,
+      "not_in_sitemap": 8,
+      "real_recoverable": 0,
+      "real_null": 8,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "seas.harvard.edu",
+    "sitemap_source": "robots:https://seas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 5709,
+    "sitemap_base": 5709,
+    "rows_raw": 14901,
+    "distinct_base": 5204,
+    "dup_collapse_ratio": 2.86,
+    "crossover": 4214,
+    "non_crossover_full": 3637,
+    "non_crossover_base": 990,
+    "query_bloat": 2647,
+    "sitemap_only_missed": 1495,
+    "non_crossover_by_type": {
+      "file": 174,
+      "distinct-path": 680,
+      "query-string (pagination/facet)": 133,
+      "garbage/local-path": 3
+    },
+    "docs_provenance": {
+      "total": 97,
+      "not_in_sitemap": 97,
+      "real_recoverable": 29,
+      "real_null": 20,
+      "real_at_risk": 2,
+      "junk_derivative": 46
+    },
+    "imgs_provenance": {
+      "total": 242,
+      "not_in_sitemap": 242,
+      "real_recoverable": 0,
+      "real_null": 242,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "slavic.fas.harvard.edu",
+    "sitemap_source": "standard:https://slavic.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1079,
+    "sitemap_base": 1079,
+    "rows_raw": 3688,
+    "distinct_base": 1639,
+    "dup_collapse_ratio": 2.25,
+    "crossover": 943,
+    "non_crossover_full": 1188,
+    "non_crossover_base": 696,
+    "query_bloat": 492,
+    "sitemap_only_missed": 136,
+    "non_crossover_by_type": {
+      "file": 603,
+      "distinct-path": 80,
+      "query-string (pagination/facet)": 13
+    },
+    "docs_provenance": {
+      "total": 190,
+      "not_in_sitemap": 190,
+      "real_recoverable": 87,
+      "real_null": 103,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 78,
+      "not_in_sitemap": 78,
+      "real_recoverable": 0,
+      "real_null": 78,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "sociology.fas.harvard.edu",
+    "sitemap_source": "standard:https://sociology.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 2242,
+    "sitemap_base": 2242,
+    "rows_raw": 8596,
+    "distinct_base": 3132,
+    "dup_collapse_ratio": 2.74,
+    "crossover": 1510,
+    "non_crossover_full": 3659,
+    "non_crossover_base": 1622,
+    "query_bloat": 2037,
+    "sitemap_only_missed": 732,
+    "non_crossover_by_type": {
+      "file": 1253,
+      "distinct-path": 309,
+      "query-string (pagination/facet)": 60
+    },
+    "docs_provenance": {
+      "total": 755,
+      "not_in_sitemap": 755,
+      "real_recoverable": 9,
+      "real_null": 132,
+      "real_at_risk": 614,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 4,
+      "not_in_sitemap": 4,
+      "real_recoverable": 0,
+      "real_null": 4,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "statistics.fas.harvard.edu",
+    "sitemap_source": "standard:https://statistics.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 2299,
+    "sitemap_base": 2299,
+    "rows_raw": 9898,
+    "distinct_base": 3831,
+    "dup_collapse_ratio": 2.58,
+    "crossover": 1755,
+    "non_crossover_full": 4139,
+    "non_crossover_base": 2076,
+    "query_bloat": 2063,
+    "sitemap_only_missed": 544,
+    "non_crossover_by_type": {
+      "distinct-path": 246,
+      "file": 1809,
+      "query-string (pagination/facet)": 21
+    },
+    "docs_provenance": {
+      "total": 710,
+      "not_in_sitemap": 710,
+      "real_recoverable": 60,
+      "real_null": 287,
+      "real_at_risk": 363,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 4,
+      "not_in_sitemap": 4,
+      "real_recoverable": 0,
+      "real_null": 4,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "tdm.fas.harvard.edu",
+    "sitemap_source": "standard:https://tdm.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1454,
+    "sitemap_base": 1454,
+    "rows_raw": 6296,
+    "distinct_base": 2500,
+    "dup_collapse_ratio": 2.52,
+    "crossover": 1361,
+    "non_crossover_full": 2330,
+    "non_crossover_base": 1139,
+    "query_bloat": 1191,
+    "sitemap_only_missed": 93,
+    "non_crossover_by_type": {
+      "file": 734,
+      "query-string (pagination/facet)": 123,
+      "distinct-path": 282
+    },
+    "docs_provenance": {
+      "total": 153,
+      "not_in_sitemap": 153,
+      "real_recoverable": 26,
+      "real_null": 85,
+      "real_at_risk": 42,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 6,
+      "not_in_sitemap": 6,
+      "real_recoverable": 0,
+      "real_null": 6,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "wgs.fas.harvard.edu",
+    "sitemap_source": "standard:https://wgs.fas.harvard.edu/sitemap.xml",
+    "sitemap_urls": 1038,
+    "sitemap_base": 1038,
+    "rows_raw": 2391,
+    "distinct_base": 1513,
+    "dup_collapse_ratio": 1.58,
+    "crossover": 973,
+    "non_crossover_full": 1418,
+    "non_crossover_base": 540,
+    "query_bloat": 878,
+    "sitemap_only_missed": 65,
+    "non_crossover_by_type": {
+      "file": 440,
+      "distinct-path": 88,
+      "query-string (pagination/facet)": 12
+    },
+    "docs_provenance": {
+      "total": 63,
+      "not_in_sitemap": 63,
+      "real_recoverable": 3,
+      "real_null": 11,
+      "real_at_risk": 49,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 4,
+      "not_in_sitemap": 4,
+      "real_recoverable": 0,
+      "real_null": 4,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "writingprogram.college.harvard.edu",
+    "sitemap_source": "robots:https://writingprogram.college.harvard.edu/wp-sitemap.xml",
+    "sitemap_urls": 106,
+    "sitemap_base": 106,
+    "rows_raw": 185,
+    "distinct_base": 130,
+    "dup_collapse_ratio": 1.42,
+    "crossover": 94,
+    "non_crossover_full": 117,
+    "non_crossover_base": 36,
+    "query_bloat": 81,
+    "sitemap_only_missed": 12,
+    "non_crossover_by_type": {
+      "query-string (pagination/facet)": 5,
+      "file": 27,
+      "distinct-path": 4
+    },
+    "docs_provenance": {
+      "total": 27,
+      "not_in_sitemap": 27,
+      "real_recoverable": 26,
+      "real_null": 0,
+      "real_at_risk": 1,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 0,
+      "not_in_sitemap": 0,
+      "real_recoverable": 0,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "www.chemistry.harvard.edu",
+    "sitemap_source": "standard:https://www.chemistry.harvard.edu/sitemap.xml",
+    "sitemap_urls": 2876,
+    "sitemap_base": 2876,
+    "rows_raw": 10448,
+    "distinct_base": 4067,
+    "dup_collapse_ratio": 2.57,
+    "crossover": 2423,
+    "non_crossover_full": 8025,
+    "non_crossover_base": 1644,
+    "query_bloat": 6381,
+    "sitemap_only_missed": 453,
+    "non_crossover_by_type": {
+      "file": 1424,
+      "distinct-path": 151,
+      "query-string (pagination/facet)": 69
+    },
+    "docs_provenance": {
+      "total": 417,
+      "not_in_sitemap": 417,
+      "real_recoverable": 325,
+      "real_null": 34,
+      "real_at_risk": 58,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 10,
+      "not_in_sitemap": 10,
+      "real_recoverable": 0,
+      "real_null": 10,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "www.economics.harvard.edu",
+    "sitemap_source": "standard:https://www.economics.harvard.edu/sitemap.xml",
+    "sitemap_urls": 5946,
+    "sitemap_base": 5946,
+    "rows_raw": 30490,
+    "distinct_base": 11874,
+    "dup_collapse_ratio": 2.57,
+    "crossover": 5263,
+    "non_crossover_full": 12573,
+    "non_crossover_base": 6611,
+    "query_bloat": 5962,
+    "sitemap_only_missed": 683,
+    "non_crossover_by_type": {
+      "file": 5198,
+      "distinct-path": 1317,
+      "query-string (pagination/facet)": 96
+    },
+    "docs_provenance": {
+      "total": 1645,
+      "not_in_sitemap": 1645,
+      "real_recoverable": 150,
+      "real_null": 889,
+      "real_at_risk": 606,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 18,
+      "not_in_sitemap": 18,
+      "real_recoverable": 0,
+      "real_null": 18,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  },
+  {
+    "host": "www.mcb.harvard.edu",
+    "sitemap_source": "robots:https://www.mcb.harvard.edu/sitemap_index.xml",
+    "sitemap_urls": 7189,
+    "sitemap_base": 7189,
+    "rows_raw": 1721,
+    "distinct_base": 808,
+    "dup_collapse_ratio": 2.13,
+    "crossover": 671,
+    "non_crossover_full": 1001,
+    "non_crossover_base": 137,
+    "query_bloat": 864,
+    "sitemap_only_missed": 6518,
+    "non_crossover_by_type": {
+      "query-string (pagination/facet)": 15,
+      "distinct-path": 100,
+      "file": 22
+    },
+    "docs_provenance": {
+      "total": 22,
+      "not_in_sitemap": 22,
+      "real_recoverable": 0,
+      "real_null": 22,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "imgs_provenance": {
+      "total": 0,
+      "not_in_sitemap": 0,
+      "real_recoverable": 0,
+      "real_null": 0,
+      "real_at_risk": 0,
+      "junk_derivative": 0
+    },
+    "status": "ok"
+  }
+]
