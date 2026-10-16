@@ -191,3 +191,11 @@ def test_scoped_host_departures_stay_inside_the_section():
     now = sm(*[(f"/undergraduate/p{i}", "2026-01-01") for i in range(19)])
     plan = plan_update(now, {}, H, scoped, prev_sitemap=prev)
     assert plan.departures == [normalize_key(f"https://{H}/undergraduate/p19")]
+
+
+def test_tiny_scoped_host_reports_the_sitemap_pages_outside_its_section_as_out_of_scope():
+    scoped = [{"url": f"https://{H}/undergraduate", "scope_to_path": True}]
+    pages = [("/undergraduate", "2026-01-01"), ("/undergraduate/a", "2026-01-01")] + [(f"/other/p{i}", "2026-01-01") for i in range(7)]
+    plan = plan_update(sm(*pages), {}, H, scoped)
+    assert list(plan.fetch.values()) == ["seed"]
+    assert plan.out_of_scope == 7                    # the report once counted these as in scope

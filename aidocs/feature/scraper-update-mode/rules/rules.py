@@ -182,14 +182,17 @@ def plan_update(sitemap: dict[str, str | None] | None, state: dict[str, dict], h
     seeds = {normalize_key(e["url"]): e["url"] for e in entries}
 
     if is_path_scoped(entries):                                                   # R10
-        in_section = 0
+        in_section = in_scope_total = 0
         for u in (sitemap or {}):
             full = u if "://" in u else f"https://{host}{u}"
             d = evaluate(full, host, entries, adopt_proposed=adopt_proposed, exclude_events=exclude_events)
-            if d.in_scope and d.reason != "seed":
-                in_section += 1
+            if d.in_scope:
+                in_scope_total += 1
+                if d.reason != "seed":
+                    in_section += 1
         if in_section <= SECTION_PAGE_THRESHOLD:       # tiny section (0 to 2 pages on 13 hosts): refetch the seeds
             plan.fetch = {k: "seed" for k in seeds}
+            plan.out_of_scope = len(sitemap or {}) - in_scope_total   # report the sitemap pages outside the section
             return plan
         # a real section (mcb has 182 pages): plan it from the sitemap like any other host
 

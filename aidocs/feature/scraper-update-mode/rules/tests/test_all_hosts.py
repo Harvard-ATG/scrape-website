@@ -121,6 +121,8 @@ def test_event_feeds_pending_prune():
     by default (PR #4); before that they are in scope, after it they are a counted pending prune (decision 26)."""
     import re
     from scrape_website.scraper import _DEFAULT_EXCLUDE_PATTERNS
+    if not manifest_hosts():
+        pytest.skip("no cached QA manifests")
     feeds = set()
     for host in manifest_hosts():
         ents, _ = load_manifest(host)
@@ -172,3 +174,20 @@ def test_first_run_is_bounded_by_in_scope_sitemap_pages():
             continue
         nonseed = len([r for r in plan.fetch.values() if r != "seed"])
         assert nonseed <= len(sm) - plan.out_of_scope        # every planned fetch is an in-scope sitemap URL
+
+
+def test_out_of_scope_count_matches_an_independent_count_on_every_planned_host():
+    """Guards the validation report: plan.out_of_scope must equal the sitemap URLs that fail evaluate(), including on
+    path-scoped hosts that take the seeds-only shortcut (the report once counted their whole sitemap as in scope)."""
+    checked = 0
+    for h, entries in SITES.items():
+        sm = readable(h)
+        if not sm:
+            continue
+        plan = plan_update(sm, {}, h, entries)
+        if plan.blocked:
+            continue
+        independent = sum(1 for u in sm if not evaluate(u if "://" in u else f"https://{h}{u}", h, entries).in_scope)
+        assert plan.out_of_scope == independent, (h, plan.out_of_scope, independent)
+        checked += 1
+    assert checked >= 70
