@@ -91,7 +91,11 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/page/\d+",
     r"/cdn-cgi/",
     r"/search\?",
-    r"\.ics$"
+    r"\.ics$",
+    # Drupal bibcite citation exports (EndNote, RIS, BibTeX, MARC, tagged, PubMed ID): each
+    # publication list is offered in six formats as small text files that ingest never reads
+    # (it only takes .pdf, .docx, .pptx and .doc), so they cost crawl time for no content.
+    r"/bibcite/export",
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
