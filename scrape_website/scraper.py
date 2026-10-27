@@ -100,6 +100,12 @@ _R7_KEEP_EVENT_HOSTS = (
 )
 _R7_KEEP_EVENT_HOSTS_RE = "|".join(re.escape(h) for h in _R7_KEEP_EVENT_HOSTS)
 
+# R7: one page per event. Matched against the full URL; the keep hosts above are exempt.
+# A scraper built with event_keep_since=<ISO date> also seeds event pages whose sitemap
+# lastmod is on or after that date (see WebsiteScraper.run), so current-year department
+# events come in while 2013-2025 calendars stay out.
+_R7_EVENT_PATTERN = rf"(?i)^(?!https?://(?:{_R7_KEEP_EVENT_HOSTS_RE})/).*/events?/[^/]+/?$"
+
 _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     r"/tag/",
     r"/author/",
@@ -123,7 +129,7 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     #     ~40 pages across all hosts, the most-cited event URLs in the logs.
     #   - the _R7_KEEP_EVENT_HOSTS above, whose /event/ pages are this year's advising
     #     items, not seminars (26 pages).
-    rf"(?i)^(?!https?://(?:{_R7_KEEP_EVENT_HOSTS_RE})/).*/events?/[^/]+/?$",
+    _R7_EVENT_PATTERN,
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
@@ -261,7 +267,17 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
                               host: str,
                               scheme: str = "https",
                               max_urls: int = 50000) -> list[str]:
+    """Sitemap discovery returning ``<loc>`` URLs only; see ``_fetch_sitemap_entries``."""
+    return [loc for loc, _ in await _fetch_sitemap_entries(fetch, host, scheme, max_urls)]
+
+
+async def _fetch_sitemap_entries(fetch: Callable[[str], Awaitable[bytes | None]],
+                                 host: str,
+                                 scheme: str = "https",
+                                 max_urls: int = 50000) -> list[tuple[str, str | None]]:
     """Best-effort sitemap discovery via a tier-escalating fetch callable.
+
+    Returns ``(loc, lastmod)`` pairs; ``lastmod`` is the entry's text as published (None when absent).
 
     Discovery order:
       1. ``robots.txt`` ``Sitemap:`` directives (authoritative when present)
@@ -277,33 +293,33 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
     Akamai-gated hosts and silently returns []. Any fetch/parse failure
     degrades to [] (caller falls back to BFS).
     """
-    ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+    def _local(tag: str) -> str:
+        return tag.split("}")[-1] if "}" in tag else tag
 
-    def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
-        urls: list[str] = []
+    def _parse_entries(xml_bytes: bytes, tag: str = "url") -> list[tuple[str, str | None]]:
+        """(loc, lastmod) for every <tag> element, namespace-agnostic; <sitemap> and <url> are
+        parent-scoped so an index's <sitemap><loc> is never read as a page entry or vice versa."""
+        entries: list[tuple[str, str | None]] = []
         try:
             root = ET.fromstring(xml_bytes)
         except ET.ParseError:
-            return urls
-        # Try with namespace first, then without
-        for elem in root.findall(f"sm:{tag}/sm:loc", ns):
-            if elem.text:
-                urls.append(elem.text.strip())
-        if not urls:
-            for elem in root.findall(f"{tag}/loc"):
-                if elem.text:
-                    urls.append(elem.text.strip())
-            # Also try namespace-stripped approach: find tag elements, then their loc children
-            # (parent-scoped so <sitemap><loc> is not matched when tag="url", and vice versa)
-            if not urls:
-                for parent in root.iter():
-                    parent_local = parent.tag.split("}")[-1] if "}" in parent.tag else parent.tag
-                    if parent_local == tag:
-                        for child in parent:
-                            child_local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
-                            if child_local == "loc" and child.text:
-                                urls.append(child.text.strip())
-        return urls
+            return entries
+        for parent in root.iter():
+            if _local(parent.tag) != tag:
+                continue
+            loc = lastmod = None
+            for child in parent:
+                name = _local(child.tag)
+                if name == "loc" and child.text:
+                    loc = child.text.strip()
+                elif name == "lastmod" and child.text:
+                    lastmod = child.text.strip()
+            if loc:
+                entries.append((loc, lastmod))
+        return entries
+
+    def _parse_locs(xml_bytes: bytes, tag: str = "url") -> list[str]:
+        return [loc for loc, _ in _parse_entries(xml_bytes, tag)]
 
     # robots.txt Sitemap: directives are authoritative. The standard fallbacks are probed only when robots
     # advertised nothing that yielded URLs: each probe that gets a 403 can escalate to Tier 2/3, which is costly.
@@ -312,17 +328,17 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
     fallbacks = [f"{scheme}://{host}{path}" for path in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml")]
 
     seen: set[str] = set()
-    result: list[str] = []
+    result: list[tuple[str, str | None]] = []
     tried: set[str] = set()
     truncated = False
 
-    def _add(locs: list[str]) -> bool:
-        """Append new locs; return False once max_urls is reached."""
+    def _add(entries: list[tuple[str, str | None]]) -> bool:
+        """Append new entries; return False once max_urls is reached."""
         nonlocal truncated
-        for loc in locs:
+        for loc, lastmod in entries:
             if loc not in seen:
                 seen.add(loc)
-                result.append(loc)
+                result.append((loc, lastmod))
                 if len(result) >= max_urls:
                     truncated = True
                     return False
@@ -339,10 +355,10 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
         # Check for sitemap index (contains <sitemap> elements)
         for sub_url in _parse_locs(data, tag="sitemap"):
             sub_data = await fetch(sub_url)
-            if sub_data and not _add(_parse_locs(sub_data, tag="url")):
+            if sub_data and not _add(_parse_entries(sub_data, tag="url")):
                 return False
         # Also parse direct <url><loc> entries
-        return _add(_parse_locs(data, tag="url"))
+        return _add(_parse_entries(data, tag="url"))
 
     for group in (advertised, fallbacks):
         for sitemap_url in group:
@@ -761,8 +777,12 @@ class WebsiteScraper:
                  output_dir: str | Path | None = None,
                  scope_to_path: bool | None = None,
                  s3_bucket: str | None = None,
-                 playwright_enabled: bool = True):
+                 playwright_enabled: bool = True,
+                 event_keep_since: str | None = None):
         self.start_url = start_url
+        # ISO date (YYYY-MM-DD). When set, a sitemap-seeded event page whose lastmod is on or
+        # after this date is crawled even though R7 would exclude it. None keeps R7 strict.
+        self.event_keep_since = event_keep_since
         self.s3_bucket = s3_bucket
         self.base_domain = self.extract_domain(start_url)
 
@@ -797,6 +817,10 @@ class WebsiteScraper:
         # Pre-compile for in-process filtering (e.g. sitemap seed)
         self._compiled_exclude_patterns: list[re.Pattern] = [
             re.compile(p) for p in self._exclude_pattern_strings
+        ]
+        self._event_pattern = re.compile(_R7_EVENT_PATTERN)
+        self._compiled_non_event_excludes: list[re.Pattern] = [
+            p for p in self._compiled_exclude_patterns if p.pattern != _R7_EVENT_PATTERN
         ]
         self._include_pattern_strings: list[str] = include_patterns or []
         self._compiled_include_patterns: list[re.Pattern] = [
@@ -1486,8 +1510,8 @@ class WebsiteScraper:
         if self.use_sitemap:
             parsed_start = urlparse(self.start_url)
             try:
-                sitemap_urls = await asyncio.wait_for(
-                    _fetch_sitemap_urls(
+                sitemap_entries = await asyncio.wait_for(
+                    _fetch_sitemap_entries(
                         self._sitemap_fetch,
                         self.base_domain,
                         parsed_start.scheme or "https",
@@ -1498,11 +1522,12 @@ class WebsiteScraper:
                 # Best-effort, but never silent: with seeding on for every host, a quiet
                 # failure would be indistinguishable from a site that has no sitemap.
                 self.logger.warning(f"Sitemap discovery failed for {self.base_domain}; crawling from links only: {e!r}")
-                sitemap_urls = []
-            if sitemap_urls:
+                sitemap_entries = []
+            if sitemap_entries:
                 added = 0
+                kept_by_date = 0
                 dropped = {"off-host": 0, "out of scope": 0, "not included": 0, "excluded": 0, "already known": 0}
-                for surl in sitemap_urls:
+                for surl, lastmod in sitemap_entries:
                     normalized = _normalize_url(surl, strip_tracking=self.strip_tracking_params)
                     nparsed = urlparse(normalized)
                     if nparsed.netloc != self.base_domain:
@@ -1517,8 +1542,16 @@ class WebsiteScraper:
                         dropped["not included"] += 1
                         continue
                     if _url_excluded(normalized, self._compiled_exclude_patterns):
-                        dropped["excluded"] += 1
-                        continue
+                        current_event = (
+                            self.event_keep_since is not None and lastmod is not None
+                            and lastmod[:10] >= self.event_keep_since
+                            and self._event_pattern.search(normalized) is not None
+                            and not _url_excluded(normalized, self._compiled_non_event_excludes)
+                        )
+                        if not current_event:
+                            dropped["excluded"] += 1
+                            continue
+                        kept_by_date += 1
                     if self.url_store.contains(normalized):
                         dropped["already known"] += 1
                         continue
@@ -1526,7 +1559,8 @@ class WebsiteScraper:
                     added += 1
                 drops = ", ".join(f"{k} {v}" for k, v in dropped.items() if v)
                 self.logger.info(
-                    f"Sitemap: {len(sitemap_urls)} entries found; seeded {added}"
+                    f"Sitemap: {len(sitemap_entries)} entries found; seeded {added}"
+                    + (f"; events kept by date {kept_by_date}" if kept_by_date else "")
                     + (f"; dropped {drops}" if drops else "")
                 )
             else:
@@ -1707,6 +1741,9 @@ def parse_args():
                             action='store_false',
                             help='Crawl the entire domain regardless of starting URL path')
     parser.set_defaults(scope_to_path=None)
+    parser.add_argument('--event-keep-since', default=None, metavar='YYYY-MM-DD',
+                        help='Also crawl sitemap-listed event pages whose lastmod is on or after this date '
+                             '(R7 excludes event pages otherwise)')
     parser.add_argument('--no-playwright', action='store_true', default=False,
                         help="Disable Tier 3 Playwright escalation (stop at curl_cffi)")
     return parser.parse_args()
@@ -1750,6 +1787,7 @@ async def main():
                 scope_to_path=args.scope_to_path,
                 s3_bucket=args.s3_bucket,
                 playwright_enabled=not args.no_playwright,
+                event_keep_since=args.event_keep_since,
             )
             # Seed any additional URLs for this domain
             for extra in domain_urls[1:]:

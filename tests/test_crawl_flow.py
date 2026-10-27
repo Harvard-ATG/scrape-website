@@ -167,9 +167,9 @@ def test_update_pass_discovers_new_page_via_sitemap_at_next_gen(tmp_path, monkey
 
     # The site now advertises a fourth page in its sitemap.
     async def fake_sitemap(fetch, host, scheme):
-        return [HOME, PAGE_A, PAGE_B, PAGE_C]
+        return [(HOME, None), (PAGE_A, None), (PAGE_B, None), (PAGE_C, None)]
 
-    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", fake_sitemap)
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_entries", fake_sitemap)
 
     site = {HOME: ([], "# Home"), PAGE_C: ([], "# C (new)")}
     fetched = []
@@ -265,7 +265,7 @@ def test_sitemap_failure_is_logged_and_crawl_continues(tmp_path, monkeypatch, ca
     async def broken_sitemap(fetch, host, scheme):
         raise RuntimeError("robots.txt unreachable")
 
-    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", broken_sitemap)
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_entries", broken_sitemap)
     site = {HOME: ([PAGE_A], "# Home"), PAGE_A: ([], "# A")}
     fetched = []
     scraper = _make(tmp_path, fresh=True, use_sitemap=True)
@@ -287,9 +287,10 @@ def test_sitemap_outcome_is_always_logged(tmp_path, monkeypatch, caplog):
     sitemap was found. Without it, a host with no sitemap and a host whose seeding worked
     look the same in the log."""
     async def sitemap_with_mixed_entries(fetch, host, scheme):
-        return [HOME, PAGE_C, "https://other.example.org/x", "https://example.com/bibcite/export?format=ris"]
+        return [(HOME, None), (PAGE_C, None), ("https://other.example.org/x", None),
+                ("https://example.com/bibcite/export?format=ris", None)]
 
-    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", sitemap_with_mixed_entries)
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_entries", sitemap_with_mixed_entries)
     site = {HOME: ([], "# Home"), PAGE_C: ([], "# C")}
     scraper = _make(tmp_path, fresh=True, use_sitemap=True)
     _install_fake_site(monkeypatch, scraper, site, [])
@@ -308,13 +309,57 @@ def test_missing_sitemap_is_logged(tmp_path, monkeypatch, caplog):
     async def no_sitemap(fetch, host, scheme):
         return []
 
-    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", no_sitemap)
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_entries", no_sitemap)
     scraper = _make(tmp_path, fresh=True, use_sitemap=True)
     _install_fake_site(monkeypatch, scraper, {HOME: ([], "# Home")}, [])
     try:
         with caplog.at_level(logging.INFO):
             asyncio.run(scraper.run())
         assert any(m.startswith("Sitemap: none found") for m in (r.getMessage() for r in caplog.records))
+    finally:
+        scraper.executor.shutdown(wait=False)
+        scraper.url_store.close()
+
+
+EVENT_OLD = "https://example.com/event/spring-2019-colloquium"
+EVENT_NEW = "https://example.com/event/fall-2026-advising-info-session"
+EXPORT_NEW = "https://example.com/bibcite/export?format=ris"
+
+
+def _event_site_sitemap(monkeypatch):
+    async def entries(fetch, host, scheme):
+        return [(HOME, None), (EVENT_OLD, "2019-03-01T12:00:00-04:00"),
+                (EVENT_NEW, "2026-09-10T08:00:00-04:00"), (EXPORT_NEW, "2026-09-10")]
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_entries", entries)
+    return {HOME: ([], "# Home"), EVENT_OLD: ([], "# old"), EVENT_NEW: ([], "# new"), EXPORT_NEW: ([], "ris")}
+
+
+def test_event_pages_dated_in_the_window_are_seeded_when_event_keep_since_is_set(tmp_path, monkeypatch, caplog):
+    """Decided 2026-10-27: an event page is worth keeping when its sitemap lastmod falls in the
+    current academic year, whatever host it is on; older ones stay excluded. Only the sitemap
+    carries dates, so this applies at seeding; a non-event exclude (bibcite) is never rescued."""
+    site = _event_site_sitemap(monkeypatch)
+    fetched = []
+    scraper = _make(tmp_path, fresh=True, use_sitemap=True, event_keep_since="2026-06-01")
+    _install_fake_site(monkeypatch, scraper, site, fetched)
+    try:
+        with caplog.at_level(logging.INFO):
+            asyncio.run(scraper.run())
+        assert sorted(fetched) == sorted([HOME, EVENT_NEW])
+        assert any("events kept by date 1" in r.getMessage() for r in caplog.records)
+    finally:
+        scraper.executor.shutdown(wait=False)
+        scraper.url_store.close()
+
+
+def test_event_pages_are_dropped_without_event_keep_since(tmp_path, monkeypatch):
+    site = _event_site_sitemap(monkeypatch)
+    fetched = []
+    scraper = _make(tmp_path, fresh=True, use_sitemap=True)
+    _install_fake_site(monkeypatch, scraper, site, fetched)
+    try:
+        asyncio.run(scraper.run())
+        assert fetched == [HOME]
     finally:
         scraper.executor.shutdown(wait=False)
         scraper.url_store.close()

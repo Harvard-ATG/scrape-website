@@ -7,7 +7,7 @@ without any network tier.
 """
 import asyncio
 
-from scrape_website.scraper import _fetch_sitemap_urls, _parse_robots_sitemaps
+from scrape_website.scraper import _fetch_sitemap_entries, _fetch_sitemap_urls, _parse_robots_sitemaps
 
 
 def test_parse_robots_sitemaps_extracts_all_directives():
@@ -141,3 +141,16 @@ def test_default_cap_keeps_a_real_sized_sitemap_whole():
     pages = {"https://example.com/sitemap.xml": f'<?xml version="1.0"?><urlset>{locs}</urlset>'.encode()}
     urls = asyncio.run(_fetch_sitemap_urls(_fetch_from(pages), "example.com"))
     assert len(urls) == 8000
+
+
+def test_entries_carry_lastmod_when_present():
+    """The XML sitemap's <lastmod> is the only change signal the sites publish; the planner
+    and the event date rule need it, so discovery returns (loc, lastmod) pairs."""
+    pages = {"https://example.com/robots.txt": b"Sitemap: https://example.com/sitemap.xml",
+             "https://example.com/sitemap.xml": (
+                 b'<?xml version="1.0"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+                 b"<url><loc>https://example.com/a</loc><lastmod>2026-09-10T08:00:00-04:00</lastmod></url>"
+                 b"<url><loc>https://example.com/b</loc></url></urlset>")}
+    entries = asyncio.run(_fetch_sitemap_entries(_fetch_from(pages), "example.com"))
+    assert entries == [("https://example.com/a", "2026-09-10T08:00:00-04:00"), ("https://example.com/b", None)]
+    assert asyncio.run(_fetch_sitemap_urls(_fetch_from(pages), "example.com")) == ["https://example.com/a", "https://example.com/b"]
