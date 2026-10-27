@@ -74,6 +74,8 @@ def test_advising_hosts_keep_their_event_pages():
         "https://histlit.fas.harvard.edu/event/plan-concentration-field-worksheet-and-other-end-year-forms-due",
         "https://socialstudies.fas.harvard.edu/event/advising-corner-hours-0",
         "https://espp.fas.harvard.edu/event/course-registration-deadline-1",
+        "https://undergrad.psychology.fas.harvard.edu/event/thesis-abstracts-due",
+        "https://firstyear.college.harvard.edu/event/take-math-placement-exam",
     ):
         assert not _url_excluded(url, COMPILED), url
     for url in (

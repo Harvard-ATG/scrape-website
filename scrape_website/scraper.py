@@ -92,7 +92,9 @@ DOWNLOADABLE_MIMES = {
 # prod manifests and Splunk citations on 2026-10-27; R7 below leaves these alone.
 _R7_KEEP_EVENT_HOSTS = (
     "incomingstudents.college.harvard.edu",
+    "firstyear.college.harvard.edu",          # incomingstudents now redirects here
     "specialconcentrations.fas.harvard.edu",
+    "undergrad.psychology.fas.harvard.edu",   # thesis deadlines: prospectus due, abstracts due
     "histlit.fas.harvard.edu",
     "socialstudies.fas.harvard.edu",
     "espp.fas.harvard.edu",
