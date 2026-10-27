@@ -89,11 +89,14 @@ DOWNLOADABLE_MIMES = {
 # --exclude-pattern (repeatable) or programmatic API.
 # Hosts whose /event/ pages are this year's advising items (registration steps, placement
 # exams) rather than seminars or old calendars. Checked 2026-10-27 against the sitemap
-# lastmod: every page here is dated 2026. histlit, socialstudies, espp and
-# specialconcentrations were tried and dropped: their event pages are 2013-2020 calendars.
+# lastmod: every page on every host here is dated 2026, so a host-level keep cannot serve a
+# stale date. histlit, socialstudies, espp, specialconcentrations and psychology were tried and
+# dropped: their event pages are 2013-2020 calendars.
 _R7_KEEP_EVENT_HOSTS = (
     "incomingstudents.college.harvard.edu",
     "firstyear.college.harvard.edu",          # incomingstudents now redirects here
+    "www.hio.harvard.edu",                    # international-student orientations; 32 of 32 dated 2026
+    "ofa.fas.harvard.edu",                    # Clay 101 sections, workshops, artist talks; 42 of 42 dated 2026
 )
 _R7_KEEP_EVENT_HOSTS_RE = "|".join(re.escape(h) for h in _R7_KEEP_EVENT_HOSTS)
 

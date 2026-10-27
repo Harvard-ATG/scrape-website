@@ -72,6 +72,8 @@ def test_advising_hosts_keep_their_event_pages():
     for url in (
         "https://incomingstudents.college.harvard.edu/event/take-math-placement-exam",
         "https://firstyear.college.harvard.edu/event/take-math-placement-exam",
+        "https://www.hio.harvard.edu/event/hio-getting-started-orientation-part-1-8",   # all 32 dated 2026
+        "https://ofa.fas.harvard.edu/event/clay-101-harvard-college-undergraduates-section-1-fall-2026",  # all 42 dated 2026
     ):
         assert not _url_excluded(url, COMPILED), url
     for url in (
