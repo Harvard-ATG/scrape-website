@@ -64,12 +64,21 @@ def test_academic_calendar_event_pages_are_kept():
         assert not _url_excluded(url, COMPILED), url
 
 
-def test_incoming_students_event_pages_are_kept():
-    """incomingstudents.college.harvard.edu uses /event/ for placement exams and
-    registration steps (13 pages, cited in Splunk); every other host's /event/ is seminars."""
+def test_advising_hosts_keep_their_event_pages():
+    """A few small advising hosts use /event/ for deadlines, placement exams, info sessions
+    and advising hours rather than seminars (slugs reviewed against prod manifests and
+    Splunk citations, 2026-10-27). Their event pages stay; every other host's go."""
     for url in (
         "https://incomingstudents.college.harvard.edu/event/take-math-placement-exam",
-        "https://incomingstudents.college.harvard.edu/event/view-course-recommendations-myharvard",
+        "https://specialconcentrations.fas.harvard.edu/event/spring-application-deadline-3",
+        "https://histlit.fas.harvard.edu/event/plan-concentration-field-worksheet-and-other-end-year-forms-due",
+        "https://socialstudies.fas.harvard.edu/event/advising-corner-hours-0",
+        "https://espp.fas.harvard.edu/event/course-registration-deadline-1",
     ):
         assert not _url_excluded(url, COMPILED), url
-    assert _url_excluded("https://history.fas.harvard.edu/event/take-math-placement-exam", COMPILED)
+    for url in (
+        "https://history.fas.harvard.edu/event/take-math-placement-exam",
+        "https://registrar.fas.harvard.edu/event/fall-2026-ferpa-workshop",
+        "https://www.economics.harvard.edu/event/sophomore-declaration-event",
+    ):
+        assert _url_excluded(url, COMPILED), url
