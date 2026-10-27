@@ -1,0 +1,31 @@
+{
+ "url": "https://www.physics.harvard.edu/people/facpages/manoharan",
+ "xml_lastmod": "2025-01-24T19:43:49+00:00",
+ "page.html": {
+  "url": "https://www.physics.harvard.edu/people/facpages/manoharan",
+  "status": 200,
+  "bytes": 55210,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://www.physics.harvard.edu/people/facpages/manoharan.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Vinothan N. Manoharan\"",
+   "last-modified": "Tue, 20 Oct 2026 14:29:36 GMT",
+   "etag": "\"1792506576\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:11 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://www.physics.harvard.edu/people/facpages/manoharan.md",
+  "status": 200,
+  "bytes": 1936,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:14 GMT",
+   "etag": "\"1792584674\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:14 GMT"
+  }
+ }
+}

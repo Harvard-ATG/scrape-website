@@ -1,0 +1,31 @@
+{
+ "url": "https://philosophy.fas.harvard.edu/news/jeff-behrends-gives-keynote-2023-gateway-graduate-conference",
+ "xml_lastmod": "2023-04-03T19:35:20+00:00",
+ "page.html": {
+  "url": "https://philosophy.fas.harvard.edu/news/jeff-behrends-gives-keynote-2023-gateway-graduate-conference",
+  "status": 200,
+  "bytes": 45328,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://philosophy.fas.harvard.edu/news/jeff-behrends-gives-keynote-2023-gateway-graduate-conference.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Jeff Behrends gives keynote at 2023 Gateway Graduate Conference \"",
+   "last-modified": "Wed, 21 Oct 2026 02:39:56 GMT",
+   "etag": "\"1792550396\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:32 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://philosophy.fas.harvard.edu/news/jeff-behrends-gives-keynote-2023-gateway-graduate-conference.md",
+  "status": 200,
+  "bytes": 959,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:35 GMT",
+   "etag": "\"1792584695\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:35 GMT"
+  }
+ }
+}

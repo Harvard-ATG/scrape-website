@@ -1,0 +1,31 @@
+{
+ "url": "https://sociology.fas.harvard.edu/people/danilo-mandic",
+ "xml_lastmod": "2022-08-15T18:59:14+00:00",
+ "page.html": {
+  "url": "https://sociology.fas.harvard.edu/people/danilo-mandic",
+  "status": 200,
+  "bytes": 48230,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://sociology.fas.harvard.edu/people/danilo-mandic.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Danilo Mandi\u0107\"",
+   "last-modified": "Wed, 21 Oct 2026 12:10:45 GMT",
+   "etag": "\"1792584645\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:45 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://sociology.fas.harvard.edu/people/danilo-mandic.md",
+  "status": 200,
+  "bytes": 5022,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:48 GMT",
+   "etag": "\"1792584648\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:48 GMT"
+  }
+ }
+}

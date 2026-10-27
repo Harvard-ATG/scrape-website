@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0" xml:base="https://haa.fas.harvard.edu/">
+  <channel>
+    <title>Department of History of Art and Architecture</title>
+    <link>https://haa.fas.harvard.edu/</link>
+    <description/>
+    <language>en</language>
+    
+    <item>
+  <title>Clone of Department of History of Art and Architecture</title>
+  <link>https://haa.fas.harvard.edu/clone-department-history-art-and-architecture-0</link>
+  <description>&lt;span&gt;Clone of Department of History of Art and Architecture&lt;/span&gt;
+&lt;span&gt;&lt;span&gt;JM Gomez&lt;/span&gt;&lt;/span&gt;
+&lt;span&gt;&lt;time datetime="2025-07-24T18:50:32+00:00" title="Thursday, July 24, 2025 - 18:50"&gt;Thu, 07/24/2025 - 18:50&lt;/time&gt;
+&lt;/span&gt;
+</description>
+  <pubDate>Thu, 24 Jul 2025 18:50:32 +0000</pubDate>
+    <dc:creator>JM Gomez</dc:creator>
+    <guid isPermaLink="false">1617486 at https://haa.fas.harvard.edu</guid>
+    </item>
+<item>
+  <title>Department of History of Art and Architecture</title>
+  <link>https://haa.fas.harvard.edu/department-history-art-and-architecture</link>
+  <description>&lt;span&gt;Department of History of Art and Architecture&lt;/span&gt;
+&lt;span&gt;&lt;span&gt;Anonymous (not verified)&lt;/span&gt;&lt;/span&gt;
+&lt;span&gt;&lt;time datetime="2017-10-23T17:37:14+00:00" title="Monday, October 23, 2017 - 17:37"&gt;Mon, 10/23/2017 - 17:37&lt;/time&gt;
+&lt;/span&gt;
+</description>
+  <pubDate>Mon, 23 Oct 2017 17:37:14 +0000</pubDate>
+    <dc:creator>Anonymous</dc:creator>
+    <guid isPermaLink="false">1074296 at https://haa.fas.harvard.edu</guid>
+    </item>
+
+  </channel>
+</rss>

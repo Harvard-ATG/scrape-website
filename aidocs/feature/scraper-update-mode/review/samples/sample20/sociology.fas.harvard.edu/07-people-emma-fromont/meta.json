@@ -1,0 +1,31 @@
+{
+ "url": "https://sociology.fas.harvard.edu/people/emma-fromont",
+ "xml_lastmod": "2026-10-09T17:48:33+00:00",
+ "page.html": {
+  "url": "https://sociology.fas.harvard.edu/people/emma-fromont",
+  "status": 200,
+  "bytes": 45201,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://sociology.fas.harvard.edu/people/emma-fromont.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Emma Fromont\"",
+   "last-modified": "Wed, 21 Oct 2026 10:54:02 GMT",
+   "etag": "\"1792580042\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:34 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://sociology.fas.harvard.edu/people/emma-fromont.md",
+  "status": 200,
+  "bytes": 2252,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:37 GMT",
+   "etag": "\"1792584637\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:37 GMT"
+  }
+ }
+}

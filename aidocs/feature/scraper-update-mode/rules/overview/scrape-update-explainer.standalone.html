@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scrape Update Walkthrough</title>
+<style>:root{color-scheme:light}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout concept: a long single column read top to bottom, one diagram per claim, plain tables for the vocabulary.
+   Colour: cool slate ground; the update path is teal, risks and open items are amber, today's behaviour is neutral. */
+:root{
+  --bg:#F3F6F8; --fg:#15212B; --muted:#4F5D6A; --line:#C6D0D8; --card:#FFFFFF; --chip:#E7EDF1;
+  --acc:#0A6B8D; --acc-soft:#DCEFF6; --warn:#955700; --warn-soft:#FBEBD1; --arrow:#4A5864; --code:#E4EAEF;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E161D; --fg:#E3EAF0; --muted:#9BAAB7; --line:#2B3945; --card:#16212A; --chip:#1D2A34;
+    --acc:#5CC0E3; --acc-soft:#10364A; --warn:#F0B455; --warn-soft:#3A2A0E; --arrow:#9BAAB7; --code:#1B2832; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E161D; --fg:#E3EAF0; --muted:#9BAAB7; --line:#2B3945; --card:#16212A; --chip:#1D2A34;
+  --acc:#5CC0E3; --acc-soft:#10364A; --warn:#F0B455; --warn-soft:#3A2A0E; --arrow:#9BAAB7; --code:#1B2832; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.55 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+header{display:flex;flex-direction:column;gap:12px}
+h1{font:700 clamp(30px,5vw,46px)/1.05 var(--display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+h2{font:700 24px/1.15 var(--display);margin:0 0 6px;text-wrap:balance}
+p{margin:0}
+.lede{font-size:18px;color:var(--muted);max-width:62ch}
+.status{display:inline-flex;gap:8px;align-items:center;background:var(--warn-soft);color:var(--fg);border:1px solid var(--warn);
+  border-radius:6px;padding:6px 10px;font-size:14px;width:fit-content;max-width:100%}
+.status b{color:var(--warn);font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+a{color:var(--acc)}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.three{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card h3{margin:0;font:600 13px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card.upd{border-color:var(--acc)} .card.upd h3{color:var(--acc)}
+figure{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.scroll{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px}
+.scroll svg{display:block;width:100%;min-width:780px;height:auto;color:var(--arrow)}
+figcaption{font-size:14px;color:var(--muted);max-width:90ch}
+.hurts{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.hurts li{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:start}
+.badge{width:22px;height:22px;border-radius:50%;background:var(--warn);color:var(--card);font:700 12px/22px var(--mono);text-align:center}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:15px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--chip)}
+tr:last-child td{border-bottom:0}
+code{font:400 13px var(--mono);background:var(--code);padding:1px 5px;border-radius:4px;overflow-wrap:anywhere}
+pre{margin:0;background:var(--code);border-radius:8px;padding:14px;overflow-x:auto;font:400 13px/1.6 var(--mono)}
+.open{border-left:3px solid var(--warn);padding:2px 0 2px 12px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1.5px solid var(--acc);background:var(--acc-soft)}
+.sw.s{border:1.5px solid var(--line);background:var(--card)}
+.sw.w{border-color:var(--warn);background:var(--warn-soft)}
+/* diagram marks */
+.box{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.box-acc{fill:var(--acc-soft);stroke:var(--acc);stroke-width:1.6}
+.box-warn{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.6}
+.box-grey{fill:var(--chip);stroke:var(--line);stroke-width:1.5}
+.dash{stroke-dasharray:6 4}
+.ln{stroke:var(--arrow);stroke-width:1.6;fill:none}
+.lna{stroke:var(--acc);stroke-width:1.8;fill:none}
+.lnw{stroke:var(--warn);stroke-width:1.5;fill:none;stroke-dasharray:3 3}
+.grid{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.mk{fill:var(--arrow)} .mka{fill:var(--acc)}
+.tt{font:600 13.5px var(--body);fill:var(--fg)}
+.ts{font:400 11.8px var(--body);fill:var(--muted)}
+.tl{font:500 10.5px var(--mono);fill:var(--muted)}
+.tw{font:600 11.8px var(--body);fill:var(--warn)}
+.ta{font:600 13.5px var(--body);fill:var(--acc)}
+.th{font:700 15px var(--display);fill:var(--fg)}
+.bd{fill:var(--warn)} .bt{font:700 12px var(--mono);fill:var(--card)}
+.bar-g{fill:var(--line)} .bar-a{fill:var(--acc)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Scrape Update Walkthrough</h1>
+  <p class="lede">How the scraper refreshes a site today, how an update run would work differently, and what the taxonomy, rules and tooling in <a href="https://github.com/Harvard-ATG/scrape-website/pull/10">PR #10</a> add.</p>
+  <div class="status"><b>Status</b><span>The rules and tests are reference code. The <code>--update</code> flag itself is not wired into the scraper yet.</span></div>
+</header>
+
+<section>
+  <div class="three">
+    <div class="card"><h3>Today</h3><p>A refresh crawls a site by following links from a seed URL. Whatever the crawl reaches is saved. Whatever it misses is treated as gone.</p></div>
+    <div class="card upd"><h3>With update</h3><p>The sitemap says which pages exist and when each last changed. An update run fetches only what is new or changed, and checks before it retires anything.</p></div>
+    <div class="card"><h3>This PR</h3><p>Combines the earlier scraper work and adds a taxonomy, 20 rules, a tested reference implementation of them, and a script that runs them across all 83 sites.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>How a scrape works today</h2>
+  <p>One entry in <code>sites.toml</code> becomes one crawl. The crawl, the manifest and the ingest are three separate steps, and the ingest decides what to remove.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 345" role="img" aria-label="Today a scrape runs entry, crawl, fetch, save, manifest and S3, then ingest; a fresh run re-crawls everything and a normal run only adds new pages.">
+      <defs><marker id="m1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <!-- boxes -->
+      <g>
+        <rect class="box" x="10" y="60" width="138" height="96" rx="8"/><text class="tt" x="22" y="84">sites.toml entry</text><text class="ts" x="22" y="104">seed URL and</text><text class="ts" x="22" y="119">scope rules</text>
+        <rect class="box" x="178" y="60" width="138" height="96" rx="8"/><text class="tt" x="190" y="84">Crawl</text><text class="ts" x="190" y="104">follow links on one</text><text class="ts" x="190" y="119">host, random order</text>
+        <rect class="box" x="346" y="60" width="138" height="96" rx="8"/><text class="tt" x="358" y="84">Fetch</text><text class="ts" x="358" y="104">3 tiers, escalating</text><text class="ts" x="358" y="119">on 403 and 429</text>
+        <rect class="box" x="514" y="60" width="138" height="96" rx="8"/><text class="tt" x="526" y="84">Save</text><text class="ts" x="526" y="104">pages, text, files,</text><text class="ts" x="526" y="119">state.db rows</text>
+        <rect class="box" x="682" y="60" width="138" height="96" rx="8"/><text class="tt" x="694" y="84">Manifest, S3</text><text class="ts" x="694" y="104">only if complete,</text><text class="ts" x="694" y="119">not capped</text>
+        <rect class="box" x="850" y="60" width="138" height="96" rx="8"/><text class="tt" x="862" y="84">Ingest</text><text class="ts" x="862" y="104">unchanged: skip</text><text class="ts" x="862" y="119">missing: retire</text>
+      </g>
+      <!-- arrows and labels -->
+      <g>
+        <line class="ln" x1="148" y1="108" x2="177" y2="108" marker-end="url(#m1)"/><text class="tl" x="163" y="99" text-anchor="middle">seed</text>
+        <line class="ln" x1="316" y1="108" x2="345" y2="108" marker-end="url(#m1)"/><text class="tl" x="331" y="99" text-anchor="middle">URL</text>
+        <line class="ln" x1="484" y1="108" x2="513" y2="108" marker-end="url(#m1)"/><text class="tl" x="499" y="99" text-anchor="middle">page</text>
+        <line class="ln" x1="652" y1="108" x2="681" y2="108" marker-end="url(#m1)"/><text class="tl" x="667" y="99" text-anchor="middle">rows</text>
+        <line class="ln" x1="820" y1="108" x2="849" y2="108" marker-end="url(#m1)"/><text class="tl" x="835" y="99" text-anchor="middle">files</text>
+        <path class="ln" d="M 222,60 C 222,26 272,26 272,60" marker-end="url(#m1)"/><text class="tl" x="247" y="17" text-anchor="middle">new links</text>
+      </g>
+      <!-- problem markers -->
+      <g>
+        <circle class="bd" cx="312" cy="60" r="11"/><text class="bt" x="312" y="64" text-anchor="middle">A</text>
+        <circle class="bd" cx="648" cy="60" r="11"/><text class="bt" x="648" y="64" text-anchor="middle">B</text>
+        <circle class="bd" cx="984" cy="60" r="11"/><text class="bt" x="984" y="64" text-anchor="middle">C</text>
+      </g>
+      <!-- two ways to run -->
+      <text class="tl" x="10" y="190">THE TWO WAYS TO RUN IT TODAY</text>
+      <rect class="box-grey" x="10" y="202" width="485" height="124" rx="8"/>
+      <text class="tt" x="28" y="228">Full refresh (<tspan font-family="JetBrains Mono, monospace" font-size="12.5">--fresh</tspan>)</text>
+      <text class="ts" x="28" y="252">• clears the host's local data first</text>
+      <text class="ts" x="28" y="272">• re-crawls everything from the seed</text>
+      <text class="ts" x="28" y="292">• every page is fetched again, changed or not</text>
+      <text class="ts" x="28" y="312">• ingest then retires whatever the crawl did not reach</text>
+      <rect class="box-grey" x="515" y="202" width="475" height="124" rx="8"/>
+      <text class="tt" x="533" y="228">Normal run (no flag)</text>
+      <text class="ts" x="533" y="252">• pulls the last run's data from S3 as the baseline</text>
+      <text class="ts" x="533" y="272">• skips every URL already visited</text>
+      <text class="ts" x="533" y="292">• finds new pages only; changed pages stay stale</text>
+      <text class="ts" x="533" y="312">• retires nothing</text>
+    </svg>
+    </div>
+    <figcaption>One scrape, left to right. The two grey boxes show the only two ways to run it today: re-crawl everything, or add new pages and never refresh or remove.</figcaption>
+  </figure>
+  <ul class="hurts">
+    <li><span class="badge">A</span><span><b>Crawl order is random.</b> Link extraction returns a set, so on one test site the same settings saved between 45 and 136 pages; seeding from the sitemap steadied it at 207 to 217.</span></li>
+    <li><span class="badge">B</span><span><b>Nothing refreshes a single changed page.</b> A normal run adds new pages and leaves changed ones stale; a fresh run re-fetches the whole site to catch them.</span></li>
+    <li><span class="badge">C</span><span><b>Removal means "the crawl did not reach it."</b> Ingest retires every record that is not in the new run's files, and nothing checks how many that is.</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>A cleaner full scrape</h2>
+  <p>A full re-scrape is still needed and stays the backstop. What changes is what it downloads: about half of the pages saved in the July manifests were never content.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 200" role="img" aria-label="Of 143,477 pages saved in the July manifests, PR 10 removes or merges 73,101 (50.9%): 39,193 twin URLs, 23,896 search pages and 10,012 calendar feeds; 19,823 more are query strings still to be decided, and 50,553 are kept.">
+      <!-- scale: 940 px for 143,477 saved pages -->
+      <line class="ln" x1="30" y1="52" x2="509" y2="52"/><line class="ln" x1="30" y1="46" x2="30" y2="52"/><line class="ln" x1="509" y1="46" x2="509" y2="52"/>
+      <text class="th" x="30" y="36" style="font-size:13.5px">PR #10 removes or merges 73,101 pages (50.9%)</text>
+      <line class="lnw" x1="511" y1="52" x2="638" y2="52"/>
+      <text class="tw" x="574" y="36" text-anchor="middle">decided, rule not written: 19,823</text>
+      <line class="ln" x1="640" y1="52" x2="970" y2="52"/>
+      <text class="th" x="970" y="36" text-anchor="end" style="font-size:13.5px">kept: 50,553 (35.2%)</text>
+      <rect x="30" y="66" width="256.8" height="54" style="fill:var(--acc)"/>
+      <rect x="286.8" y="66" width="156.6" height="54" style="fill:var(--acc);opacity:.78"/>
+      <rect x="443.4" y="66" width="65.6" height="54" style="fill:var(--acc);opacity:.58"/>
+      <rect class="box-warn" x="509" y="66" width="129.9" height="54"/>
+      <rect class="box-grey" x="638.9" y="66" width="331.2" height="54"/>
+      <g style="font:700 13px var(--body)">
+        <text x="158" y="89" text-anchor="middle" style="fill:var(--card)">39,193</text><text x="158" y="107" text-anchor="middle" style="fill:var(--card);font:400 11.5px var(--body)">27.3%</text>
+        <text x="365" y="89" text-anchor="middle" style="fill:var(--card)">23,896</text><text x="365" y="107" text-anchor="middle" style="fill:var(--card);font:400 11.5px var(--body)">16.7%</text>
+        <text x="476" y="89" text-anchor="middle" style="fill:var(--card)">10,012</text><text x="476" y="107" text-anchor="middle" style="fill:var(--card);font:400 11.5px var(--body)">7.0%</text>
+        <text x="574" y="89" text-anchor="middle" style="fill:var(--fg)">19,823</text><text x="574" y="107" text-anchor="middle" style="fill:var(--fg);font:400 11.5px var(--body)">13.8%</text>
+        <text x="804" y="89" text-anchor="middle" style="fill:var(--fg)">50,553</text><text x="804" y="107" text-anchor="middle" style="fill:var(--fg);font:400 11.5px var(--body)">35.2%</text>
+      </g>
+      <text class="ts" x="34" y="144">twin URLs merged into one</text><text class="ts" x="34" y="159">(http vs https, trailing slash)</text>
+      <text class="ts" x="291" y="144">search result pages</text><text class="ts" x="291" y="159">dropped</text>
+      <line class="ln" x1="476" y1="120" x2="476" y2="172"/><text class="ts" x="402" y="186">calendar feeds (.ics): dropped</text>
+      <text class="ts" x="513" y="144">pagination and filter</text><text class="ts" x="513" y="159">query strings</text>
+      <text class="ts" x="643" y="144">everything else:</text><text class="ts" x="643" y="159">real pages, files kept</text>
+    </svg>
+    </div>
+    <figcaption>All 143,477 pages saved in the 77 July manifests, in one bar. The first three segments are what the PR's excludes and https canonicalization remove or merge, measured by running the PR's own code over every saved URL. The amber segment is query-string pages the team has decided to exclude but no rule has been written for yet.</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <tr><th>What goes</th><th>Why</th><th>A real saved page</th><th>Biggest host</th></tr>
+    <tr><td>Search result pages</td><td>Results listings, not content</td><td><code>linguistics.fas.harvard.edu/search?page=0</code></td><td>economics, 6,932</td></tr>
+    <tr><td>Calendar feeds (<code>.ics</code>)</td><td>An iCal download for each event, saved as a page</td><td><code>socialstudies.fas.harvard.edu/node/1127886/event-feed.ics</code></td><td>economics, 3,869</td></tr>
+    <tr><td>Twin URLs</td><td>The same page saved twice, as http and https or with and without a trailing slash</td><td><code>http://espp.fas.harvard.edu/pages/field-trips</code></td><td>economics, 8,371</td></tr>
+    <tr><td>Pagination (rule not written)</td><td>Page 1, 2, 3 of a listing</td><td><code>scienceeducation.fas.harvard.edu/directory?page=1</code></td><td>chemistry, 4,050</td></tr>
+    <tr><td>Filters (rule not written)</td><td>The same list re-filtered</td><td><code>chemistry.harvard.edu/people?f[0]=hwp_c_administrationstaff:...</code></td><td>chemistry, 485</td></tr>
+  </table></div>
+  <p class="open">These are pages saved in the manifests. I did not check how many of them were uploaded to the vector store.</p>
+</section>
+
+<section>
+  <h2>How an update run differs</h2>
+  <p>Same entry, same scope rules, same fetcher. The change is in the middle: the sitemap's last-modified date decides what to fetch.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 485" role="img" aria-label="An update run reads the sitemap, plans what is new or changed, fetches only that, records state, then ingests; unchanged pages are skipped and never-captured pages are listed for a later backfill.">
+      <defs>
+        <marker id="m2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="m2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mka" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <!-- guard notes -->
+      <rect class="box-warn" x="270" y="4" width="250" height="38" rx="6"/>
+      <text class="tw" x="282" y="20">tiny path-scoped section:</text><text class="tw" x="282" y="35">refetch the seeds only (R10)</text>
+      <line class="lnw" x1="365" y1="42" x2="365" y2="62"/>
+      <rect class="box-warn" x="540" y="4" width="250" height="38" rx="6"/>
+      <text class="tw" x="552" y="20">sitemap unreadable or lists</text><text class="tw" x="552" y="35">another host: skip it (R11, R12)</text>
+      <line class="lnw" x1="625" y1="42" x2="625" y2="62"/>
+      <!-- row 1 -->
+      <rect class="box" x="10" y="62" width="190" height="92" rx="8"/><text class="tt" x="24" y="86">sites.toml entry</text><text class="ts" x="24" y="106">same as today</text>
+      <rect class="box" x="270" y="62" width="190" height="92" rx="8"/><text class="tt" x="284" y="86">Scope rules</text><text class="ts" x="284" y="106">host, seed path,</text><text class="ts" x="284" y="121">include and exclude</text>
+      <rect class="box-acc dash" x="530" y="62" width="190" height="92" rx="8"/><text class="ta" x="544" y="86">Read the sitemap</text><text class="ts" x="544" y="106">every URL with its</text><text class="ts" x="544" y="121">last-modified date</text>
+      <rect class="box-acc dash" x="790" y="62" width="190" height="92" rx="8"/><text class="ta" x="804" y="86">Plan</text><text class="ts" x="804" y="106">compare each date with</text><text class="ts" x="804" y="121">what is stored</text>
+      <line class="ln" x1="200" y1="108" x2="269" y2="108" marker-end="url(#m2)"/><text class="tl" x="235" y="99" text-anchor="middle">entry</text>
+      <line class="ln" x1="460" y1="108" x2="529" y2="108" marker-end="url(#m2)"/><text class="tl" x="495" y="99" text-anchor="middle">in scope</text>
+      <line class="ln" x1="720" y1="108" x2="789" y2="108" marker-end="url(#m2)"/><text class="tl" x="755" y="99" text-anchor="middle">URL + date</text>
+      <!-- plan outputs -->
+      <text class="tl" x="790" y="176">THE PLAN SORTS EVERY URL</text>
+      <rect class="box-grey dash" x="790" y="184" width="190" height="26" rx="5"/><text class="ts" x="802" y="201">unchanged → skip</text>
+      <rect class="box-warn dash" x="790" y="214" width="190" height="26" rx="5"/><text class="tw" x="802" y="231">never captured → backfill</text>
+      <rect class="box-acc dash" x="790" y="244" width="190" height="26" rx="5"/><text class="ts" x="802" y="261" style="fill:var(--fg)">new → fetch</text>
+      <rect class="box-acc dash" x="790" y="274" width="190" height="26" rx="5"/><text class="ts" x="802" y="291" style="fill:var(--fg)">changed → fetch</text>
+      <rect class="box-acc dash" x="790" y="304" width="190" height="26" rx="5"/><text class="ts" x="802" y="321" style="fill:var(--fg)">no date → fetch every run</text>
+      <line class="lna" x1="885" y1="330" x2="885" y2="371" marker-end="url(#m2a)"/><text class="tl" x="897" y="355">fetch these</text>
+      <!-- row 2, right to left -->
+      <rect class="box" x="790" y="372" width="190" height="84" rx="8"/><text class="tt" x="804" y="396">Fetch the plan only</text><text class="ts" x="804" y="416">same tiered fetcher</text><text class="ts" x="804" y="431">as today</text>
+      <rect class="box" x="530" y="372" width="190" height="84" rx="8"/><text class="tt" x="544" y="396">Save</text><text class="ts" x="544" y="416">changed pages replaced,</text><text class="ts" x="544" y="431">unchanged files kept</text>
+      <rect class="box-acc dash" x="270" y="372" width="190" height="84" rx="8"/><text class="ta" x="284" y="396">Record state</text><text class="ts" x="284" y="416">date and fetch time</text><text class="ts" x="284" y="431">per URL in state.db</text>
+      <rect class="box" x="10" y="372" width="190" height="84" rx="8"/><text class="tt" x="24" y="396">Ingest</text><text class="ts" x="24" y="416">unchanged: hash skip</text><text class="ts" x="24" y="431">removals: see below</text>
+      <line class="ln" x1="790" y1="414" x2="721" y2="414" marker-end="url(#m2)"/><text class="tl" x="755" y="405" text-anchor="middle">pages</text>
+      <line class="ln" x1="530" y1="414" x2="461" y2="414" marker-end="url(#m2)"/><text class="tl" x="495" y="405" text-anchor="middle">saved</text>
+      <line class="ln" x1="270" y1="414" x2="201" y2="414" marker-end="url(#m2)"/><text class="tl" x="235" y="405" text-anchor="middle">rows</text>
+      <!-- legend -->
+      <rect class="box" x="10" y="466" width="18" height="12" rx="3"/><text class="ts" x="36" y="476">already in the scraper</text>
+      <rect class="box-acc dash" x="200" y="466" width="18" height="12" rx="3"/><text class="ts" x="226" y="476">new in this design: reference code and tests only, not wired in yet</text>
+    </svg>
+    </div>
+    <figcaption>The update flow. Dashed boxes are new: they exist as tested reference code in this PR but are not connected to the scraper. Amber notes are the cases where a host is handled differently or skipped.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>What it saves</h2>
+  <p>First all 71 hosts added together, then one host on its own. Both use the July manifests as the starting point and count in-scope sitemap pages.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 305" role="img" aria-label="All 71 hosts combined, pages fetched on a log scale: a full re-crawl is 56,992 pages, an update's first run 4,339, each week 341 and each day about 50.">
+      <text class="th" x="10" y="12" style="font-size:13.5px">All 71 hosts combined</text>
+      <line class="grid" x1="270" y1="14" x2="270" y2="258"/><line class="grid" x1="445" y1="14" x2="445" y2="258"/><line class="grid" x1="620" y1="14" x2="620" y2="258"/><line class="grid" x1="795" y1="14" x2="795" y2="258"/><line class="grid" x1="970" y1="14" x2="970" y2="258"/>
+      <text class="tl" x="270" y="274" text-anchor="middle">10</text><text class="tl" x="445" y="274" text-anchor="middle">100</text><text class="tl" x="620" y="274" text-anchor="middle">1,000</text><text class="tl" x="795" y="274" text-anchor="middle">10,000</text><text class="tl" x="970" y="274" text-anchor="middle">100,000</text>
+      <rect class="bar-g" x="270" y="30" width="657.3" height="36" rx="3"/><text class="tt" x="10" y="46">Full re-crawl</text><text class="ts" x="10" y="61">56,992 pages · about 17 to 27 hours</text>
+      <rect class="bar-a" x="270" y="86" width="461.5" height="36" rx="3"/><text class="tt" x="10" y="102">Update, first run</text><text class="ts" x="10" y="117">4,339 pages · about 1.3 to 2 hours</text>
+      <rect class="bar-a" x="270" y="142" width="268.3" height="36" rx="3"/><text class="tt" x="10" y="158">Update, each week</text><text class="ts" x="10" y="173">341 pages · about 6 to 10 minutes</text>
+      <rect class="bar-a" x="270" y="198" width="122.3" height="36" rx="3"/><text class="tt" x="10" y="214">Update, each day</text><text class="ts" x="10" y="229">about 50 pages · about 1 minute</text>
+      <text class="tl" x="970" y="296" text-anchor="end">pages fetched, log scale</text>
+    </svg>
+    </div>
+    <figcaption>Totals for all 71 hosts added together; the next chart shows one host. Bars use a log scale, so each gridline is ten times the last. Times assume one page at a time at 1.1 to 1.7 seconds, the pace in the existing scrape logs, with the hosts run back to back; browser-tier fetches and running hosts in parallel will change them. "Full re-crawl" counts every in-scope page in the sitemap; the update bars count pages new or changed since the July manifests, plus about 18,000 never-captured pages kept for a separate backfill.</figcaption>
+  </figure>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 235" role="img" aria-label="One host, english.fas.harvard.edu, pages fetched on a log scale: a full re-crawl is 1,643 pages, an update's first run 69, and each week 16.">
+      <text class="th" x="10" y="12" style="font-size:13.5px">One host: english.fas.harvard.edu</text>
+      <line class="grid" x1="270" y1="22" x2="270" y2="182"/><line class="grid" x1="445" y1="22" x2="445" y2="182"/><line class="grid" x1="620" y1="22" x2="620" y2="182"/><line class="grid" x1="795" y1="22" x2="795" y2="182"/><line class="grid" x1="970" y1="22" x2="970" y2="182"/>
+      <text class="tl" x="270" y="198" text-anchor="middle">1</text><text class="tl" x="445" y="198" text-anchor="middle">10</text><text class="tl" x="620" y="198" text-anchor="middle">100</text><text class="tl" x="795" y="198" text-anchor="middle">1,000</text><text class="tl" x="970" y="198" text-anchor="middle">10,000</text>
+      <rect class="bar-g" x="270" y="32" width="562.8" height="36" rx="3"/><text class="tt" x="10" y="48">Full re-crawl</text><text class="ts" x="10" y="63">1,643 pages · about 30 to 47 minutes</text>
+      <rect class="bar-a" x="270" y="86" width="321.8" height="36" rx="3"/><text class="tt" x="10" y="102">Update, first run</text><text class="ts" x="10" y="117">69 pages · about 1 to 2 minutes</text>
+      <rect class="bar-a" x="270" y="140" width="210.7" height="36" rx="3"/><text class="tt" x="10" y="156">Update, each week</text><text class="ts" x="10" y="171">16 pages · about 20 to 30 seconds</text>
+      <text class="tl" x="970" y="226" text-anchor="end">pages fetched, log scale</text>
+    </svg>
+    </div>
+    <figcaption>The same comparison for a single site. Its sitemap lists 1,643 pages; the first update fetches 16 new and 53 changed pages, 1,151 are skipped as unchanged, and 423 never-captured pages wait for a separate backfill. Same pace and log scale as the chart above.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>What happens to one URL</h2>
+  <p>Every URL from the sitemap passes the same gates in the same order. A "no" at any gate stops it; whatever gets through is sorted by comparing dates.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 620" role="img" aria-label="A sitemap URL is normalized, then checked for host, seed path, include patterns and excludes; survivors are sorted into new, changed, no date, unchanged or never captured.">
+      <defs>
+        <marker id="m3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker>
+        <marker id="m3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mka" d="M0,0 L10,5 L0,10 z"/></marker>
+      </defs>
+      <rect class="box-grey" x="20" y="8" width="300" height="36" rx="18"/><text class="tt" x="170" y="31" text-anchor="middle">A URL from the sitemap</text>
+      <line class="ln" x1="170" y1="44" x2="170" y2="71" marker-end="url(#m3)"/>
+      <rect class="box" x="20" y="72" width="300" height="58" rx="8"/><text class="tt" x="34" y="96">Normalize the URL (R1)</text><text class="ts" x="34" y="114">https, no trailing slash, no fragment</text>
+      <line class="ln" x1="170" y1="130" x2="170" y2="151" marker-end="url(#m3)"/>
+      <rect class="box" x="20" y="152" width="300" height="58" rx="8"/><text class="tt" x="34" y="176">Same host as the entry? (R2)</text><text class="ts" x="34" y="194">compares the host name exactly</text>
+      <line class="ln" x1="170" y1="210" x2="170" y2="231" marker-end="url(#m3)"/>
+      <rect class="box" x="20" y="232" width="300" height="58" rx="8"/><text class="tt" x="34" y="256">Inside the seed path? (R3)</text><text class="ts" x="34" y="274">only on path-scoped entries</text>
+      <line class="ln" x1="170" y1="290" x2="170" y2="311" marker-end="url(#m3)"/>
+      <rect class="box" x="20" y="312" width="300" height="58" rx="8"/><text class="tt" x="34" y="336">Matches an include pattern? (R4)</text><text class="ts" x="34" y="354">only where the entry lists patterns</text>
+      <line class="ln" x1="170" y1="370" x2="170" y2="391" marker-end="url(#m3)"/>
+      <rect class="box" x="20" y="392" width="300" height="58" rx="8"/><text class="tt" x="34" y="416">Hits an exclude? (R5, R6, R7)</text><text class="ts" x="34" y="434">tags, authors, /page/N, feeds, search, events</text>
+      <!-- exits -->
+      <line class="lnw" x1="320" y1="181" x2="399" y2="181"/><text class="tl" x="360" y="173" text-anchor="middle">no</text><rect class="box-warn" x="400" y="161" width="340" height="40" rx="6"/><text class="tw" x="414" y="185">out of scope: another host (moved hosts end here)</text>
+      <line class="lnw" x1="320" y1="261" x2="399" y2="261"/><text class="tl" x="360" y="253" text-anchor="middle">no</text><rect class="box-warn" x="400" y="241" width="340" height="40" rx="6"/><text class="tw" x="414" y="265">out of scope: outside the seed path</text>
+      <line class="lnw" x1="320" y1="341" x2="399" y2="341"/><text class="tl" x="360" y="333" text-anchor="middle">no</text><rect class="box-warn" x="400" y="321" width="340" height="40" rx="6"/><text class="tw" x="414" y="345">out of scope: no include pattern matched</text>
+      <line class="lnw" x1="320" y1="421" x2="399" y2="421"/><text class="tl" x="360" y="413" text-anchor="middle">yes</text><rect class="box-warn" x="400" y="401" width="340" height="40" rx="6"/><text class="tw" x="414" y="425">excluded: tag, author, page N, feed, search, event</text>
+      <!-- kind note -->
+      <rect class="box-grey" x="770" y="72" width="220" height="120" rx="8"/>
+      <text class="tt" x="784" y="96">Every URL also has a kind</text><text class="ts" x="784" y="116">page, event, feed, file,</text><text class="ts" x="784" y="131">archive and so on. The kind</text><text class="ts" x="784" y="146">sets the default action; see</text><text class="ts" x="784" y="161">the vocabulary below.</text>
+      <!-- sorting -->
+      <line class="ln" x1="170" y1="450" x2="170" y2="479" marker-end="url(#m3)"/>
+      <text class="tl" x="186" y="470">PASSED EVERY GATE: COMPARE WITH WHAT IS STORED (R13)</text>
+      <line class="lna" x1="100" y1="480" x2="900" y2="480"/>
+      <line class="lna" x1="100" y1="480" x2="100" y2="505" marker-end="url(#m3a)"/><line class="lna" x1="300" y1="480" x2="300" y2="505" marker-end="url(#m3a)"/><line class="lna" x1="500" y1="480" x2="500" y2="505" marker-end="url(#m3a)"/><line class="lna" x1="700" y1="480" x2="700" y2="505" marker-end="url(#m3a)"/><line class="lna" x1="900" y1="480" x2="900" y2="505" marker-end="url(#m3a)"/>
+      <rect class="box-acc" x="10" y="506" width="180" height="100" rx="8"/><text class="ta" x="22" y="530">New</text><text class="ts" x="22" y="548">not stored yet, and</text><text class="ts" x="22" y="563">date after the baseline</text><text class="tt" x="22" y="588">→ fetch</text>
+      <rect class="box-acc" x="210" y="506" width="180" height="100" rx="8"/><text class="ta" x="222" y="530">Changed</text><text class="ts" x="222" y="548">stored date differs</text><text class="ts" x="222" y="563">from the sitemap's</text><text class="tt" x="222" y="588">→ fetch</text>
+      <rect class="box-acc" x="410" y="506" width="180" height="100" rx="8"/><text class="ta" x="422" y="530">No date</text><text class="ts" x="422" y="548">the sitemap gives no</text><text class="ts" x="422" y="563">last-modified date</text><text class="tt" x="422" y="588">→ fetch every run</text>
+      <rect class="box-grey" x="610" y="506" width="180" height="100" rx="8"/><text class="tt" x="622" y="530">Unchanged</text><text class="ts" x="622" y="548">same date as stored</text><text class="tt" x="622" y="588">→ keep what we have</text>
+      <rect class="box-warn" x="810" y="506" width="180" height="100" rx="8"/><text class="tw" x="822" y="530" style="font-size:13.5px">Never captured</text><text class="ts" x="822" y="548">not stored, date before</text><text class="ts" x="822" y="563">the baseline</text><text class="tt" x="822" y="588">→ list for backfill (R20)</text>
+    </svg>
+    </div>
+    <figcaption>The path of one URL. Amber exits are the ways a URL leaves the plan; the five boxes at the bottom are the only outcomes for a URL that stays.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Deleting a page</h2>
+  <p>Today a page is removed because a crawl did not find it. With the sitemap, a page is a removal candidate only if it was listed before and has now disappeared, and a fetch confirms it.</p>
+  <figure>
+    <div class="scroll">
+    <svg viewBox="0 0 1000 540" role="img" aria-label="Today a full crawl's missing pages are retired by ingest; with update, sitemap departures pass guards and a confirmation fetch before being retired.">
+      <defs><marker id="m4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="mk" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <text class="th" x="35" y="24">Today: a full crawl decides</text>
+      <text class="th" x="545" y="24">With update: the sitemap decides</text>
+      <line class="grid" x1="500" y1="10" x2="500" y2="530"/>
+      <!-- left -->
+      <rect class="box" x="35" y="40" width="420" height="74" rx="8"/><text class="tt" x="49" y="66">Full (fresh) crawl</text><text class="ts" x="49" y="86">everything the crawl finds is saved;</text><text class="ts" x="49" y="101">everything it misses is not</text>
+      <line class="ln" x1="245" y1="114" x2="245" y2="139" marker-end="url(#m4)"/>
+      <rect class="box" x="35" y="140" width="420" height="74" rx="8"/><text class="tt" x="49" y="166">Files on disk become the active set</text><text class="ts" x="49" y="186">ingest reads the host's text and files folders;</text><text class="ts" x="49" y="201">the manifest supplies title, hash and URL</text>
+      <line class="ln" x1="245" y1="214" x2="245" y2="239" marker-end="url(#m4)"/>
+      <rect class="box" x="35" y="240" width="420" height="74" rx="8"/><text class="tt" x="49" y="266">Ingest compares</text><text class="ts" x="49" y="286">every database record for the host that is</text><text class="ts" x="49" y="301">not in the active set is retired</text>
+      <line class="ln" x1="245" y1="314" x2="245" y2="339" marker-end="url(#m4)"/>
+      <rect class="box" x="35" y="340" width="420" height="74" rx="8"/><text class="tt" x="49" y="366">Retired</text><text class="ts" x="49" y="386">soft by default: hidden from search;</text><text class="ts" x="49" y="401">really deleted only if the hard-delete flag is on</text>
+      <rect class="box-warn" x="35" y="440" width="420" height="70" rx="8"/><text class="tw" x="49" y="464">A page the crawl never reached is retired</text><text class="tw" x="49" y="482">even though it still exists. Nothing checks</text><text class="tw" x="49" y="500">how many pages one run retires.</text>
+      <!-- right -->
+      <rect class="box-acc dash" x="545" y="40" width="420" height="64" rx="8"/><text class="ta" x="559" y="64">Compare sitemap snapshots</text><text class="ts" x="559" y="82">today's in-scope URLs against the last saved snapshot</text>
+      <line class="lna" x1="755" y1="104" x2="755" y2="125" marker-end="url(#m4)"/>
+      <rect class="box-acc dash" x="545" y="126" width="420" height="64" rx="8"/><text class="ta" x="559" y="150">Departures (R15)</text><text class="ts" x="559" y="168">listed last time, not listed now</text>
+      <line class="lna" x1="755" y1="190" x2="755" y2="211" marker-end="url(#m4)"/>
+      <rect class="box-warn dash" x="545" y="212" width="420" height="64" rx="8"/><text class="tw" x="559" y="236" style="font-size:13.5px">Guards (R11, R12, R15)</text><text class="ts" x="559" y="254">sitemap unreadable, host moved, or over 30% gone:</text><text class="ts" x="559" y="268">hold the whole host for review</text>
+      <line class="lna" x1="755" y1="276" x2="755" y2="297" marker-end="url(#m4)"/>
+      <rect class="box-acc dash" x="545" y="298" width="420" height="64" rx="8"/><text class="ta" x="559" y="322">Confirm each departure by fetching it (R16)</text><text class="ts" x="559" y="340">404 or 410 retire · 403 hold · redirect follow</text><text class="ts" x="559" y="354">200 keep · 5xx or timeout never retires</text>
+      <line class="lna" x1="755" y1="362" x2="755" y2="383" marker-end="url(#m4)"/>
+      <rect class="box-acc dash" x="545" y="384" width="420" height="64" rx="8"/><text class="ta" x="559" y="408">Retire after a complete, uncapped run (R17)</text><text class="ts" x="559" y="426">soft retire first; pages outside the scope are untouched</text>
+      <rect class="box-grey dash" x="545" y="466" width="420" height="58" rx="8"/><text class="ts" x="559" y="488">Pages that were never in a sitemap are covered by a monthly</text><text class="ts" x="559" y="504">full refresh (R19), not by this path.</text>
+    </svg>
+    </div>
+    <figcaption>Left is what the code does now; right is the proposed path, all of it new and not yet connected. The right side retires fewer pages by design: only pages that were listed and then vanished, and only after a fetch agrees.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>The vocabulary</h2>
+  <p>The taxonomy gives the team names for three things: what a URL is, what a host is, and what state a page is in during an update.</p>
+  <div class="tbl"><table>
+    <tr><th>URL kind</th><th>Example</th><th>Default action</th></tr>
+    <tr><td><code>page</code></td><td><code>/undergraduate-program</code></td><td>Fetch when new or changed</td></tr>
+    <tr><td><code>event_page</code></td><td><code>/event/seminar-macroeconomics-58</code></td><td>In scope today; exclusion proposed (about a third of sitemap pages; every dated page in a 90-page sample was past)</td></tr>
+    <tr><td><code>event_feed</code></td><td><code>/node/1397253/event-feed.ics</code></td><td>Excluded by default (PR #4); never listed in a sitemap</td></tr>
+    <tr><td><code>resource_page</code></td><td><code>/resource/slug</code></td><td>File landing page: fetch the card, then the file</td></tr>
+    <tr><td><code>file_binary</code></td><td><code>/sites/g/files/.../x.pdf</code></td><td>Reached by link; in no sitemap; carried forward</td></tr>
+    <tr><td><code>tag_archive</code></td><td><code>/tag/x</code>, <code>/author/y</code></td><td>Excluded by default</td></tr>
+    <tr><td><code>archive_listing</code></td><td><code>/news/page/2</code>, <code>/2024/11</code></td><td>Excluded by default (<code>/page/N</code>)</td></tr>
+    <tr><td><code>query_variant</code></td><td><code>/search?page=3</code></td><td>Search excluded (PR #4); other query strings undecided</td></tr>
+    <tr><td><code>admin</code></td><td><code>/wp-admin/...</code></td><td>Exclusion proposed</td></tr>
+  </table></div>
+  <div class="tbl"><table>
+    <tr><th>Host class</th><th>Values</th><th>Hosts</th></tr>
+    <tr><td>Entry kind</td><td><code>scoped</code> (seed path only) · <code>include</code> (pattern list) · <code>root</code> · <code>subpath</code></td><td>17 · 3 · 29 · 34</td></tr>
+    <tr><td>Sitemap state</td><td>readable · none · unreadable that day · lists another host (moved) · relative paths only</td><td>none 4 · unreadable 4 · moved 4 · relative 1</td></tr>
+    <tr><td>Last-modified coverage</td><td>on 90% or more of URLs, or partial</td><td>partial on 4 hosts: 206 URLs refetched every run</td></tr>
+  </table></div>
+  <div class="tbl"><table>
+    <tr><th>Page state</th><th>Meaning</th></tr>
+    <tr><td><code>new</code> · <code>changed</code> · <code>no_lastmod</code></td><td>Fetch: not stored, stored date differs, or the sitemap gives no date</td></tr>
+    <tr><td><code>unchanged</code></td><td>Same date as stored: skip</td></tr>
+    <tr><td><code>never_captured</code></td><td>In scope and listed, but never stored and not changed since the baseline: kept for a separate backfill</td></tr>
+    <tr><td><code>seed</code> · <code>out_of_scope</code></td><td>The entry's own URL is always fetched; anything failing a gate is skipped</td></tr>
+    <tr><td><code>departure</code> · <code>blocked</code></td><td>Listed last time and gone now; or the whole host is skipped (unreadable sitemap, moved host)</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>What is in the PR</h2>
+  <div class="tbl"><table>
+    <tr><th>Piece</th><th>Where it sits in the flow</th><th>Status</th></tr>
+    <tr><td>429 escalation (2 commits)</td><td>Fetch</td><td>In the scraper</td></tr>
+    <tr><td>PR #4: https canonicalization, search and .ics excludes</td><td>Normalize, scope</td><td>In the scraper</td></tr>
+    <tr><td>PR #7: crawl-generation columns, <code>_should_fetch</code>, manifest guard</td><td>Save, manifest</td><td>In the scraper; fetch behavior unchanged</td></tr>
+    <tr><td>PR #8: tiered sitemap discovery, cadence tooling</td><td>Read the sitemap</td><td>Discovery in the scraper; cadence tooling is analysis</td></tr>
+    <tr><td>Rules folder: taxonomy, <code>rules.py</code>, tests, validation</td><td>Scope, plan, departures</td><td>Reference code and tests only</td></tr>
+  </table></div>
+  <div class="open"><p><b>Not built yet:</b> the update flag itself; a stored last-modified date and saved sitemap snapshot per run; the departures and confirmation-fetch step; the backfill run; scheduling the monthly full refresh.</p></div>
+</section>
+
+<section>
+  <h2>Run it yourself</h2>
+  <pre>cd aidocs/feature/scraper-update-mode/rules
+../../../../.venv/bin/python -m pytest tests -q
+../../../../.venv/bin/python validate_hosts.py</pre>
+  <p>With the real <code>sites.toml</code> and cached manifests, 257 tests pass and 4 skip. With neither of them, as in a clean clone, 76 pass and 26 skip. <code>validate_hosts.py</code> writes <code>report/hosts.csv</code> and <code>report/summary.json</code>, one row per site.</p>
+</section>
+</div>
+</body>
+</html>

@@ -1,0 +1,418 @@
+[
+ {
+  "dir": "blog/linguistics-blog-week-may-20",
+  "type": "blog",
+  "title": "Week of May 20",
+  "date_in_md": "May 21, 2019",
+  "served_md": {
+   "tokens": 281,
+   "whitespace_tokens": 23,
+   "whitespace_share": 0.082,
+   "link_and_image_target_tokens": 91,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 268,
+   "whitespace_tokens": 7,
+   "whitespace_share": 0.026,
+   "link_and_image_target_tokens": 118,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "blog/medieval-blog-want-your-cfp-appear-here",
+  "type": "blog",
+  "title": "Want your CFP to appear here?",
+  "date_in_md": "November 13, 2016",
+  "served_md": {
+   "tokens": 72,
+   "whitespace_tokens": 15,
+   "whitespace_share": 0.208,
+   "link_and_image_target_tokens": 7,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 35,
+   "whitespace_tokens": 2,
+   "whitespace_share": 0.057,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  }
+ },
+ {
+  "dir": "blog/writingcenter-blog-does-my-paper-flow-tips-creating-well-structu",
+  "type": "blog",
+  "title": "Does my paper flow? Tips for creating a well-structured essay.",
+  "date_in_md": "August 23, 2020",
+  "served_md": {
+   "tokens": 802,
+   "whitespace_tokens": 10,
+   "whitespace_share": 0.012,
+   "link_and_image_target_tokens": 0,
+   "chunks": 2,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 804,
+   "whitespace_tokens": 2,
+   "whitespace_share": 0.002,
+   "link_and_image_target_tokens": 0,
+   "chunks": 2,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "blog/www-blog-assistant-professor-position-open-cwru-depart",
+  "type": "blog",
+  "title": "Assistant Professor Position Open - CWRU Department of Chemistry",
+  "date_in_md": "December 16, 2021",
+  "served_md": {
+   "tokens": 307,
+   "whitespace_tokens": 21,
+   "whitespace_share": 0.068,
+   "link_and_image_target_tokens": 199,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 224,
+   "whitespace_tokens": 1,
+   "whitespace_share": 0.004,
+   "link_and_image_target_tokens": 168,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "events/nelc-event-christianity-iraq-challenges-and-hopes",
+  "type": "events",
+  "title": "Christianity in Iraq: Challenges and Hopes",
+  "date_in_md": "November 17, 2022",
+  "served_md": {
+   "tokens": 302,
+   "whitespace_tokens": 30,
+   "whitespace_share": 0.099,
+   "link_and_image_target_tokens": 36,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 191,
+   "whitespace_tokens": 9,
+   "whitespace_share": 0.047,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  }
+ },
+ {
+  "dir": "events/summerfunding-event-students-must-accept-or-decline-funding-offe",
+  "type": "events",
+  "title": "Students must accept or decline funding offer",
+  "date_in_md": "March 24, 2026",
+  "served_md": {
+   "tokens": 106,
+   "whitespace_tokens": 20,
+   "whitespace_share": 0.189,
+   "link_and_image_target_tokens": 26,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 174,
+   "whitespace_tokens": 44,
+   "whitespace_share": 0.253,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": true
+  }
+ },
+ {
+  "dir": "events/tdm-event-perspectives-performance-narcissister",
+  "type": "events",
+  "title": "Perspectives on Performance with Narcissister",
+  "date_in_md": "March 6, 2019",
+  "served_md": {
+   "tokens": 395,
+   "whitespace_tokens": 31,
+   "whitespace_share": 0.078,
+   "link_and_image_target_tokens": 80,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 220,
+   "whitespace_tokens": 10,
+   "whitespace_share": 0.045,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  }
+ },
+ {
+  "dir": "events/wgs-event-queer-theory-french-response-talk-bruno-perr",
+  "type": "events",
+  "title": "RESCHEDULED Queer Theory: The French Response -- talk by Bruno Perreau",
+  "date_in_md": "March 23, 2017",
+  "served_md": {
+   "tokens": 358,
+   "whitespace_tokens": 31,
+   "whitespace_share": 0.087,
+   "link_and_image_target_tokens": 49,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 223,
+   "whitespace_tokens": 11,
+   "whitespace_share": 0.049,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  }
+ },
+ {
+  "dir": "events/www-event-loeb-lectures-margaret-murnane-jila",
+  "type": "events",
+  "title": "Loeb Lectures: Margaret Murnane (JILA)",
+  "date_in_md": "April 12, 2018",
+  "served_md": {
+   "tokens": 254,
+   "whitespace_tokens": 25,
+   "whitespace_share": 0.098,
+   "link_and_image_target_tokens": 53,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 209,
+   "whitespace_tokens": 5,
+   "whitespace_share": 0.024,
+   "link_and_image_target_tokens": 23,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  }
+ },
+ {
+  "dir": "news/english-news-why-ai-hallucinations-can-be-good-thing",
+  "type": "news",
+  "title": "Why AI hallucinations can be a good thing",
+  "date_in_md": "February 08, 2024",
+  "served_md": {
+   "tokens": 279,
+   "whitespace_tokens": 20,
+   "whitespace_share": 0.072,
+   "link_and_image_target_tokens": 55,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 329,
+   "whitespace_tokens": 3,
+   "whitespace_share": 0.009,
+   "link_and_image_target_tokens": 19,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "news/history-news-kirin-gupta-and-jane-kamensky-awarded-star-fa",
+  "type": "news",
+  "title": "Kirin Gupta and Jane Kamensky Awarded Star Family Prizes for Excellence in Advis",
+  "date_in_md": "April 25, 2022",
+  "served_md": {
+   "tokens": 57,
+   "whitespace_tokens": 13,
+   "whitespace_share": 0.228,
+   "link_and_image_target_tokens": 7,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 27,
+   "whitespace_tokens": 3,
+   "whitespace_share": 0.111,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "news/sociology-news-christina-ciocca-ellers-recent-paper-urges-co",
+  "type": "news",
+  "title": "Christina Ciocca Eller's recent paper urges college ratings focused on real-life",
+  "date_in_md": "February 14, 2024",
+  "served_md": {
+   "tokens": 263,
+   "whitespace_tokens": 16,
+   "whitespace_share": 0.061,
+   "link_and_image_target_tokens": 130,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 184,
+   "whitespace_tokens": 3,
+   "whitespace_share": 0.016,
+   "link_and_image_target_tokens": 106,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "news/wgs-news-thesis-track-applications-due-115-0",
+  "type": "news",
+  "title": "Thesis Track Applications Due 11/4",
+  "date_in_md": "October 13, 2022",
+  "served_md": {
+   "tokens": 211,
+   "whitespace_tokens": 20,
+   "whitespace_share": 0.095,
+   "link_and_image_target_tokens": 90,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 164,
+   "whitespace_tokens": 4,
+   "whitespace_share": 0.024,
+   "link_and_image_target_tokens": 86,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "news/www-news-imaging-viscous-flow-dirac-fluid-graphene",
+  "type": "news",
+  "title": "Imaging Viscous Flow of the Dirac Fluid in Graphene",
+  "date_in_md": "July 23, 2020",
+  "served_md": {
+   "tokens": 482,
+   "whitespace_tokens": 10,
+   "whitespace_share": 0.021,
+   "link_and_image_target_tokens": 44,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 475,
+   "whitespace_tokens": 2,
+   "whitespace_share": 0.004,
+   "link_and_image_target_tokens": 55,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "publications/classics-publications-cambridge-songs-carmina-cantabrigiens",
+  "type": "publications",
+  "title": "The Cambridge Songs (Carmina cantabrigiensia)",
+  "date_in_md": null,
+  "served_md": null,
+  "ours": {
+   "tokens": 250,
+   "whitespace_tokens": 1,
+   "whitespace_share": 0.004,
+   "link_and_image_target_tokens": 18,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "publications/histsci-publications-carbon-technocracy",
+  "type": "publications",
+  "title": "Carbon Technocracy: Energy Regimes in Modern East Asia",
+  "date_in_md": null,
+  "served_md": null,
+  "ours": {
+   "tokens": 395,
+   "whitespace_tokens": 2,
+   "whitespace_share": 0.005,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "publications/linguistics-publications-reference-kinds-across-languages",
+  "type": "publications",
+  "title": "Reference to Kinds across Languages",
+  "date_in_md": null,
+  "served_md": null,
+  "ours": {
+   "tokens": 70,
+   "whitespace_tokens": 3,
+   "whitespace_share": 0.043,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "publications/philosophy-publications-collected-works",
+  "type": "publications",
+  "title": "",
+  "date_in_md": null,
+  "served_md": null,
+  "ours": {
+   "tokens": 60,
+   "whitespace_tokens": 8,
+   "whitespace_share": 0.133,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "publications/sociology-publications-coming-age-america-transition-adultho",
+  "type": "publications",
+  "title": "",
+  "date_in_md": null,
+  "served_md": null,
+  "ours": {
+   "tokens": 0,
+   "whitespace_tokens": 0,
+   "whitespace_share": null,
+   "link_and_image_target_tokens": 0,
+   "chunks": 0,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ }
+]

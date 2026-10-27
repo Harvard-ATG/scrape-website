@@ -1,0 +1,30 @@
+{
+ "type": "publications",
+ "host": "linguistics.fas.harvard.edu",
+ "url": "https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages",
+ "md_url": "https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages.md",
+ "xml_lastmod_snapshot": "2013-06-19T03:50:01+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 47070,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 403,
+  "bytes": 96,
+  "content_type": "text/plain; charset=UTF-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1865,
+  "line_number": 1831,
+  "line": "- [Reference to Kinds across Languages](https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages.md)",
+  "before": "- [Dynamics of Meaning: Anaphora, Presupposition, and the Theory of Grammar](https://linguistics.fas.harvard.edu/publications/dynamics-meaning-anaphora-presupposition-and-theory-grammar.md)",
+  "after": "- [Backwards vs. Forward Anaphora: Reconstruction in Child Language](https://linguistics.fas.harvard.edu/publications/backwards-vs-forward-anaphora-reconstruction-child-language.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://linguistics.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages</loc>\n  <lastmod>2013-06-19T03:50:01+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

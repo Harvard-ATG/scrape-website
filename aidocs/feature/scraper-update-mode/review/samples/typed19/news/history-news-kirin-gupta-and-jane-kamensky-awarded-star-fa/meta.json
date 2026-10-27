@@ -1,0 +1,30 @@
+{
+ "type": "news",
+ "host": "history.fas.harvard.edu",
+ "url": "https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising",
+ "md_url": "https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising.md",
+ "xml_lastmod_snapshot": "2022-04-25T21:23:39+00:00",
+ "page.html": {
+  "status": 404,
+  "bytes": 15434,
+  "content_type": "text/html"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 206,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 5792,
+  "line_number": 3897,
+  "line": "- [Kirin Gupta and Jane Kamensky Awarded Star Family Prizes for Excellence in Advising](https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising.md)",
+  "before": "- [Global American Studies Conference with Sara Awartani, Kris Klein Hernandez, Evan Taparata, Ida Yalzadeh](https://history.fas.harvard.edu/event/global-american-studies-conference-sara-awartani-kris-klein-hernandez-evan-taparata.md)",
+  "after": "- [A Year of Black History: Coming of Age in Jim Crow D.C.](https://history.fas.harvard.edu/event/year-black-history-coming-age-jim-crow-dc.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://history.fas.harvard.edu/sitemap.xml?page=1",
+  "child_index": 1,
+  "block": "<url>\n  <loc>https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising</loc>\n  <lastmod>2022-04-25T21:23:39+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

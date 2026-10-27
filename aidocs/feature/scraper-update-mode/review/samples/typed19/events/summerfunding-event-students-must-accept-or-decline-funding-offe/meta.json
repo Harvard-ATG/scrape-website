@@ -1,0 +1,30 @@
+{
+ "type": "events",
+ "host": "summerfunding.college.harvard.edu",
+ "url": "https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer",
+ "md_url": "https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer.md",
+ "xml_lastmod_snapshot": "2025-11-20T20:43:08+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 37460,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 356,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 128,
+  "line_number": 106,
+  "line": "- [Students must accept or decline funding offer](https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer.md)",
+  "before": "- [Funding decisions released](https://sfsao.college.harvard.edu/event/funding-decisions-released.md)",
+  "after": "- [Deadline to submit pre-departure requirements to receive funding](https://sfsao.college.harvard.edu/event/deadline-submit-pre-departure-requirements-receive-funding.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://summerfunding.college.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer</loc>\n  <lastmod>2025-11-20T20:43:08+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

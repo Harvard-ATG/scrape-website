@@ -47,7 +47,7 @@ Duplicate addresses (`http://` twin, trailing slash, `index.html`) are handled b
 | R2 | A URL on another host than the entry's hostname is out of scope | `evaluate` |
 | R3 | `scope_to_path`: only the seed path and below, ending at a path boundary (`/a` does not admit `/a-b`) | `evaluate` |
 | R4 | `include_patterns`: a URL must match at least one regex | `evaluate` |
-| R5 | Default excludes (`/tag/`, `/author/`, `/page/N`, `/feed`, `/print/`, `/comments/`, `/cdn-cgi/`) plus the site's `exclude_patterns` | `evaluate` |
+| R5 | Default excludes (`/tag/`, `/author/`, `/page/N`, `/feed`, `/print/`, `?print=`, `/comments/`, `/cdn-cgi/`, `/search?`, `.ics`, `/bibcite/export` (decision D1)) plus the site's `exclude_patterns` | `evaluate` |
 | R6 | **PROPOSED** (6, 7): also exclude `\.ics`, `^http://`, `/search\?`, `/wp-admin/`. PR #4 delivers the `\.ics` and `/search\?` excludes and replaces `^http://` with http-to-https canonicalization (R1), so `^http://` (PR #9) becomes unnecessary if #4 merges | `PROPOSED_EXCLUDES` |
 | R7 | **PROPOSED** (43): exclude individual event pages (listings stay) | `exclude_events` |
 | R8 | A host with several entries takes the union of their scopes | `evaluate` |
@@ -55,11 +55,11 @@ Duplicate addresses (`http://` twin, trailing slash, `index.html`) are handled b
 | R10 | A host whose entries are all path-scoped with a tiny section (at most 5 sitemap pages besides the seed, true of 16 hosts): re-fetch the seeds each run, ignore the sitemap. A larger section (mcb, 182 pages) is planned from the sitemap like any other host | `plan_update`, `SECTION_PAGE_THRESHOLD` |
 | R11 | Sitemap unreadable or empty: block the host (no fetches, no removals) | `plan_update` |
 | R12 | Sitemap lists only another host (moved): block the host, never propose removals | `plan_update`, `host_moved` |
-| R13 | Fetch a URL when it is not stored (`new`) or its lastmod differs from the stored one (`changed`, any difference, not only newer); fetch always when the sitemap has no lastmod | `plan_update` |
+| R13 | Fetch a URL when it is not stored (`new`) or its lastmod differs from the stored one (`changed`, any difference, not only newer); fetch always when the sitemap has no lastmod or one that cannot be parsed | `plan_update` |
 | R13b | First run, no stored lastmod: `changed` only if lastmod is later than the baseline (manifest `generated_at`) | `plan_update(baseline=)` |
-| R14 | Compare full timestamps in UTC, never dates only | `parse_lastmod` |
+| R14 | Compare full timestamps in UTC. A bare date is read as the end of that day, so a same-day edit is not missed; text after a date is rejected | `parse_lastmod` |
 | R20 | Pages never captured (not stored, lastmod not later than the baseline) are listed in `plan.backfill` and are not fetched by a normal update; a separate, capped backfill fetches them (`backfill=True`). Record them in state as unfetched so later runs keep skipping them | `plan_update(backfill=)` |
-| R15 | Departures are in-scope URLs in the previous snapshot and absent from the current one. If more than 30% (suggested) depart, hold all removals for review | `plan_update(prev_sitemap=)` |
+| R15 | Departures are in-scope URLs in the previous snapshot and absent from the current one (a seed is never a departure, R9). If more than 30% (suggested) depart, hold all removals for review | `plan_update(prev_sitemap=)` |
 | R16 | Confirm each departure by fetching it: 404 or 410 retire; 403 hold; 3xx follow (retire once the target is captured); 200 keep; 5xx or timeout unknown, never retire | `classify_confirmation` |
 | R17 | Retire only after a complete, uncapped run of the host; never on a failed or partial run (policy, not coded) | |
 | R18 | Files: use `/resource/` page lastmod where the sitemap has it; carry known files forward elsewhere (policy, not coded) | |

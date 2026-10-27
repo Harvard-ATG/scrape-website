@@ -1,0 +1,30 @@
+{
+ "type": "blog",
+ "host": "www.chemistry.harvard.edu",
+ "url": "https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry",
+ "md_url": "https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry.md",
+ "xml_lastmod_snapshot": "2021-12-16T19:43:48+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 55644,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 855,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 2893,
+  "line_number": 1459,
+  "line": "- [Assistant Professor Position Open - CWRU Department of Chemistry](https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry.md)",
+  "before": "- [Jarad Mason wins the 2021 Dream Chemistry Award](https://www.chemistry.harvard.edu/news/professor-jarad-mason-wins-2021-dream-chemistry-award.md)",
+  "after": "- [Yahya Chaudhry](https://www.chemistry.harvard.edu/people/yahya-chaudhry.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://www.chemistry.harvard.edu/sitemap.xml?page=1",
+  "child_index": 1,
+  "block": "<url>\n  <loc>https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry</loc>\n  <lastmod>2021-12-16T19:43:48+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

@@ -1,0 +1,482 @@
+[
+ {
+  "dir": "english.fas.harvard.edu/01-english-198v-art-listening-how-sound-works-literature-underg",
+  "type": "sample20",
+  "title": "English 198v. Art of Listening: How Sound Works in Literature (Undergraduate/Gra",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 502,
+   "whitespace_tokens": 15,
+   "whitespace_share": 0.03,
+   "link_and_image_target_tokens": 125,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 354,
+   "whitespace_tokens": 3,
+   "whitespace_share": 0.008,
+   "link_and_image_target_tokens": 42,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "english.fas.harvard.edu/02-english-90ai-building-character-ai-humanities-lab",
+  "type": "sample20",
+  "title": "English 90ai. Building a Character: AI Humanities Lab",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 389,
+   "whitespace_tokens": 14,
+   "whitespace_share": 0.036,
+   "link_and_image_target_tokens": 72,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 289,
+   "whitespace_tokens": 5,
+   "whitespace_share": 0.017,
+   "link_and_image_target_tokens": 18,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "english.fas.harvard.edu/03-english-90er-poetry-creatures-earth",
+  "type": "sample20",
+  "title": "English 90er. Poetry, Creatures, the Earth",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 294,
+   "whitespace_tokens": 17,
+   "whitespace_share": 0.058,
+   "link_and_image_target_tokens": 72,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 203,
+   "whitespace_tokens": 5,
+   "whitespace_share": 0.025,
+   "link_and_image_target_tokens": 29,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "english.fas.harvard.edu/04-english-90b-jamesbaldwin",
+  "type": "sample20",
+  "title": "English 90b. James/Baldwin",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 448,
+   "whitespace_tokens": 16,
+   "whitespace_share": 0.036,
+   "link_and_image_target_tokens": 74,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 357,
+   "whitespace_tokens": 4,
+   "whitespace_share": 0.011,
+   "link_and_image_target_tokens": 31,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "english.fas.harvard.edu/05-contact",
+  "type": "sample20",
+  "title": "Contact",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 3,
+   "whitespace_tokens": 1,
+   "whitespace_share": 0.333,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 225,
+   "whitespace_tokens": 63,
+   "whitespace_share": 0.28,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "philosophy.fas.harvard.edu/16-people-andres-muedano",
+  "type": "sample20",
+  "title": "Andr\u00e9s Muedano",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 702,
+   "whitespace_tokens": 29,
+   "whitespace_share": 0.041,
+   "link_and_image_target_tokens": 79,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 559,
+   "whitespace_tokens": 11,
+   "whitespace_share": 0.02,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "philosophy.fas.harvard.edu/17-people-anna-popnikolova",
+  "type": "sample20",
+  "title": "Anna Popnikolova",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 414,
+   "whitespace_tokens": 20,
+   "whitespace_share": 0.048,
+   "link_and_image_target_tokens": 68,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 283,
+   "whitespace_tokens": 1,
+   "whitespace_share": 0.004,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "philosophy.fas.harvard.edu/18-news-jeff-behrends-gives-keynote-2023-gateway-graduate-confe",
+  "type": "sample20",
+  "title": "Jeff Behrends gives keynote at 2023 Gateway Graduate Conference",
+  "date_in_md": "April 01, 2023",
+  "served_md": {
+   "tokens": 230,
+   "whitespace_tokens": 22,
+   "whitespace_share": 0.096,
+   "link_and_image_target_tokens": 35,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 151,
+   "whitespace_tokens": 6,
+   "whitespace_share": 0.04,
+   "link_and_image_target_tokens": 9,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "philosophy.fas.harvard.edu/19-news-zo-c3-ab-johnson-king-publishes-sensitivity-safety-and-",
+  "type": "sample20",
+  "title": "Zo\u00eb Johnson King publishes \"Sensitivity, Safety, and Admissibility\"",
+  "date_in_md": "December 08, 2022",
+  "served_md": {
+   "tokens": 166,
+   "whitespace_tokens": 17,
+   "whitespace_share": 0.102,
+   "link_and_image_target_tokens": 31,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 108,
+   "whitespace_tokens": 1,
+   "whitespace_share": 0.009,
+   "link_and_image_target_tokens": 24,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "philosophy.fas.harvard.edu/20-news-douglas-marshall-accepts-tenure-track-position-carleton",
+  "type": "sample20",
+  "title": "Douglas Marshall (PhD 2011) accepts tenure-track position at Carleton College",
+  "date_in_md": "February 28, 2014",
+  "served_md": {
+   "tokens": 129,
+   "whitespace_tokens": 17,
+   "whitespace_share": 0.132,
+   "link_and_image_target_tokens": 15,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": true
+  },
+  "ours": {
+   "tokens": 74,
+   "whitespace_tokens": 2,
+   "whitespace_share": 0.027,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": false
+  }
+ },
+ {
+  "dir": "sociology.fas.harvard.edu/06-people-minjin-chae",
+  "type": "sample20",
+  "title": "Minjin Chae",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 532,
+   "whitespace_tokens": 34,
+   "whitespace_share": 0.064,
+   "link_and_image_target_tokens": 185,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 182,
+   "whitespace_tokens": 3,
+   "whitespace_share": 0.016,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "sociology.fas.harvard.edu/07-people-emma-fromont",
+  "type": "sample20",
+  "title": "Emma Fromont",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 550,
+   "whitespace_tokens": 38,
+   "whitespace_share": 0.069,
+   "link_and_image_target_tokens": 208,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 183,
+   "whitespace_tokens": 9,
+   "whitespace_share": 0.049,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "sociology.fas.harvard.edu/08-covid-19-info",
+  "type": "sample20",
+  "title": "COVID-19 Info",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 422,
+   "whitespace_tokens": 6,
+   "whitespace_share": 0.014,
+   "link_and_image_target_tokens": 275,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 254,
+   "whitespace_tokens": 4,
+   "whitespace_share": 0.016,
+   "link_and_image_target_tokens": 158,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "sociology.fas.harvard.edu/09-people-danilo-mandic",
+  "type": "sample20",
+  "title": "Danilo Mandi\u0107",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 1231,
+   "whitespace_tokens": 21,
+   "whitespace_share": 0.017,
+   "link_and_image_target_tokens": 515,
+   "chunks": 3,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 1045,
+   "whitespace_tokens": 5,
+   "whitespace_share": 0.005,
+   "link_and_image_target_tokens": 379,
+   "chunks": 2,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "sociology.fas.harvard.edu/10-faq-do-i-need-apply-separately-funding",
+  "type": "sample20",
+  "title": "Do I need to apply separately for funding?",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 69,
+   "whitespace_tokens": 7,
+   "whitespace_share": 0.101,
+   "link_and_image_target_tokens": 12,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 38,
+   "whitespace_tokens": 2,
+   "whitespace_share": 0.053,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "www.physics.harvard.edu/11-people-elizabeth-alcock",
+  "type": "sample20",
+  "title": "Elizabeth Alcock",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 103,
+   "whitespace_tokens": 18,
+   "whitespace_share": 0.175,
+   "link_and_image_target_tokens": 14,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 372,
+   "whitespace_tokens": 89,
+   "whitespace_share": 0.239,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "www.physics.harvard.edu/12-people-helen-abraha",
+  "type": "sample20",
+  "title": "Helen Abraha",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 117,
+   "whitespace_tokens": 19,
+   "whitespace_share": 0.162,
+   "link_and_image_target_tokens": 28,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 371,
+   "whitespace_tokens": 89,
+   "whitespace_share": 0.24,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "www.physics.harvard.edu/13-people-facpages-mazur",
+  "type": "sample20",
+  "title": "Eric Mazur",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 459,
+   "whitespace_tokens": 25,
+   "whitespace_share": 0.054,
+   "link_and_image_target_tokens": 81,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 296,
+   "whitespace_tokens": 4,
+   "whitespace_share": 0.014,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "www.physics.harvard.edu/14-people-facpages-manoharan",
+  "type": "sample20",
+  "title": "Vinothan N. Manoharan",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 419,
+   "whitespace_tokens": 24,
+   "whitespace_share": 0.057,
+   "link_and_image_target_tokens": 64,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 292,
+   "whitespace_tokens": 6,
+   "whitespace_share": 0.021,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  }
+ },
+ {
+  "dir": "www.physics.harvard.edu/15-news-events",
+  "type": "sample20",
+  "title": "News &amp; Events",
+  "date_in_md": null,
+  "served_md": {
+   "tokens": 7,
+   "whitespace_tokens": 1,
+   "whitespace_share": 0.143,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 0,
+   "title_and_date_in_one_chunk": null
+  },
+  "ours": {
+   "tokens": 300,
+   "whitespace_tokens": 74,
+   "whitespace_share": 0.247,
+   "link_and_image_target_tokens": 0,
+   "chunks": 1,
+   "chunks_mostly_not_in_other": 1,
+   "title_and_date_in_one_chunk": null
+  }
+ }
+]

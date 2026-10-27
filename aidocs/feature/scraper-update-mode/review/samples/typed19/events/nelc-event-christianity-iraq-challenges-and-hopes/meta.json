@@ -1,0 +1,30 @@
+{
+ "type": "events",
+ "host": "nelc.fas.harvard.edu",
+ "url": "https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes",
+ "md_url": "https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes.md",
+ "xml_lastmod_snapshot": "2022-11-14T15:36:55+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 45741,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 1304,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1690,
+  "line_number": 637,
+  "line": "- [Christianity in Iraq: Challenges and Hopes](https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes.md)",
+  "before": "- [Seminar: Manifesto of the Great Resurrection (Qiy\u0101mat-i buzurg)](https://nelc.fas.harvard.edu/event/seminar-manifesto-great-resurrection-qiy%C4%81mat-i-buzurg.md)",
+  "after": "- [Harvard Crimson Interview with NELC Professor Peter Der Manuelian](https://nelc.fas.harvard.edu/harvard-crimson-interview-nelc-professor-peter-der-manuelian.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://nelc.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes</loc>\n  <lastmod>2022-11-14T15:36:55+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

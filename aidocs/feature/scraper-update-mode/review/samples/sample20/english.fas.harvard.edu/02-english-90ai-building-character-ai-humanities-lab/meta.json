@@ -1,0 +1,31 @@
+{
+ "url": "https://english.fas.harvard.edu/english-90ai-building-character-ai-humanities-lab",
+ "xml_lastmod": "2026-10-09T12:00:16+00:00",
+ "page.html": {
+  "url": "https://english.fas.harvard.edu/english-90ai-building-character-ai-humanities-lab",
+  "status": 200,
+  "bytes": 55382,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "HIT",
+   "link": "<https://english.fas.harvard.edu/english-90ai-building-character-ai-humanities-lab.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"English 90ai. Building a Character: AI Humanities Lab\"",
+   "last-modified": "Wed, 21 Oct 2026 12:10:05 GMT",
+   "etag": "\"1792584605\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:06 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://english.fas.harvard.edu/english-90ai-building-character-ai-humanities-lab.md",
+  "status": 200,
+  "bytes": 1700,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:08 GMT",
+   "etag": "\"1792584608\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:08 GMT"
+  }
+ }
+}

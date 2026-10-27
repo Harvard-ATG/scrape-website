@@ -1,0 +1,30 @@
+{
+ "type": "events",
+ "host": "www.physics.harvard.edu",
+ "url": "https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila",
+ "md_url": "https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila.md",
+ "xml_lastmod_snapshot": "2021-02-02T02:08:52+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 54867,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 867,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 842,
+  "line_number": 159,
+  "line": "- [Loeb Lectures: Margaret Murnane (JILA)](https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila.md)",
+  "before": "- [Lee Historical Lecture: Rainer Weiss (MIT)](https://www.physics.harvard.edu/event/lee-historical-lecture-rainer-weiss-mit.md)",
+  "after": "- [Lee Historical Lecture: Michael Berry (U Bristol)](https://www.physics.harvard.edu/event/lee-historical-lecture-michael-berry-u-bristol.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://www.physics.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila</loc>\n  <lastmod>2021-02-02T02:08:52+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

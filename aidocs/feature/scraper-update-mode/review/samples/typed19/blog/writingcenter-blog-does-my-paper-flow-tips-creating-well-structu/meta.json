@@ -1,0 +1,30 @@
+{
+ "type": "blog",
+ "host": "writingcenter.fas.harvard.edu",
+ "url": "https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay",
+ "md_url": "https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay.md",
+ "xml_lastmod_snapshot": "2020-08-23T02:50:12+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 40475,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 4005,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 94,
+  "line_number": 2,
+  "line": "- [Does my paper flow? Tips for creating a well-structured essay.](https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay.md)",
+  "before": "- [Welcome to the Barker Underground!](https://writingcenter.fas.harvard.edu/blog/welcome-barker-underground.md)",
+  "after": "- [Why would anyone want to meet with a writing tutor? ](https://writingcenter.fas.harvard.edu/faq/why-would-anyone-want-meet-writing-tutor.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://writingcenter.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay</loc>\n  <lastmod>2020-08-23T02:50:12+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

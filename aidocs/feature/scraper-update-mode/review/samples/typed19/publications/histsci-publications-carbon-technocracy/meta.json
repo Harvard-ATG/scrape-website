@@ -1,0 +1,30 @@
+{
+ "type": "publications",
+ "host": "histsci.fas.harvard.edu",
+ "url": "https://histsci.fas.harvard.edu/publications/carbon-technocracy",
+ "md_url": "https://histsci.fas.harvard.edu/publications/carbon-technocracy.md",
+ "xml_lastmod_snapshot": "2025-09-23T21:00:30+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 46692,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 403,
+  "bytes": 96,
+  "content_type": "text/plain; charset=UTF-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 881,
+  "line_number": 837,
+  "line": "- [Carbon Technocracy: Energy Regimes in Modern East Asia](https://histsci.fas.harvard.edu/publications/carbon-technocracy.md)",
+  "before": "- [Einstein's Clock's, Poincar\u00e9's Maps](https://histsci.fas.harvard.edu/publications/einsteins-clocks-poincar%C3%A9s-maps.md)",
+  "after": "- [Why Trust Science?](https://histsci.fas.harvard.edu/publications/why-trust-science.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://histsci.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://histsci.fas.harvard.edu/publications/carbon-technocracy</loc>\n  <lastmod>2025-09-23T21:00:30+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "type": "events",
+ "host": "wgs.fas.harvard.edu",
+ "url": "https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau",
+ "md_url": "https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau.md",
+ "xml_lastmod_snapshot": "2017-02-23T15:13:54+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 49780,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 1513,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1041,
+  "line_number": 492,
+  "line": "- [RESCHEDULED Queer Theory: The French Response -- talk by Bruno Perreau](https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau.md)",
+  "before": "- [ \"Dark Girls\" -- film screening](https://wgs.fas.harvard.edu/event/dark-girls-film-screening.md)",
+  "after": "- [Pan-Harvard LGBTQ Town Hall](https://wgs.fas.harvard.edu/event/pan-harvard-lgbtq-town-hall.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://wgs.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau</loc>\n  <lastmod>2017-02-23T15:13:54+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

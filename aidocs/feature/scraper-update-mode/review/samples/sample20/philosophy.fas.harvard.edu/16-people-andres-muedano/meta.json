@@ -1,0 +1,31 @@
+{
+ "url": "https://philosophy.fas.harvard.edu/people/andres-muedano",
+ "xml_lastmod": "2026-10-08T15:43:56+00:00",
+ "page.html": {
+  "url": "https://philosophy.fas.harvard.edu/people/andres-muedano",
+  "status": 200,
+  "bytes": 46784,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://philosophy.fas.harvard.edu/people/andres-muedano.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Andr\u00e9s Muedano\"",
+   "last-modified": "Wed, 21 Oct 2026 12:11:22 GMT",
+   "etag": "\"1792584682\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:22 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://philosophy.fas.harvard.edu/people/andres-muedano.md",
+  "status": 200,
+  "bytes": 3082,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:24 GMT",
+   "etag": "\"1792584684\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:25 GMT"
+  }
+ }
+}

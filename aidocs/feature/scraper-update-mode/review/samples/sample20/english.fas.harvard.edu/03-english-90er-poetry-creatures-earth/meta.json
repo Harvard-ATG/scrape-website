@@ -1,0 +1,31 @@
+{
+ "url": "https://english.fas.harvard.edu/english-90er-poetry-creatures-earth",
+ "xml_lastmod": "2024-03-27T17:59:26+00:00",
+ "page.html": {
+  "url": "https://english.fas.harvard.edu/english-90er-poetry-creatures-earth",
+  "status": 200,
+  "bytes": 54544,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://english.fas.harvard.edu/english-90er-poetry-creatures-earth.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"English 90er. Poetry, Creatures, the Earth\"",
+   "last-modified": "Wed, 21 Oct 2026 12:10:11 GMT",
+   "etag": "\"1792584611\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:11 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://english.fas.harvard.edu/english-90er-poetry-creatures-earth.md",
+  "status": 200,
+  "bytes": 1144,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:14 GMT",
+   "etag": "\"1792584614\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:14 GMT"
+  }
+ }
+}

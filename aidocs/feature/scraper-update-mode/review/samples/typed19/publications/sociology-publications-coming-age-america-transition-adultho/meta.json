@@ -1,0 +1,30 @@
+{
+ "type": "publications",
+ "host": "sociology.fas.harvard.edu",
+ "url": "https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century",
+ "md_url": "https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century.md",
+ "xml_lastmod_snapshot": "2018-05-22T20:44:06+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 45249,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 403,
+  "bytes": 96,
+  "content_type": "text/plain; charset=UTF-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 2245,
+  "line_number": 2182,
+  "line": "- [Coming of Age in America: The Transition to Adulthood in the Twenty-First Century](https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century.md)",
+  "before": "- [Survey Methods for Network Data](https://sociology.fas.harvard.edu/publications/survey-methods-network-data.md)",
+  "after": "- [Racial and Ethnic Diversity and Public Policy](https://sociology.fas.harvard.edu/publications/racial-and-ethnic-diversity-and-public-policy.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://sociology.fas.harvard.edu/sitemap.xml?page=1",
+  "child_index": 1,
+  "block": "<url>\n  <loc>https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century</loc>\n  <lastmod>2018-05-22T20:44:06+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

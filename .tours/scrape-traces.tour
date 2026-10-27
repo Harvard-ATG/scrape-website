@@ -1,0 +1,111 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Scrape traces: a changed page and a missing page",
+  "description": "Follows one page from the command that starts a run to the vector store. Additive: does not replace the area-based tour. Reference code is not wired into the scraper.",
+  "steps": [
+    {
+      "title": "Start here: follow one thing down the stack",
+      "description": "This tour is **additive**: it does not replace `scrape-update-mode.tour`. That tour is organised by area. This one follows one thing from the command that starts it to the place it ends.\n\n**Trace A**: a page changed on the site. **Trace B**: a page disappeared.\n\nStatus tags: `RUNS TODAY`, `PROPOSED` (reference code, not wired), `MISSING`, `OUTSIDE THIS REPO` (text only; open the link).\n\nThe commands that start a run are a ladder, each calling the next: EventBridge schedule, `run_scrape.py`, `scrape_and_ingest.py`, `scrape.py`, `scrape-website`, then `ingest.py`. Flags change meaning on the way down; the next steps decode them.\n\n![Today's flow](./aidocs/feature/scraper-update-mode/rules/overview/tour/01-today-flow.png)\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)"
+    },
+    {
+      "title": "Sitemaps 1: the XML sitemap carries dates · EVIDENCE",
+      "description": "Before any command runs, the question is what the site tells us about itself. The **XML sitemap** is a list of `<url>` entries. Each has `<loc>` and `<lastmod>`; most also have `<priority>`, and `<changefreq>` appears only on a few (here, the homepage). This is the first entry of a real child file for `haa.fas.harvard.edu`.\n\nOur planner (R13) uses `lastmod` only. The parser in `evidence/cadence-analysis/sitemap_parse.py` keeps `loc` and `lastmod` and drops the rest. `_fetch_sitemap_urls` in the scraper keeps neither: it returns URLs only.\n\n79 of 83 hosts have an XML sitemap, often an index of child files. In the 2026-10-15 snapshot every one of the 10,775 file landing pages (`/resource/...`) listed in these sitemaps has a `lastmod`.\n\n![Sitemap kinds](./aidocs/feature/scraper-update-mode/rules/overview/tour/03-sitemap-kinds.png)\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "aidocs/feature/scraper-update-mode/evidence/aws-reachability/samples/haa.fas.harvard.edu_sitemap_child0.xml",
+      "line": 7
+    },
+    {
+      "title": "Sitemaps 2: the markdown sitemap: the list has no dates, the file cards do · EVIDENCE",
+      "description": "The **markdown sitemap** is on 52 of 83 hosts (Drupal 10 only). It is a plain list: `- [title](url.md)`. No dates, no priority. Each link points at a per-page `.md` copy of the page.\n\nThe list has no dates, and a page's own `.md` copy shows a written date only on news, events and blog pages (the publication or event date, day only, not an edit time). Its extra content is **files**: the `haa` list has 276 `/resource/` entries. Each one links to a small metadata card (`/resource/<slug>.md`) whose body gives **size, format, date and the download path**, for example `Size: 1.92 MB`, `Format: PDF`, `Date: 09/05/2018` for a celtic PDF. The card's HTTP `Last-Modified` is just the render time, so it is not a usable date.\n\n**The card date mostly matches the XML:** on 19 cards with a date, 14 had the same date as the XML `lastmod` of the same landing page (for example card `09/05/2018` against `2018-09-05T15:19:26Z`). The other 5 had a card date years older than an XML `lastmod` that a bulk re-save moved (several cards share one 2024 timestamp). So the card `Date` looks like the file's own date; the XML `lastmod` also moves on re-saves. The card date is date only; the XML has the time. Reading it costs one request per card.\n\n**Scope matters:** the markdown sitemap lists files for the whole host. Run through our scope rules, 751 of 10,375 file entries are out of scope (every file on path-scoped hosts such as `haa`).\n\nStatus: neither the markdown sitemap nor file cards are read by the scraper today.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "aidocs/feature/scraper-update-mode/evidence/aws-reachability/samples/haa.fas.harvard.edu_sitemap-llm.md",
+      "line": 2175
+    },
+    {
+      "title": "Sitemaps 3: one page, two forms (haa /about) · EVIDENCE",
+      "description": "Fetched on 2026-10-21, one request each. Left: the `.md` copy that the markdown sitemap links to. The HTML page and what our extractor makes of it are in the same samples folder (`haa-about/about.html`, `haa-about-extracted/ours-from-html.md`); the full comparison is in `haa-about-COMPARE.md`.\n\n| | Served `.md` | Our extraction |\n| --- | --- | --- |\n| Words | 766 | 532 |\n| Links | 42 | 9 |\n| Images | 20 | 0 |\n| Blank lines | 442 | 42 |\n\nUnder **Department Administration** the served copy has 16 person cards (name, role, email). Our extraction keeps the heading and none of the cards. The served copy is also noisy (hundreds of blank lines, image links).\n\nThe front matter our extractor wrote says `date: 2026-01-01`; the HTML has no date tag, so that is a guess. The `.md` `Last-Modified` header is the fetch minute. Neither is a change date: use the XML `lastmod`.\n\nOne page only; it does not say how often our extraction loses content.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "aidocs/feature/scraper-update-mode/review/samples/haa-about/about.md",
+      "line": 39
+    },
+    {
+      "title": "Entry 1: the commands · OUTSIDE THIS REPO",
+      "description": "Layer 1, schedule: [`main.tf` L203](https://github.com/Harvard-ATG/atg-ops-appserver/blob/24c065d7f356b6fe5facd79369871ebfc391a984/terraform/modules/apps/apo-mcp/main.tf#L203) runs `scrape_and_ingest.py --all --mode full --workers 8` daily at 05:00 ET. It is DISABLED in Terraform.\n\nLayer 2, manual: [`run_scrape.py`](https://github.com/Harvard-ATG/atg-ops-appserver/blob/24c065d7f356b6fe5facd79369871ebfc391a984/apps/apo-mcp/run_scrape.py) takes `[dev|prod|qa] --all|--hostname|--hostnames --mode scrape|ingest|full --fresh --workers`.\n\nLayer 3, orchestrator: [`scrape_and_ingest.py`](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/scrape_and_ingest.py#L268). `--fresh` here deletes `data/<host>` (L268) and skips the S3 baseline (L276); otherwise the last run is pulled from S3 and only new pages are added.\n\nLayer 4, per-site driver: [`scrape.py`](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/scrape.py#L60) reads `sites.toml` and builds the scraper. `use_sitemap` and `scope_to_path` default to **False** there, so production crawls by link-following only.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)"
+    },
+    {
+      "title": "Entry 2: the scraper's own command · RUNS TODAY",
+      "description": "Layer 5. `scrape-website` is `scrape_website.cli:run`, which calls `main`. This is the flag set of the scraper itself: URL or `--file` or `--retry FILE`, `--concurrency`, `--timeout`, `--delay`, `--output-dir`, `--s3-bucket`, `--fresh`, `--include-pattern`, `--exclude-pattern`, `--no-default-excludes`, `--use-sitemap` (default **on** here), `--scope-to-path`, `--no-playwright`.\n\nNotice: the defaults here differ from what `scrape.py` passes in. Same crawl, different entry point, different path.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1597
+    },
+    {
+      "title": "Flag decoder: `--fresh` and sitemap defaults · RUNS TODAY",
+      "description": "`--fresh` means four things depending on the layer:\n\n| Layer | Meaning |\n| --- | --- |\n| `scrape_and_ingest.py` | delete `data/<host>`, skip the S3 baseline, pass `--fresh` down |\n| `scrape.py` | ignore the saved checkpoint |\n| `scrape-website` | crawl state (see `_decide_crawl_gen`) |\n| `ingest.py` | not accepted |\n\n`--use-sitemap` defaults on in the scraper CLI but off when `scrape.py` builds it from `sites.toml`.\n\nA proposed update flag would have to be forwarded through each layer.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1610
+    },
+    {
+      "title": "Trace A1: the scraper is built · RUNS TODAY",
+      "description": "The flags become a `WebsiteScraper`. From here the data moves down one path regardless of which layer started it.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1672
+    },
+    {
+      "title": "Trace A2: is this URL in scope? · RUNS TODAY",
+      "description": "Every candidate URL passes the exclude and path-prefix helpers. The proposed planner reuses these rules unchanged (R2 to R9, [`evaluate`](./aidocs/feature/scraper-update-mode/rules/rules.py)).\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 192
+    },
+    {
+      "title": "Trace A3: where dates should come from · RUNS TODAY",
+      "description": "Sitemap seeding runs only when `use_sitemap` is on. `_fetch_sitemap_urls` returns URLs with no `lastmod`, so today nothing can tell a changed page from an unchanged one.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1433
+    },
+    {
+      "title": "Trace A4: the plan (proposed) · PROPOSED",
+      "description": "`plan_update` compares each sitemap date with what is stored and returns `fetch`, `skip`, `backfill`, `departures`. **Not called by the scraper.** Notice the order of checks: R10 tiny section, R11 unreadable, R12 moved host, then per-URL dates (R13, R13b, R20).\n\n![Plan order](./aidocs/feature/scraper-update-mode/rules/overview/tour/11-plan-order.png)\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 175
+    },
+    {
+      "title": "Trace A5: the seam where the plan plugs in · RUNS TODAY, planner MISSING",
+      "description": "`_should_fetch` is the gate every URL passes. Today it skips anything already visited. An update run would ask the plan instead. The seam exists; the planner is not connected.\n\n![Update flow](./aidocs/feature/scraper-update-mode/rules/overview/tour/04-update-flow.png)\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 372
+    },
+    {
+      "title": "Trace A6: the page is saved and recorded · RUNS TODAY, lastmod column MISSING",
+      "description": "`upsert_metadata` writes one row per page (including `crawl_gen`). No per-URL `lastmod` column exists yet, which R13 needs.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 639
+    },
+    {
+      "title": "Trace A7: the manifest is the hand-off · RUNS TODAY",
+      "description": "`export_manifest` builds the manifest; `_should_write_manifest` only allows it for a complete, uncapped run. After this the files are synced to S3 and ingest reads them.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 658
+    },
+    {
+      "title": "Trace A8: ingest · OUTSIDE THIS REPO",
+      "description": "[`ingest.py` L324](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L324) looks each `.md` file up in the manifest by filename; [L343](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L343) skips non-200 pages; then each page is hash-compared and uploaded to the vector store. The unchanged ones are skipped by content hash.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)"
+    },
+    {
+      "title": "Trace B1: a page is missing from the sitemap (proposed) · PROPOSED",
+      "description": "A departure is a URL in the last sitemap snapshot and not in this one (R15). If more than 30% depart, `removal_blocked` is set: nothing is retired. The review proposes that this raise a Sentry alert with the host, counts, sample URLs and links, and carry the entries forward.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 258
+    },
+    {
+      "title": "Trace B2: a fetch decides (proposed) · PROPOSED",
+      "description": "`classify_confirmation`: 404 or 410 retire; 403 hold; 3xx follow; 200 keep; 5xx or timeout unknown, never retire.\n\n![Deletion](./aidocs/feature/scraper-update-mode/rules/overview/tour/07-deletion.png)\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 273
+    },
+    {
+      "title": "Trace B3: dropping the manifest entry · MISSING",
+      "description": "The proposed hand-off is the manifest: a retired URL is absent from it. Catch: ingest decides what is active from `.md` files **on disk** ([`ingest.py` L314](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L314)), not from manifest entries, and a normal run keeps old files from the S3 baseline. So either the scraper deletes the file or ingest iterates the manifest. Neither exists yet.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)"
+    },
+    {
+      "title": "Trace B4: retire · OUTSIDE THIS REPO",
+      "description": "[`deprecate_removed_urls`](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L71) retires every record whose URL is not in `active_urls`, with no cap and no confirmation. [`_retire_file`](https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L42) flips `source_status` to `removed`, or deletes only if `VECTOR_STORE_HARD_DELETE_ENABLED` is set. This is the vector-store end of Trace B.\n\nDocs: [UPDATE_MODE.md](./docs/UPDATE_MODE.md) · [DELETION_SIDE_BY_SIDE.md](./aidocs/feature/scraper-update-mode/review/DELETION_SIDE_BY_SIDE.md) · [REHEARSAL.md](./aidocs/feature/scraper-update-mode/review/REHEARSAL.md)"
+    }
+  ]
+}
