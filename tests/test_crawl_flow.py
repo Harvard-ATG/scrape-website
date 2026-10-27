@@ -25,6 +25,7 @@ crawl_gen is older than the current pass. That behavior does not exist yet and
 is intentionally not asserted here.
 """
 import asyncio
+import logging
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
