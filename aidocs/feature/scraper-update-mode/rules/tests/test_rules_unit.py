@@ -153,9 +153,11 @@ def test_proposed_excludes_leave_ordinary_pages_alone():
         assert evaluate(f"https://{host}{path}", host, [{"url": f"https://{host}/"}], adopt_proposed=True).in_scope, path
 
 
-def test_event_policy_is_off_by_default_and_spares_listings():
+def test_event_pages_are_excluded_by_default_and_listings_spared():
     e = [{"url": "https://www.economics.harvard.edu/"}]
     h = "www.economics.harvard.edu"
-    assert evaluate("https://www.economics.harvard.edu/event/seminar-1", h, e).in_scope
+    d = evaluate("https://www.economics.harvard.edu/event/seminar-1", h, e)
+    assert not d.in_scope and d.reason == "excluded"          # R7 is a default exclude now, so R5 fires first
     assert not evaluate("https://www.economics.harvard.edu/event/seminar-1", h, e, exclude_events=True).in_scope
+    assert evaluate("https://www.economics.harvard.edu/events", h, e).in_scope
     assert evaluate("https://www.economics.harvard.edu/events", h, e, exclude_events=True).in_scope

@@ -2,8 +2,9 @@
 
 Derived from the sitemap / manifest / scope analysis of 2026-10-15 (see the Claude Docs "Incremental Update via
 Sitemap lastmod: Findings" and "Scraping Decisions Log"). Executable version: `rules.py`. Tests: `tests/`.
-Rules marked **PROPOSED** (R6, R7) were adopted on 2026-10-15 as policy (decisions 6, 7, 43) but are not yet in the
-scraper, so they stay switched off in code unless `adopt_proposed=True` / `exclude_events=True`.
+Rule R6 (marked **PROPOSED**) was adopted on 2026-10-15 as policy (decisions 6, 7) but is not yet in the scraper, so it
+stays switched off in code unless `adopt_proposed=True`. R7 (decision 43) is in the scraper's default excludes since
+branch `feat/scraper-exclude-event-pages`; `exclude_events=True` is now redundant with the default.
 
 ## 1. Taxonomy
 
@@ -49,7 +50,7 @@ Duplicate addresses (`http://` twin, trailing slash, `index.html`) are handled b
 | R4 | `include_patterns`: a URL must match at least one regex | `evaluate` |
 | R5 | Default excludes (`/tag/`, `/author/`, `/page/N`, `/feed`, `/print/`, `?print=`, `/comments/`, `/cdn-cgi/`, `/search?`, `.ics`, `/bibcite/export` (decision D1)) plus the site's `exclude_patterns` | `evaluate` |
 | R6 | **PROPOSED** (6, 7): also exclude `\.ics`, `^http://`, `/search\?`, `/wp-admin/`. PR #4 delivers the `\.ics` and `/search\?` excludes and replaces `^http://` with http-to-https canonicalization (R1), so `^http://` (PR #9) becomes unnecessary if #4 merges | `PROPOSED_EXCLUDES` |
-| R7 | **PROPOSED** (43): exclude individual event pages (listings stay) | `exclude_events` |
+| R7 | Default exclude (43): individual event pages `/(events?|calendar[_-]?events?)/<slug>`; listings stay | `_DEFAULT_EXCLUDE_PATTERNS` in `scraper.py` (R5); `exclude_events` kept for the planner |
 | R8 | A host with several entries takes the union of their scopes | `evaluate` |
 | R9 | Every entry's seed URL is always in scope | `evaluate` |
 | R10 | A host whose entries are all path-scoped with a tiny section (at most 5 sitemap pages besides the seed, true of 16 hosts): re-fetch the seeds each run, ignore the sitemap. A larger section (mcb, 182 pages) is planned from the sitemap like any other host | `plan_update`, `SECTION_PAGE_THRESHOLD` |

@@ -96,6 +96,10 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # publication list is offered in six formats as small text files that ingest never reads
     # (it only takes .pdf, .docx, .pptx and .doc), so they cost crawl time for no content.
     r"/bibcite/export",
+    # Individual event pages (R7): one page per seminar or talk, almost all past by the time they
+    # are read; on economics they are 74% of the sitemap. Listings (/events, /calendar,
+    # /event-topic/x) stay: the pattern needs exactly one path segment after the events folder.
+    r"(?i)/(events?|calendar[_-]?events?)/[^/]+/?$",
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
