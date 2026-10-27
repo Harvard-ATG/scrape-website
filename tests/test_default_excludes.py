@@ -31,9 +31,8 @@ def test_individual_event_pages_are_excluded():
         "https://www.economics.harvard.edu/event/graduate-student-workshop-macroeconomics",
         "https://history.fas.harvard.edu/events/brown-bag-lunch-talk",
         "https://iop.harvard.edu/events/conversation-jack-lew-former-us-treasury-secretary-2013-2017",
-        "https://writingprogram.college.harvard.edu/calendar_event/course-registration",
-        "https://x.harvard.edu/calendar-event/open-house",
         "https://x.harvard.edu/Events/Mixed-Case-Slug",
+        "https://www.chemistry.harvard.edu/event/professor-peng-chen-peking-university?occ_id=0",
         "https://x.harvard.edu/events/talk/",                       # trailing slash
         "https://x.harvard.edu/event/talk?date=2026-11-01",         # query string
     ):
@@ -52,3 +51,25 @@ def test_event_listing_pages_are_not_excluded():
         "https://x.harvard.edu/news/eventful-year",                 # 'event' inside another word
     ):
         assert not _url_excluded(url, COMPILED), url
+
+
+def test_academic_calendar_event_pages_are_kept():
+    """Registrar-style deadlines live under calendar_event (OUE, SAS): the most-cited
+    event content in Splunk (Jul-Oct 2026), only ~40 pages across all hosts."""
+    for url in (
+        "https://oue.fas.harvard.edu/calendar_event/fall-course-registration-opens-for-incoming-students",
+        "https://sas.fas.harvard.edu/calendar_event/fall-2026-course-registration-deadline-for-continuing-students",
+        "https://x.harvard.edu/calendar-event/open-house",
+    ):
+        assert not _url_excluded(url, COMPILED), url
+
+
+def test_incoming_students_event_pages_are_kept():
+    """incomingstudents.college.harvard.edu uses /event/ for placement exams and
+    registration steps (13 pages, cited in Splunk); every other host's /event/ is seminars."""
+    for url in (
+        "https://incomingstudents.college.harvard.edu/event/take-math-placement-exam",
+        "https://incomingstudents.college.harvard.edu/event/view-course-recommendations-myharvard",
+    ):
+        assert not _url_excluded(url, COMPILED), url
+    assert _url_excluded("https://history.fas.harvard.edu/event/take-math-placement-exam", COMPILED)

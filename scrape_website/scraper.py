@@ -105,7 +105,12 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # Individual event pages (R7): one page per seminar or talk, almost all past by the time they
     # are read; on economics they are 74% of the sitemap. Listings (/events, /calendar,
     # /event-topic/x) stay: the pattern needs exactly one path segment after the events folder.
-    r"(?i)/(events?|calendar[_-]?events?)/[^/]+/?$",
+    # Kept on purpose (Splunk, Jul-Oct 2026: the only event content users actually hit):
+    #   - /calendar_event/ and /calendar-event/ pages: registrar-style deadlines on OUE and SAS,
+    #     ~40 pages across all hosts, the most-cited event URLs in the logs.
+    #   - incomingstudents.college.harvard.edu, whose /event/ pages are placement exams and
+    #     registration steps (13 pages), not seminars.
+    r"(?i)^(?!https?://incomingstudents\.college\.harvard\.edu/).*/events?/[^/]+/?$",
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent

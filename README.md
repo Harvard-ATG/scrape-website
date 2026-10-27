@@ -131,7 +131,7 @@ uv run scrape-website https://blog.example.com/ --exclude-pattern '/category/'
 uv run scrape-website https://blog.example.com/ --no-default-excludes --exclude-pattern '/archive/'
 ```
 
-Default patterns: `/tag/`, `/author/`, `/feed/`, `/print/`, `?print=`, `/comments/`, `/page/\d+`, `/cdn-cgi/`, `/search?`, `.ics`, `/bibcite/export`, and single event pages `/(events?|calendar[_-]?events?)/<slug>` (event listings stay).
+Default patterns: `/tag/`, `/author/`, `/feed/`, `/print/`, `?print=`, `/comments/`, `/page/\d+`, `/cdn-cgi/`, `/search?`, `.ics`, `/bibcite/export`, and single event pages `/event/<slug>` or `/events/<slug>` (event listings, `calendar_event` deadline pages, and incomingstudents.college.harvard.edu stay).
 
 **URL include patterns** — when set, only URLs matching at least one pattern are crawled. Composes with exclude patterns: a URL must match an include AND not match any exclude (`(include₁ OR include₂) AND NOT (exclude₁ OR exclude₂)`):
 
