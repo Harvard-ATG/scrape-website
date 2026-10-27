@@ -52,6 +52,12 @@ CONFIG = {
 # burning retries against a WAF that won't relent on the same fingerprint.
 RETRYABLE_STATUS = {500, 502, 503, 504}
 
+# Sticky Tier 2: after this many consecutive Tier 1 (aiohttp) 403/429s on a host,
+# start every later fetch at Tier 2. Saves one rejected round trip per page and
+# stops feeding the bot wall a stream of bot-fingerprint hits. Any Tier 1 success
+# resets the count; Tier 1 is still the last resort if Tier 2/3 fail.
+_TIER1_SKIP_AFTER = 5
+
 # File extensions to download
 DOWNLOADABLE_EXTENSIONS = {
     '.pdf', '.doc', '.docx', '.ppt', '.pptx',
@@ -780,6 +786,9 @@ class WebsiteScraper:
         ]
         self.session = None
         self.semaphore = asyncio.Semaphore(self.max_concurrent)
+        # Sticky Tier 2 state (see _TIER1_SKIP_AFTER)
+        self._tier1_blocks_in_a_row = 0
+        self._skip_tier1 = False
         self.denied_urls: list[str] = []
         self.failed_urls: list[str] = []
 
@@ -1187,6 +1196,15 @@ class WebsiteScraper:
         Returns (content, content_type, kind, status) for all paths.
         """
         last_error = None
+        if self._skip_tier1:
+            tier2_result = await self._fetch_via_curl_cffi(url)
+            if tier2_result is not None:
+                return tier2_result
+            if self.playwright_enabled:
+                tier3_result = await self._fetch_via_playwright(url)
+                if tier3_result is not None:
+                    return tier3_result
+            # Tier 2/3 could not serve it either: fall through to the normal Tier 1 path
         for attempt in range(self.max_retries):
             try:
                 async with self.session.request(method, url, allow_redirects=True) as response:
@@ -1205,6 +1223,13 @@ class WebsiteScraper:
 
                     # Escalate 403/429 to Tier 2 (curl_cffi Chrome fingerprint)
                     if status in (403, 429):
+                        self._tier1_blocks_in_a_row += 1
+                        if not self._skip_tier1 and self._tier1_blocks_in_a_row >= _TIER1_SKIP_AFTER:
+                            self._skip_tier1 = True
+                            self.logger.info(
+                                f"Tier 1 blocked {self._tier1_blocks_in_a_row} times in a row on "
+                                f"{self.base_domain}; starting at Tier 2 for the rest of this crawl"
+                            )
                         # Release the aiohttp connection before slow Tier 2/3 work.
                         # Without this, the connection pool slot stays occupied during
                         # potentially multi-second browser fetches.
@@ -1223,6 +1248,8 @@ class WebsiteScraper:
                                 return tier3_result
 
                         # All tiers failed, will return original status below
+                    else:
+                        self._tier1_blocks_in_a_row = 0
 
                     # Determine if this is a downloadable file or HTML
                     if self.should_download_file(url, content_type):
