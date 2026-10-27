@@ -65,22 +65,23 @@ def test_academic_calendar_event_pages_are_kept():
 
 
 def test_advising_hosts_keep_their_event_pages():
-    """A few small advising hosts use /event/ for deadlines, placement exams, info sessions
-    and advising hours rather than seminars (slugs reviewed against prod manifests and
-    Splunk citations, 2026-10-27). Their event pages stay; every other host's go."""
+    """incomingstudents (now firstyear.college) uses /event/ for this year's registration
+    steps and placement exams: all 26 pages carry a 2026 sitemap lastmod. The other advising
+    hosts tried on 2026-10-27 (histlit, socialstudies, espp, specialconcentrations) turned out
+    to be 2013-2020 calendars with few or no current entries, so their event pages go too."""
     for url in (
         "https://incomingstudents.college.harvard.edu/event/take-math-placement-exam",
-        "https://specialconcentrations.fas.harvard.edu/event/spring-application-deadline-3",
-        "https://histlit.fas.harvard.edu/event/plan-concentration-field-worksheet-and-other-end-year-forms-due",
-        "https://socialstudies.fas.harvard.edu/event/advising-corner-hours-0",
-        "https://espp.fas.harvard.edu/event/course-registration-deadline-1",
         "https://firstyear.college.harvard.edu/event/take-math-placement-exam",
     ):
         assert not _url_excluded(url, COMPILED), url
     for url in (
-        "https://undergrad.psychology.fas.harvard.edu/event/thesis-abstracts-due",   # 2018 calendar, superseded by dated pages
         "https://history.fas.harvard.edu/event/take-math-placement-exam",
         "https://registrar.fas.harvard.edu/event/fall-2026-ferpa-workshop",
         "https://www.economics.harvard.edu/event/sophomore-declaration-event",
+        "https://undergrad.psychology.fas.harvard.edu/event/thesis-abstracts-due",
+        "https://histlit.fas.harvard.edu/event/plan-concentration-field-worksheet-and-other-end-year-forms-due",
+        "https://socialstudies.fas.harvard.edu/event/advising-corner-hours-0",
+        "https://espp.fas.harvard.edu/event/course-registration-deadline-1",
+        "https://specialconcentrations.fas.harvard.edu/event/spring-application-deadline-3",
     ):
         assert _url_excluded(url, COMPILED), url

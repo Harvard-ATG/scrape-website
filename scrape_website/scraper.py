@@ -87,16 +87,13 @@ DOWNLOADABLE_MIMES = {
 # Regex patterns for URLs commonly worth skipping on blog/CMS sites.
 # These are matched against the full URL (re.search). Override via
 # --exclude-pattern (repeatable) or programmatic API.
-# Hosts whose /event/ pages are advising content (deadlines, placement exams, info
-# sessions, advising hours) rather than seminars. Reviewed slug by slug against the
-# prod manifests and Splunk citations on 2026-10-27; R7 below leaves these alone.
+# Hosts whose /event/ pages are this year's advising items (registration steps, placement
+# exams) rather than seminars or old calendars. Checked 2026-10-27 against the sitemap
+# lastmod: every page here is dated 2026. histlit, socialstudies, espp and
+# specialconcentrations were tried and dropped: their event pages are 2013-2020 calendars.
 _R7_KEEP_EVENT_HOSTS = (
     "incomingstudents.college.harvard.edu",
     "firstyear.college.harvard.edu",          # incomingstudents now redirects here
-    "specialconcentrations.fas.harvard.edu",
-    "histlit.fas.harvard.edu",
-    "socialstudies.fas.harvard.edu",
-    "espp.fas.harvard.edu",
 )
 _R7_KEEP_EVENT_HOSTS_RE = "|".join(re.escape(h) for h in _R7_KEEP_EVENT_HOSTS)
 
@@ -121,8 +118,8 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # Kept on purpose (Splunk, Jul-Oct 2026: the only event content users actually hit):
     #   - /calendar_event/ and /calendar-event/ pages: registrar-style deadlines on OUE and SAS,
     #     ~40 pages across all hosts, the most-cited event URLs in the logs.
-    #   - the _R7_KEEP_EVENT_HOSTS above, whose /event/ pages are advising items, not seminars
-    #     (about 340 pages in prod).
+    #   - the _R7_KEEP_EVENT_HOSTS above, whose /event/ pages are this year's advising
+    #     items, not seminars (26 pages).
     rf"(?i)^(?!https?://(?:{_R7_KEEP_EVENT_HOSTS_RE})/).*/events?/[^/]+/?$",
 ]
 
