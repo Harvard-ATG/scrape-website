@@ -237,10 +237,11 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
 
     Discovery order:
       1. ``robots.txt`` ``Sitemap:`` directives (authoritative when present)
-      2. standard fallbacks ``/sitemap.xml``, ``/sitemap_index.xml``,
+      2. only if (1) found nothing: standard fallbacks ``/sitemap.xml``, ``/sitemap_index.xml``,
          ``/wp-sitemap.xml`` (WordPress)
     Recurses into ``<sitemap><loc>`` (sitemap-index) entries up to one level.
-    Returns a deduped list of ``<loc>`` URLs, capped at *max_urls*.
+    Returns a deduped list of ``<loc>`` URLs, capped at *max_urls* (a warning is logged when the cap cuts the list).
+    Fallbacks are probed only when robots.txt advertised no sitemap that yielded URLs.
 
     *fetch* takes a URL and returns the body as bytes on HTTP 200, else None.
     Routing discovery through the crawler's tier-escalating fetcher (Tier 1
@@ -276,45 +277,56 @@ async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
                                 urls.append(child.text.strip())
         return urls
 
-    # robots.txt Sitemap: directives first (authoritative), then fallbacks.
+    # robots.txt Sitemap: directives are authoritative. The standard fallbacks are probed only when robots
+    # advertised nothing that yielded URLs: each probe that gets a 403 can escalate to Tier 2/3, which is costly.
     robots = await fetch(f"{scheme}://{host}/robots.txt")
-    candidates = _parse_robots_sitemaps(robots)
-    for path in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"):
-        candidates.append(f"{scheme}://{host}{path}")
+    advertised = _parse_robots_sitemaps(robots)
+    fallbacks = [f"{scheme}://{host}{path}" for path in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml")]
 
     seen: set[str] = set()
     result: list[str] = []
     tried: set[str] = set()
+    truncated = False
 
-    for sitemap_url in candidates:
-        if sitemap_url in tried:
-            continue
-        tried.add(sitemap_url)
-        data = await fetch(sitemap_url)
-        if not data:
-            continue
-
-        # Check for sitemap index (contains <sitemap> elements)
-        sub_sitemaps = _parse_locs(data, tag="sitemap")
-        if sub_sitemaps:
-            for sub_url in sub_sitemaps:
-                sub_data = await fetch(sub_url)
-                if sub_data:
-                    for loc in _parse_locs(sub_data, tag="url"):
-                        if loc not in seen:
-                            seen.add(loc)
-                            result.append(loc)
-                            if len(result) >= max_urls:
-                                return result
-
-        # Also parse direct <url><loc> entries
-        for loc in _parse_locs(data, tag="url"):
+    def _add(locs: list[str]) -> bool:
+        """Append new locs; return False once max_urls is reached."""
+        nonlocal truncated
+        for loc in locs:
             if loc not in seen:
                 seen.add(loc)
                 result.append(loc)
                 if len(result) >= max_urls:
-                    return result
+                    truncated = True
+                    return False
+        return True
 
+    async def _read(sitemap_url: str) -> bool:
+        """Read one sitemap (and its sub-sitemaps); return False once max_urls is reached."""
+        if sitemap_url in tried:
+            return True
+        tried.add(sitemap_url)
+        data = await fetch(sitemap_url)
+        if not data:
+            return True
+        # Check for sitemap index (contains <sitemap> elements)
+        for sub_url in _parse_locs(data, tag="sitemap"):
+            sub_data = await fetch(sub_url)
+            if sub_data and not _add(_parse_locs(sub_data, tag="url")):
+                return False
+        # Also parse direct <url><loc> entries
+        return _add(_parse_locs(data, tag="url"))
+
+    for group in (advertised, fallbacks):
+        for sitemap_url in group:
+            if not await _read(sitemap_url):
+                break
+        if result:
+            break   # advertised sitemaps worked: do not probe the fallbacks
+
+    if truncated:
+        # TODO: return a completeness flag so the update planner (R11, R15) can tell a cut-off list from a full one.
+        logging.getLogger("scraper.sitemap").warning(
+            "Sitemap discovery for %s stopped at max_urls=%d; the list is incomplete", host, max_urls)
     return result
 
 
@@ -372,6 +384,8 @@ def _should_fetch(url: str, seen_this_run: set[str], url_store: "URLStore") -> b
     rows whose crawl_gen < the current generation. Resume vs. new-pass is decided
     by the queue, never here.
     """
+    # NOTE(review): the crawl loop adds a URL to url_store before it is fetched, so a page that fails or is
+    # denied counts as visited here and is never retried by a later run. See review/REVIEW_FINDINGS.md (O2).
     if url in seen_this_run:
         return False
     return not url_store.contains(url)
@@ -379,6 +393,10 @@ def _should_fetch(url: str, seen_this_run: set[str], url_store: "URLStore") -> b
 
 def _should_write_manifest(*, crawl_complete: bool, capped: bool, has_entries: bool) -> bool:
     """Only (re)write manifest.json after a complete, non-capped pass with entries.
+
+    NOTE(review): "complete" means the queue drained. Pages that failed or were denied are not counted, so a
+    manifest can omit them and downstream ingest then retires them. R17 (retire only after a complete run) is
+    not enforced here. See review/REVIEW_FINDINGS.md (O1).
 
     Guards the 'complete & authoritative' invariant: a partial, crashed, or capped
     run leaves the last complete manifest untouched, so downstream ingest /
@@ -628,13 +646,15 @@ class URLStore:
                         file_size: int | None = None, crawl_gen: int | None = None):
         # last_fetched_at stamps the UTC instant of this successful save (freshness);
         # crawl_gen records which crawl generation last fetched the row (control).
-        # Only stamp them on a real fetch save (crawl_gen provided).
+        # Only stamp them on a real fetch save (crawl_gen provided); a save without a
+        # generation keeps any existing stamp (COALESCE) instead of erasing it.
         fetched_at = (
             datetime.now(timezone.utc).isoformat() if crawl_gen is not None else None
         )
         self.conn.execute("""
             UPDATE visited SET filename=?, hostname=?, title=?, found_on=?,
-                file_type=?, content_hash=?, file_size=?, crawl_gen=?, last_fetched_at=?
+                file_type=?, content_hash=?, file_size=?,
+                crawl_gen=COALESCE(?, crawl_gen), last_fetched_at=COALESCE(?, last_fetched_at)
             WHERE url=?
         """, (filename, hostname, title, found_on, file_type, content_hash,
               file_size, crawl_gen, fetched_at, url))
@@ -740,6 +760,8 @@ class WebsiteScraper:
         # at curl_cffi. Useful if Playwright causes issues on specific sites.
         self.playwright_enabled = playwright_enabled
         # Store patterns as strings (for pickling to process pool)
+        # NOTE(review): passing exclude_patterns here REPLACES the defaults, while the CLI and the update rules
+        # (rules.evaluate) ADD to them. See review/REVIEW_FINDINGS.md (O5).
         self._exclude_pattern_strings: list[str] = (
             exclude_patterns if exclude_patterns is not None
             else list(_DEFAULT_EXCLUDE_PATTERNS)

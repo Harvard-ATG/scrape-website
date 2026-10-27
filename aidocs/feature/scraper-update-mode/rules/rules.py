@@ -45,17 +45,25 @@ def normalize_key(url: str) -> str:
 
 
 def parse_lastmod(value: str | None) -> datetime | None:
-    """Parse a sitemap lastmod into an aware UTC datetime (R14: full timestamps, never dates only)."""
+    """Parse a sitemap lastmod into an aware UTC datetime (R14: full timestamps, never dates only).
+
+    A bare date (YYYY-MM-DD, optionally followed by Z) carries no time, so it is read as the END of that day:
+    a page edited later on the baseline day is then still seen as changed instead of being missed.
+    Trailing text after a date is not accepted.
+    """
     if not value:
         return None
     s = value.strip().replace("Z", "+00:00")
-    try:
-        d = datetime.fromisoformat(s)
-    except ValueError:
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}(\+00:00)?", s):
         try:
             d = datetime.strptime(s[:10], "%Y-%m-%d")
         except ValueError:
             return None
+        return d.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+    try:
+        d = datetime.fromisoformat(s)
+    except ValueError:
+        return None
     return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
 
 
@@ -159,7 +167,7 @@ class Plan:
         for r in self.fetch.values():
             c[r] = c.get(r, 0) + 1
         c["skip"] = len(self.skip)
-        c["backfill"] = len(self.backfill)
+        c["backfill"] = c.get("backfill", 0) + len(self.backfill)   # fetched (backfill=True) plus held
         c["departures"] = len(self.departures)
         return c
 
@@ -223,22 +231,24 @@ def plan_update(sitemap: dict[str, str | None] | None, state: dict[str, dict], h
                     plan.backfill[key] = "never_captured"
             else:
                 plan.fetch[key] = "new"
-        elif st.get("fetched") is False and not backfill:                           # R20 recorded, still unfetched
+        elif st.get("fetched") is False:                                            # R20 recorded, still unfetched
             old0 = parse_lastmod(st.get("lastmod"))
             if cur0 is not None and old0 is not None and cur0 != old0:
                 plan.fetch[key] = "changed"
+            elif backfill:
+                plan.fetch[key] = "backfill"
             else:
                 plan.backfill[key] = "never_captured"
-        elif not lm:
-            plan.fetch[key] = "no_lastmod"                                        # always refetch (Q2 option A)
+        elif not lm or cur0 is None:
+            plan.fetch[key] = "no_lastmod"                                        # missing or unusable date: refetch (R13)
         else:
-            cur, old = parse_lastmod(lm), parse_lastmod(st.get("lastmod"))
+            cur, old = cur0, parse_lastmod(st.get("lastmod"))
             if old is None and baseline is not None:                              # R13b bootstrap
-                if cur is not None and cur > baseline:
+                if cur > baseline:
                     plan.fetch[key] = "changed"
                 else:
                     plan.skip.append(key)
-            elif old is None or (cur is not None and cur != old):
+            elif old is None or cur != old:
                 plan.fetch[key] = "changed"                                       # inequality, not just newer
             else:
                 plan.skip.append(key)
@@ -251,7 +261,7 @@ def plan_update(sitemap: dict[str, str | None] | None, state: dict[str, dict], h
             full = u if "://" in u else f"https://{host}{u}"
             if evaluate(full, host, entries, adopt_proposed=adopt_proposed, exclude_events=exclude_events).in_scope:
                 prev[normalize_key(full)] = 1
-        gone = sorted(set(prev) - set(current))
+        gone = sorted(set(prev) - set(current) - set(seeds))   # a seed is always refetched (R9), never a departure
         if prev and len(gone) / len(prev) > departure_cap:
             plan.removal_blocked = f"departure_cap:{len(gone)}/{len(prev)}"
         else:

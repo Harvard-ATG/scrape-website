@@ -33,6 +33,21 @@ def test_parse_lastmod_variants():
     assert parse_lastmod("not a date") is None
 
 
+def test_parse_lastmod_rejects_trailing_text_and_reads_bare_dates_as_end_of_day():
+    assert parse_lastmod("2026-10-15 garbage") is None
+    assert parse_lastmod("2026-13-45") is None
+    d = parse_lastmod("2026-10-15")
+    assert (d.hour, d.minute, d.second) == (23, 59, 59) and d == parse_lastmod("2026-10-15Z")
+    assert parse_lastmod("2026-10-15T10:00:00").hour == 10      # naive is read as UTC
+
+
+@pytest.mark.parametrize("url", ["https://Example.edu/", "https://example.edu/a/?x=1", "http://example.edu/a/", "https://example.edu/a#frag"])
+def test_scraper_keys_agree_with_rule_keys_after_normalize_key(url):
+    """The planner's state is keyed by normalize_key; keys the scraper stores must map to the same key."""
+    from scrape_website.scraper import _normalize_url
+    assert normalize_key(_normalize_url(url)) == normalize_key(url)
+
+
 # --- taxonomy: url_kind -----------------------------------------------------------------------------
 @pytest.mark.parametrize("url,kind", [
     ("https://www.economics.harvard.edu/node/1397253/event-feed.ics", "event_feed"),
@@ -118,22 +133,24 @@ def test_path_scoped_requires_every_entry_scoped():
     ("https://www.economics.harvard.edu/node/1397253/event-feed.ics", "event_feed"),
     ("http://folkmyth.fas.harvard.edu/people/x", "http_dup"),
     ("https://folkmyth.fas.harvard.edu/search?page=2", "search"),
+    ("https://www.example.harvard.edu/wp-admin/options.php", "wp_admin"),
 ])
-def test_proposed_excludes_only_when_adopted(url, name):
-    """Inert until adopted, unless the scraper already excludes the URL by default (true for .ics and /search? once
-    PR #4 is merged); then the default exclude is what removes it."""
-    import re
-    from scrape_website.scraper import _DEFAULT_EXCLUDE_PATTERNS
+def test_proposed_excludes_only_when_adopted(url, name, monkeypatch):
+    """Each proposed pattern is tested on its own: the scraper's default excludes already catch .ics and /search?,
+    so they are emptied here. Otherwise the default exclude would answer first and this test could not fail."""
+    import rules
+    monkeypatch.setattr(rules, "_DEFAULT_EXCLUDE_PATTERNS", [])
     host = url.split("/")[2]
     entries = [{"url": f"https://{host}/"}]
-    already_default = any(re.search(p, url) for p in _DEFAULT_EXCLUDE_PATTERNS)
-    d0 = evaluate(url, host, entries)
-    if already_default:
-        assert (d0.in_scope, d0.reason) == (False, "excluded")
-        return
-    assert d0.in_scope or name == "http_dup"      # not excluded today (the http twin passes the host check)
+    assert evaluate(url, host, entries).in_scope                  # inert until adopted
     d = evaluate(url, host, entries, adopt_proposed=True)
     assert (d.in_scope, d.reason) == (False, f"proposed:{name}")
+
+
+def test_proposed_excludes_leave_ordinary_pages_alone():
+    host = "www.example.harvard.edu"
+    for path in ("/about", "/people/jane-doe", "/news/search-for-truth", "/wp-content/uploads/x.pdf"):
+        assert evaluate(f"https://{host}{path}", host, [{"url": f"https://{host}/"}], adopt_proposed=True).in_scope, path
 
 
 def test_event_policy_is_off_by_default_and_spares_listings():

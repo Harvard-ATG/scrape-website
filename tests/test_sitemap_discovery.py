@@ -96,3 +96,39 @@ def test_discovery_caps_at_max_urls():
     )
     assert len(urls) == 3
     assert urls[0] == "https://example.com/p0"
+
+
+def test_fallbacks_are_not_probed_once_robots_advertised_sitemap_yields_urls():
+    pages = {
+        "https://example.com/robots.txt": b"Sitemap: https://example.com/custom-sitemap.xml\n",
+        "https://example.com/custom-sitemap.xml":
+            b'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            b"<url><loc>https://example.com/a</loc></url></urlset>",
+    }
+    asked: list[str] = []
+
+    async def fetch(url: str) -> bytes | None:
+        asked.append(url)
+        return pages.get(url)
+
+    asyncio.run(_fetch_sitemap_urls(fetch, "example.com"))
+    assert not any(u.endswith(("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml")) for u in asked)
+
+
+def test_fallbacks_are_probed_when_the_advertised_sitemap_is_unreachable():
+    pages = {
+        "https://example.com/robots.txt": b"Sitemap: https://example.com/gone.xml\n",
+        "https://example.com/sitemap.xml":
+            b'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            b"<url><loc>https://example.com/b</loc></url></urlset>",
+    }
+    assert asyncio.run(_fetch_sitemap_urls(_fetch_from(pages), "example.com")) == ["https://example.com/b"]
+
+
+def test_truncation_at_max_urls_is_logged(caplog):
+    locs = b"".join(f"<url><loc>https://example.com/p{i}</loc></url>".encode() for i in range(10))
+    pages = {"https://example.com/sitemap.xml":
+             b'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + locs + b"</urlset>"}
+    with caplog.at_level("WARNING", logger="scraper.sitemap"):
+        asyncio.run(_fetch_sitemap_urls(_fetch_from(pages), "example.com", max_urls=3))
+    assert "incomplete" in caplog.text

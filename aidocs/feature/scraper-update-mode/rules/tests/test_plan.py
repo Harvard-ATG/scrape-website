@@ -180,7 +180,7 @@ def test_scoped_host_with_a_real_section_is_planned_from_the_sitemap():
     assert plan.out_of_scope == 1
 
 
-def test_scoped_host_with_a_real_section_and_unreadable_sitemap_falls_back_to_seeds():
+def test_scoped_host_with_an_unreadable_sitemap_falls_back_to_seeds():
     scoped = [{"url": f"https://{H}/undergraduate/", "scope_to_path": True}]
     assert list(plan_update(None, {}, H, scoped).fetch.values()) == ["seed"]
 
@@ -199,3 +199,58 @@ def test_tiny_scoped_host_reports_the_sitemap_pages_outside_its_section_as_out_o
     plan = plan_update(sm(*pages), {}, H, scoped)
     assert list(plan.fetch.values()) == ["seed"]
     assert plan.out_of_scope == 7                    # the report once counted these as in scope
+
+
+# --- fixes from the PR #10 code review ----------------------------------------------------------------
+def test_backfill_run_fetches_recorded_unfetched_pages_even_when_lastmod_is_unchanged():
+    st = {k("/old"): {"lastmod": "2026-05-01", "fetched": False}}
+    plan = plan_update(sm(("/old", "2026-05-01")), st, H, E, backfill=True)
+    assert plan.fetch[k("/old")] == "backfill" and k("/old") not in plan.skip
+
+
+def test_counts_keep_the_backfill_total_when_a_backfill_run_fetches_them():
+    plan = plan_update(sm(("/old", "2026-05-01")), {}, H, E, baseline=BASE, backfill=True)
+    assert plan.counts()["backfill"] == 1
+
+
+def test_a_seed_missing_from_the_sitemap_is_not_a_departure():
+    pages = [f"/p{i}" for i in range(9)]
+    prev = {f"https://{H}/": None, **{f"https://{H}{p}": None for p in pages}}
+    plan = plan_update({f"https://{H}{p}": None for p in pages}, {}, H, E, prev_sitemap=prev)
+    assert plan.departures == [] and plan.fetch[normalize_key(E[0]["url"])] == "seed"
+
+
+def test_an_unusable_lastmod_is_refetched_not_skipped():
+    plan = plan_update(sm(("/a", "garbage")), state(("/a", "2026-01-01T10:00:00+00:00")), H, E)
+    assert plan.fetch[k("/a")] == "no_lastmod" and k("/a") not in plan.skip
+
+
+def test_a_date_only_lastmod_on_the_baseline_day_counts_as_changed():
+    """A bare date is read as the end of that day, so an edit later on the baseline day is not missed."""
+    base = datetime(2026, 7, 22, 9, 0, tzinfo=timezone.utc)
+    plan = plan_update(sm(("/a", "2026-07-22")), state(("/a", None)), H, E, baseline=base)
+    assert plan.fetch[k("/a")] == "changed"
+
+
+def _scoped_sitemap(n_in_section):
+    return sm(*[(f"/undergraduate/p{i}", "2026-01-01") for i in range(n_in_section)], ("/directory/x", "2026-01-01"))
+
+
+def test_r10_threshold_five_section_pages_refetch_the_seeds_only():
+    scoped = [{"url": f"https://{H}/undergraduate/", "scope_to_path": True}]
+    plan = plan_update(_scoped_sitemap(5), {}, H, scoped)
+    assert list(plan.fetch.values()) == ["seed"] and plan.out_of_scope == 1
+
+
+def test_r10_threshold_six_section_pages_are_planned_from_the_sitemap():
+    scoped = [{"url": f"https://{H}/undergraduate/", "scope_to_path": True}]
+    plan = plan_update(_scoped_sitemap(6), {}, H, scoped)
+    assert len(plan.fetch) == 7 and set(plan.fetch.values()) <= {"new", "seed"}
+    assert k("/directory/x") not in plan.fetch
+
+
+def test_r12_only_blocks_when_every_sitemap_url_is_on_another_host():
+    mixed = {f"https://{H}/a": "2026-01-01", "https://other.harvard.edu/b": "2026-01-01", "https://other.harvard.edu/c": None}
+    plan = plan_update(mixed, {}, H, E)
+    assert plan.blocked is None and k("/a") in plan.fetch and plan.out_of_scope == 2
+    assert plan_update({"https://other.harvard.edu/b": None}, {}, H, E).blocked == "sitemap_foreign_host"

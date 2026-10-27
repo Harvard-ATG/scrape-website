@@ -105,6 +105,18 @@ def test_upsert_without_gen_leaves_fields_null(tmp_path):
     store.close()
 
 
+def test_upsert_without_gen_keeps_an_existing_stamp(tmp_path):
+    store = URLStore(tmp_path / "state.db")
+    store.add("https://x/a")
+    store.upsert_metadata("https://x/a", filename="a.md", hostname="x", crawl_gen=3)
+    store.upsert_metadata("https://x/a", filename="a.md", hostname="x", title="t")
+    gen, fetched_at = store.conn.execute(
+        "SELECT crawl_gen, last_fetched_at FROM visited WHERE url='https://x/a'"
+    ).fetchone()
+    assert gen == 3 and fetched_at is not None
+    store.close()
+
+
 def test_should_fetch_unseen_url(tmp_path):
     store = URLStore(tmp_path / "state.db")
     assert _should_fetch("https://x/a", set(), store) is True

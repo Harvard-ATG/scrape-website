@@ -49,8 +49,6 @@ def test_moved_hosts_are_detected_as_foreign_host_sitemaps():
 def test_no_other_host_has_a_foreign_host_sitemap():
     for h, entries in SITES.items():
         sm = readable(h)
-        if sm and not all(len(e["url"]) for e in entries):
-            continue
         if sm:
             assert plan_update(sm, {}, h, entries).blocked != "sitemap_foreign_host", h
 
@@ -82,7 +80,7 @@ def test_urls_refetched_every_run_for_lack_of_lastmod_is_small():
         sm = readable(h)
         plan = plan_update(sm, {normalize_key(u if "://" in u else f"https://{h}{u}"): {"lastmod": "2026-01-01"} for u in sm}, h, SITES[h])
         seen += sum(1 for r in plan.fetch.values() if r == "no_lastmod")
-    assert seen <= total
+    assert 0 < seen <= total, (seen, total)
 
 
 def test_seeds_are_always_in_scope_even_with_every_proposed_rule_on():
@@ -136,7 +134,8 @@ def test_event_feeds_pending_prune():
         host = u.split("/")[2]
         if host in SITES and not evaluate(u, host, SITES[host]).in_scope:
             out_of_scope += 1
-    assert out_of_scope == (len(feeds) - sum(1 for u in feeds if u.split("/")[2] not in SITES) if excluded_by_default else 0)
+    assert excluded_by_default, "the scraper's default excludes must catch .ics feeds (PR #4)"
+    assert out_of_scope == len(feeds) - sum(1 for u in feeds if u.split("/")[2] not in SITES)
 
 
 def test_proposed_event_feed_exclude_removes_only_feeds():
@@ -172,8 +171,9 @@ def test_first_run_is_bounded_by_in_scope_sitemap_pages():
         plan = plan_update(sm, {}, h, entries)
         if plan.blocked:
             continue
-        nonseed = len([r for r in plan.fetch.values() if r != "seed"])
-        assert nonseed <= len(sm) - plan.out_of_scope        # every planned fetch is an in-scope sitemap URL
+        seeds = {normalize_key(e["url"]) for e in entries}
+        for key in plan.fetch:                               # every planned fetch is a seed or an in-scope URL
+            assert key in seeds or evaluate(key, h, entries).in_scope, (h, key)
 
 
 def test_out_of_scope_count_matches_an_independent_count_on_every_planned_host():
