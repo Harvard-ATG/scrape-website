@@ -1498,24 +1498,36 @@ class WebsiteScraper:
                 sitemap_urls = []
             if sitemap_urls:
                 added = 0
+                dropped = {"off-host": 0, "out of scope": 0, "not included": 0, "excluded": 0, "already known": 0}
                 for surl in sitemap_urls:
                     normalized = _normalize_url(surl, strip_tracking=self.strip_tracking_params)
                     nparsed = urlparse(normalized)
                     if nparsed.netloc != self.base_domain:
+                        dropped["off-host"] += 1
                         continue
                     if self.path_prefix and not _url_within_path_prefix(nparsed.path, self.path_prefix):
+                        dropped["out of scope"] += 1
                         continue
                     if self._compiled_include_patterns and not any(
                         p.search(normalized) for p in self._compiled_include_patterns
                     ):
+                        dropped["not included"] += 1
                         continue
                     if _url_excluded(normalized, self._compiled_exclude_patterns):
+                        dropped["excluded"] += 1
                         continue
-                    if not self.url_store.contains(normalized):
-                        self.urls_to_visit.append((normalized, None))
-                        added += 1
-                if added:
-                    self.logger.info(f"Sitemap: seeded {added} URLs from sitemap discovery")
+                    if self.url_store.contains(normalized):
+                        dropped["already known"] += 1
+                        continue
+                    self.urls_to_visit.append((normalized, None))
+                    added += 1
+                drops = ", ".join(f"{k} {v}" for k, v in dropped.items() if v)
+                self.logger.info(
+                    f"Sitemap: {len(sitemap_urls)} entries found; seeded {added}"
+                    + (f"; dropped {drops}" if drops else "")
+                )
+            else:
+                self.logger.info(f"Sitemap: none found for {self.base_domain}; crawling from links only")
 
         # Start background tasks
         progress_task = asyncio.create_task(self._progress_reporter())

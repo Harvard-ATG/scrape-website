@@ -279,3 +279,42 @@ def test_sitemap_failure_is_logged_and_crawl_continues(tmp_path, monkeypatch, ca
     finally:
         scraper.executor.shutdown(wait=False)
         scraper.url_store.close()
+
+
+def test_sitemap_outcome_is_always_logged(tmp_path, monkeypatch, caplog):
+    """One line per crawl says what the sitemap contributed: entries found, seeded, and
+    how many were dropped (off-host, out of scope, excluded, already known), or that no
+    sitemap was found. Without it, a host with no sitemap and a host whose seeding worked
+    look the same in the log."""
+    async def sitemap_with_mixed_entries(fetch, host, scheme):
+        return [HOME, PAGE_C, "https://other.example.org/x", "https://example.com/bibcite/export?format=ris"]
+
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", sitemap_with_mixed_entries)
+    site = {HOME: ([], "# Home"), PAGE_C: ([], "# C")}
+    scraper = _make(tmp_path, fresh=True, use_sitemap=True)
+    _install_fake_site(monkeypatch, scraper, site, [])
+    try:
+        with caplog.at_level(logging.INFO):
+            asyncio.run(scraper.run())
+        msgs = [r.getMessage() for r in caplog.records]
+        line = next(m for m in msgs if m.startswith("Sitemap: 4 entries"))
+        assert "seeded 2" in line and "off-host 1" in line and "excluded 1" in line
+    finally:
+        scraper.executor.shutdown(wait=False)
+        scraper.url_store.close()
+
+
+def test_missing_sitemap_is_logged(tmp_path, monkeypatch, caplog):
+    async def no_sitemap(fetch, host, scheme):
+        return []
+
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", no_sitemap)
+    scraper = _make(tmp_path, fresh=True, use_sitemap=True)
+    _install_fake_site(monkeypatch, scraper, {HOME: ([], "# Home")}, [])
+    try:
+        with caplog.at_level(logging.INFO):
+            asyncio.run(scraper.run())
+        assert any(m.startswith("Sitemap: none found") for m in (r.getMessage() for r in caplog.records))
+    finally:
+        scraper.executor.shutdown(wait=False)
+        scraper.url_store.close()
