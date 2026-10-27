@@ -256,3 +256,25 @@ def test_sitemap_fetch_routes_through_tier_fetcher(tmp_path, monkeypatch):
     finally:
         scraper.executor.shutdown(wait=False)
         scraper.url_store.close()
+
+
+def test_sitemap_failure_is_logged_and_crawl_continues(tmp_path, monkeypatch, caplog):
+    """Sitemap discovery is best-effort, but a failure must not be silent: with seeding on
+    by default for every host, an unlogged failure would look like a site with no sitemap."""
+    async def broken_sitemap(fetch, host, scheme):
+        raise RuntimeError("robots.txt unreachable")
+
+    monkeypatch.setattr(scraper_mod, "_fetch_sitemap_urls", broken_sitemap)
+    site = {HOME: ([PAGE_A], "# Home"), PAGE_A: ([], "# A")}
+    fetched = []
+    scraper = _make(tmp_path, fresh=True, use_sitemap=True)
+    _install_fake_site(monkeypatch, scraper, site, fetched)
+    try:
+        with caplog.at_level(logging.WARNING):
+            asyncio.run(scraper.run())
+        assert fetched == [HOME, PAGE_A]                    # crawl still ran
+        assert any("sitemap" in r.getMessage().lower() and "robots.txt unreachable" in r.getMessage()
+                   for r in caplog.records if r.levelno >= logging.WARNING)
+    finally:
+        scraper.executor.shutdown(wait=False)
+        scraper.url_store.close()

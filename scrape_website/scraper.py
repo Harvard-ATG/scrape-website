@@ -1491,7 +1491,10 @@ class WebsiteScraper:
                     ),
                     timeout=60,
                 )
-            except Exception:
+            except Exception as e:
+                # Best-effort, but never silent: with seeding on for every host, a quiet
+                # failure would be indistinguishable from a site that has no sitemap.
+                self.logger.warning(f"Sitemap discovery failed for {self.base_domain}; crawling from links only: {e!r}")
                 sitemap_urls = []
             if sitemap_urls:
                 added = 0
