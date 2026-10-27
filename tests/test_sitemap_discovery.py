@@ -132,3 +132,12 @@ def test_truncation_at_max_urls_is_logged(caplog):
     with caplog.at_level("WARNING", logger="scraper.sitemap"):
         asyncio.run(_fetch_sitemap_urls(_fetch_from(pages), "example.com", max_urls=3))
     assert "incomplete" in caplog.text
+
+
+def test_default_cap_keeps_a_real_sized_sitemap_whole():
+    """economics (6,248), seas (5,958), history (5,793), mcb (7,331) and iop (7,040) all exceed the
+    old 5,000 cap, which was applied before the exclude filters and so dropped real pages."""
+    locs = "".join(f"<url><loc>https://example.com/p{i}</loc></url>" for i in range(8000))
+    pages = {"https://example.com/sitemap.xml": f'<?xml version="1.0"?><urlset>{locs}</urlset>'.encode()}
+    urls = asyncio.run(_fetch_sitemap_urls(_fetch_from(pages), "example.com"))
+    assert len(urls) == 8000

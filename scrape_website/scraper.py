@@ -257,7 +257,7 @@ def _parse_robots_sitemaps(robots_bytes: bytes | None) -> list[str]:
 async def _fetch_sitemap_urls(fetch: Callable[[str], Awaitable[bytes | None]],
                               host: str,
                               scheme: str = "https",
-                              max_urls: int = 5000) -> list[str]:
+                              max_urls: int = 50000) -> list[str]:
     """Best-effort sitemap discovery via a tier-escalating fetch callable.
 
     Discovery order:
