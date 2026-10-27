@@ -1,0 +1,30 @@
+{
+ "type": "news",
+ "host": "sociology.fas.harvard.edu",
+ "url": "https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes",
+ "md_url": "https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes.md",
+ "xml_lastmod_snapshot": "2024-03-25T13:11:24+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 45334,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 995,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 2245,
+  "line_number": 886,
+  "line": "- [Christina Ciocca Eller's recent paper urges college ratings focused on real-life outcomes](https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes.md)",
+  "before": "- [James Chu: How Beneficiaries Become Sources of Normative Control](https://sociology.fas.harvard.edu/event/james-chu-how-beneficiaries-become-sources-normative-control.md)",
+  "after": "- [Riva Kastoryano: Negotiating Diversity in European Public Spaces](https://sociology.fas.harvard.edu/event/riva-kastoryano-negotiating-diversity-european-public-spaces.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://sociology.fas.harvard.edu/sitemap.xml?page=1",
+  "child_index": 1,
+  "block": "<url>\n  <loc>https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes</loc>\n  <lastmod>2024-03-25T13:11:24+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

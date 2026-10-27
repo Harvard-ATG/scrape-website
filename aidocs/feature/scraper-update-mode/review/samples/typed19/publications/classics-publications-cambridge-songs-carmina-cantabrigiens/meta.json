@@ -1,0 +1,30 @@
+{
+ "type": "publications",
+ "host": "classics.fas.harvard.edu",
+ "url": "https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia",
+ "md_url": "https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia.md",
+ "xml_lastmod_snapshot": "2024-07-17T17:06:23+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 52707,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 403,
+  "bytes": 96,
+  "content_type": "text/plain; charset=UTF-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 574,
+  "line_number": 498,
+  "line": "- [The Cambridge Songs (Carmina cantabrigiensia)](https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia.md)",
+  "before": "- [Singers and Tales in the Twenty-First Century](https://classics.fas.harvard.edu/publications/singers-and-tales-twenty-first-century.md)",
+  "after": "- [Solomon and Marcolf](https://classics.fas.harvard.edu/publications/solomon-and-marcolf-0.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://classics.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia</loc>\n  <lastmod>2024-07-17T17:06:23+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

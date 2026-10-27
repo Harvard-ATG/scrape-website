@@ -1,0 +1,31 @@
+{
+ "url": "https://philosophy.fas.harvard.edu/news/zo%C3%AB-johnson-king-publishes-sensitivity-safety-and-admissibility",
+ "xml_lastmod": "2023-04-03T19:24:20+00:00",
+ "page.html": {
+  "url": "https://philosophy.fas.harvard.edu/news/zo%C3%AB-johnson-king-publishes-sensitivity-safety-and-admissibility",
+  "status": 200,
+  "bytes": 45090,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://philosophy.fas.harvard.edu/news/zo%C3%AB-johnson-king-publishes-sensitivity-safety-and-admissibility.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Zo\u00eb Johnson King publishes \"Sensitivity, Safety, and Admissibility\"\"",
+   "last-modified": "Wed, 21 Oct 2026 12:11:37 GMT",
+   "etag": "\"1792584697\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:38 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://philosophy.fas.harvard.edu/news/zo%C3%AB-johnson-king-publishes-sensitivity-safety-and-admissibility.md",
+  "status": 200,
+  "bytes": 623,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:40 GMT",
+   "etag": "\"1792584700\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:40 GMT"
+  }
+ }
+}

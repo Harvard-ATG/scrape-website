@@ -1,0 +1,30 @@
+{
+ "type": "blog",
+ "host": "medieval.fas.harvard.edu",
+ "url": "https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here",
+ "md_url": "https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here.md",
+ "xml_lastmod_snapshot": "2024-11-30T21:57:28+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 40508,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 251,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1559,
+  "line_number": 344,
+  "line": "- [Want your CFP to appear here?](https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here.md)",
+  "before": "- [Heinz Bluhm Memorial Lecture Series](https://medieval.fas.harvard.edu/event/heinz-bluhm-memorial-lecture-series.md)",
+  "after": "- [Harvard Theater and Performance Colloquium](https://medieval.fas.harvard.edu/event/harvard-theater-and-performance-colloquium.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://medieval.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here</loc>\n  <lastmod>2024-11-30T21:57:28+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

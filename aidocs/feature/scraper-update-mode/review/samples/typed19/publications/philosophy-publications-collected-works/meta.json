@@ -1,0 +1,30 @@
+{
+ "type": "publications",
+ "host": "philosophy.fas.harvard.edu",
+ "url": "https://philosophy.fas.harvard.edu/publications/collected-works",
+ "md_url": "https://philosophy.fas.harvard.edu/publications/collected-works.md",
+ "xml_lastmod_snapshot": "2014-07-10T17:39:30+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 46993,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 403,
+  "bytes": 96,
+  "content_type": "text/plain; charset=UTF-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 973,
+  "line_number": 948,
+  "line": "- [Collected Works](https://philosophy.fas.harvard.edu/publications/collected-works.md)",
+  "before": "- [The Sources of Normativity](https://philosophy.fas.harvard.edu/publications/sources-normativity.md)",
+  "after": "- [Deductive Logic](https://philosophy.fas.harvard.edu/publications/deductive-logic.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://philosophy.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://philosophy.fas.harvard.edu/publications/collected-works</loc>\n  <lastmod>2014-07-10T17:39:30+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

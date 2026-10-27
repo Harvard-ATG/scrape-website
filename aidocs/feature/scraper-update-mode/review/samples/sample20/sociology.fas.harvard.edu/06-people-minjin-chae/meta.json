@@ -1,0 +1,31 @@
+{
+ "url": "https://sociology.fas.harvard.edu/people/minjin-chae",
+ "xml_lastmod": "2026-10-09T17:54:34+00:00",
+ "page.html": {
+  "url": "https://sociology.fas.harvard.edu/people/minjin-chae",
+  "status": 200,
+  "bytes": 45576,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "HIT",
+   "link": "<https://sociology.fas.harvard.edu/people/minjin-chae.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Minjin Chae\"",
+   "last-modified": "Wed, 21 Oct 2026 01:26:52 GMT",
+   "etag": "\"1792546012\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:29 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://sociology.fas.harvard.edu/people/minjin-chae.md",
+  "status": 200,
+  "bytes": 2353,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:31 GMT",
+   "etag": "\"1792584631\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:32 GMT"
+  }
+ }
+}

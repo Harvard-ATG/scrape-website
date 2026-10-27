@@ -1,0 +1,31 @@
+{
+ "url": "https://sociology.fas.harvard.edu/faq/do-i-need-apply-separately-funding",
+ "xml_lastmod": "2013-03-11T16:48:51+00:00",
+ "page.html": {
+  "url": "https://sociology.fas.harvard.edu/faq/do-i-need-apply-separately-funding",
+  "status": 200,
+  "bytes": 40618,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://sociology.fas.harvard.edu/faq/do-i-need-apply-separately-funding.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Do I need to apply separately for funding?\"",
+   "last-modified": "Wed, 21 Oct 2026 12:10:51 GMT",
+   "etag": "\"1792584651\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:51 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://sociology.fas.harvard.edu/faq/do-i-need-apply-separately-funding.md",
+  "status": 200,
+  "bytes": 315,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:53 GMT",
+   "etag": "\"1792584653\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:53 GMT"
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "type": "events",
+ "host": "tdm.fas.harvard.edu",
+ "url": "https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister",
+ "md_url": "https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister.md",
+ "xml_lastmod_snapshot": "2019-02-28T20:50:37+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 48524,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 1642,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1329,
+  "line_number": 455,
+  "line": "- [Perspectives on Performance with Narcissister](https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister.md)",
+  "before": "- [TDM Open Seminars presents I Am the Seagull with Johnny Moreno](https://tdm.fas.harvard.edu/event/tdm-open-seminars-presents-i-am-seagull-johnny-moreno.md)",
+  "after": "- [TDM Master Class with Young Joo Lee](https://tdm.fas.harvard.edu/event/tdm-master-class-young-joo-lee.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://tdm.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister</loc>\n  <lastmod>2019-02-28T20:50:37+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

@@ -1,0 +1,31 @@
+{
+ "url": "https://www.physics.harvard.edu/news-events",
+ "xml_lastmod": "2019-02-22T17:19:53+00:00",
+ "page.html": {
+  "url": "https://www.physics.harvard.edu/news-events",
+  "status": 200,
+  "bytes": 51257,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://www.physics.harvard.edu/news-events.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"News & Events\"",
+   "last-modified": "Wed, 21 Oct 2026 12:11:16 GMT",
+   "etag": "\"1792584676\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:17 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://www.physics.harvard.edu/news-events.md",
+  "status": 200,
+  "bytes": 20,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:19 GMT",
+   "etag": "\"1792584679\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:19 GMT"
+  }
+ }
+}

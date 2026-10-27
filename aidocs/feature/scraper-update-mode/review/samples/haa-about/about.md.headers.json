@@ -1,0 +1,15 @@
+{
+ "url": "https://haa.fas.harvard.edu/about.md",
+ "status": 200,
+ "bytes": 8881,
+ "headers": {
+  "content-type": "text/markdown; charset=utf-8",
+  "content-language": "en",
+  "last-modified": "Wed, 21 Oct 2026 11:54:53 GMT",
+  "etag": "\"1792583693\"",
+  "x-robots-tag": "noindex",
+  "content-length": "3152",
+  "cache-control": "public, max-age=300, s-maxage=86400",
+  "date": "Wed, 21 Oct 2026 11:54:54 GMT"
+ }
+}

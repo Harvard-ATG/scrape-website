@@ -1,0 +1,31 @@
+{
+ "url": "https://www.physics.harvard.edu/people/facpages/mazur",
+ "xml_lastmod": "2025-01-24T19:45:16+00:00",
+ "page.html": {
+  "url": "https://www.physics.harvard.edu/people/facpages/mazur",
+  "status": 200,
+  "bytes": 55742,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://www.physics.harvard.edu/people/facpages/mazur.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Eric Mazur\"",
+   "last-modified": "Tue, 20 Oct 2026 14:18:33 GMT",
+   "etag": "\"1792505913\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:07 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://www.physics.harvard.edu/people/facpages/mazur.md",
+  "status": 200,
+  "bytes": 2116,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:09 GMT",
+   "etag": "\"1792584669\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:09 GMT"
+  }
+ }
+}

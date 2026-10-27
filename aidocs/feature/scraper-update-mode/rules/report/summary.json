@@ -1,0 +1,51 @@
+{
+  "hosts": 87,
+  "by_kind": {
+    "subpath": 34,
+    "root": 29,
+    "scoped": 17,
+    "include": 3,
+    "moved(old name)": 4
+  },
+  "sitemap_ok": 75,
+  "blocked": {
+    "incomingstudents.college.harvard.edu": "sitemap_foreign_host",
+    "oaisc.fas.harvard.edu": "sitemap_foreign_host",
+    "oie.fas.harvard.edu": "sitemap_foreign_host",
+    "summerfunding.college.harvard.edu": "sitemap_foreign_host"
+  },
+  "unreadable_or_missing": [
+    "astronomy.fas.harvard.edu",
+    "careerservices.fas.harvard.edu",
+    "ces.fas.harvard.edu",
+    "courses.my.harvard.edu",
+    "daviscenter.fas.harvard.edu",
+    "firstyear.college.harvard.edu",
+    "scienceeducation.fas.harvard.edu",
+    "secretary.college.harvard.edu",
+    "sfsao.college.harvard.edu",
+    "statistics.fas.harvard.edu",
+    "studyabroad.college.harvard.edu",
+    "www.math.harvard.edu"
+  ],
+  "hosts_planned": 71,
+  "in_scope_pages": 56992,
+  "out_of_scope_pages": 25005,
+  "first_run_new_pages": 2627,
+  "first_run_new_resource_pages": 80,
+  "first_run_changed": 1592,
+  "first_run_no_lastmod": 40,
+  "backfill_never_captured": 18205,
+  "first_run_total_excluding_resource_pages": 4259,
+  "first_run_total_including_resource_pages": 4339,
+  "first_run_if_proposed_adopted": 3765,
+  "changed_7d": 341,
+  "changed_30d": 1324,
+  "departures": 821,
+  "removal_blocked": {
+    "ofa.fas.harvard.edu": "departure_cap:616/1085"
+  },
+  "event_pages_in_scope": 15046,
+  "event_feeds_in_scope": 0,
+  "resource_pages_in_scope": 9213
+}

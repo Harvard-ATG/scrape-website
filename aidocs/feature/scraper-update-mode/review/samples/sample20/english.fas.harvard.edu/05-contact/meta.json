@@ -1,0 +1,31 @@
+{
+ "url": "https://english.fas.harvard.edu/contact",
+ "xml_lastmod": "2018-05-22T17:50:51+00:00",
+ "page.html": {
+  "url": "https://english.fas.harvard.edu/contact",
+  "status": 200,
+  "bytes": 51247,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://english.fas.harvard.edu/contact.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Contact\"",
+   "last-modified": "Wed, 21 Oct 2026 12:10:22 GMT",
+   "etag": "\"1792584622\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:22 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://english.fas.harvard.edu/contact.md",
+  "status": 200,
+  "bytes": 10,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:26 GMT",
+   "etag": "\"1792584626\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:26 GMT"
+  }
+ }
+}

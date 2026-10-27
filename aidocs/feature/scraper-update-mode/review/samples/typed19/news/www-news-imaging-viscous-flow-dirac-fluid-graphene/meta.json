@@ -1,0 +1,30 @@
+{
+ "type": "news",
+ "host": "www.physics.harvard.edu",
+ "url": "https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene",
+ "md_url": "https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene.md",
+ "xml_lastmod_snapshot": "2020-08-25T20:26:57+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 54309,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 2210,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 842,
+  "line_number": 203,
+  "line": "- [Imaging Viscous Flow of the Dirac Fluid in Graphene](https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene.md)",
+  "before": "- [Quantum Science Center: A Partnership to Drive the the Development of New Quantum Technologies](https://www.physics.harvard.edu/news/quantum-science-center-partnership-drive-development-new-quantum-technologies.md)",
+  "after": "- [Congratulations to 2020 Harvard Physics Graduates!](https://www.physics.harvard.edu/news/congratulations-2020-harvard-physics-graduates.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://www.physics.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene</loc>\n  <lastmod>2020-08-25T20:26:57+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

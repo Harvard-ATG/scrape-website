@@ -1,0 +1,95 @@
+<title>Trace Run</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>:root{--bg:#f7f8f6;--surface:#ffffff;--fg:#1d2420;--muted:#5a6660;--line:#d9dfdb;--accent:#0b5d54;--accent-fg:#ffffff;--warn-bg:#fff3d6;--warn-fg:#5c4300;--ok:#1f7a45;--code:#eef1ee;--display:"Source Serif 4",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121715;--surface:#1a211e;--fg:#e6ece8;--muted:#9aa8a1;--line:#2c3732;--accent:#4fc3b4;--accent-fg:#0b1512;--warn-bg:#3a2f10;--warn-fg:#f3d98b;--ok:#5fcf8c;--code:#232c28;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121715;--surface:#1a211e;--fg:#e6ece8;--muted:#9aa8a1;--line:#2c3732;--accent:#4fc3b4;--accent-fg:#0b1512;--warn-bg:#3a2f10;--warn-fg:#f3d98b;--ok:#5fcf8c;--code:#232c28;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+.wrap{max-width:1080px;margin:0 auto}
+.top{padding-block:28px 12px;border-bottom:1px solid var(--line)}
+.eyebrow{font:12px var(--mono);letter-spacing:.04em;color:var(--muted);margin:0 0 8px;overflow-wrap:anywhere}
+h1{font:600 34px/1.15 var(--display);margin:0 0 10px;text-wrap:balance}
+h2{font:600 24px/1.2 var(--display);margin:0 0 8px;text-wrap:balance}
+h3{font:600 15px var(--body);margin:22px 0 6px}
+.lede{max-width:68ch;margin:0 0 12px;font-size:16px}
+.warn{background:var(--warn-bg);color:var(--warn-fg);padding:8px 12px;border-radius:4px;margin:0 0 14px;max-width:72ch}
+nav{display:flex;flex-wrap:wrap;gap:6px 14px;padding-block:6px}
+nav a{font-weight:500}
+a{color:var(--accent);text-underline-offset:2px}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding-block:8px 48px}
+section{padding-block:26px 6px;border-bottom:1px solid var(--line)}
+section:last-child{border-bottom:0}
+p{max-width:78ch}
+code{font:13px var(--mono);background:var(--code);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+.tw{overflow-x:auto;margin:10px 0 14px;border:1px solid var(--line);border-radius:4px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 12px var(--body);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);background:var(--code)}
+tr:last-child td{border-bottom:0}
+.tag{font:600 11px var(--mono);padding:2px 6px;border-radius:3px;white-space:nowrap}
+.tag.pushed{background:var(--code);color:var(--ok)}
+.tag.local{background:var(--warn-bg);color:var(--warn-fg)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px 14px;min-width:0}
+.card h3{margin:0 0 4px;font:600 20px var(--display)}
+.card p{margin:8px 0 0}.card .m{color:var(--muted);font-size:13px}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:12px;overflow-x:auto;margin:8px 0 14px;font:13px var(--mono);white-space:pre}
+li{margin-block:4px;max-width:78ch}
+@media (max-width:520px){h1{font-size:27px}}
+.code{background:var(--code);border:1px solid var(--line);border-radius:4px;padding:10px 12px;overflow-x:auto;font:13px var(--mono);white-space:pre}
+</style>
+<header class="top"><div class="wrap">
+<p class="eyebrow">Harvard-ATG/scrape-website · PR #10 · offline run of the reference rules</p>
+<h1>Trace run</h1>
+<p class="lede">The two traces from the code tour, run for real on the 2026-10-15 sitemap snapshot, the 2026-07-28 snapshot and the cached QA manifests. Every number below is output of <code>rules.py</code>; nothing was crawled.</p>
+<p class="warn"><b>Read this first:</b> this is the proposed planner running on saved data. The scraper does not call it yet, and no page was fetched, saved, ingested or retired. The confirmation statuses in Trace B are example inputs, not results of fetching.</p>
+<nav><a href="#start">Commands</a><a href="#a">Trace A: changed page</a><a href="#b">Trace B: missing page</a><a href="#moved">Moved host</a><a href="#cap">Cap trips</a><a href="#sitemaps">Sitemap or not</a><a href="#reproduce">Reproduce</a></nav>
+</div></header>
+<main class="wrap">
+<section id="start"><h2>Where each trace starts</h2>
+<div class="tw"><table><thead><tr><th>Layer</th><th>Command</th><th>Source</th></tr></thead><tbody><tr><td>Schedule</td><td><code>scrape_and_ingest.py --all --mode full --workers 8</code> (disabled)</td><td><a href="https://github.com/Harvard-ATG/atg-ops-appserver/blob/24c065d7f356b6fe5facd79369871ebfc391a984/terraform/modules/apps/apo-mcp/main.tf#L203">main.tf:203</a></td></tr><tr><td>Manual</td><td><code>run_scrape.py prod --hostname {A_HOST} --mode scrape</code></td><td><a href="https://github.com/Harvard-ATG/atg-ops-appserver/blob/24c065d7f356b6fe5facd79369871ebfc391a984/apps/apo-mcp/run_scrape.py">run_scrape.py</a></td></tr><tr><td>Orchestrator</td><td><code>scrape_and_ingest.py --hostname {A_HOST}</code></td><td><a href="https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/scrape_and_ingest.py#L268">scrape_and_ingest.py:268</a></td></tr><tr><td>Per-site</td><td><code>scrape.py --hostname {A_HOST}</code></td><td><a href="https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/scrape.py#L60">scrape.py:60</a></td></tr><tr><td>Scraper</td><td><code>scrape-website https://{A_HOST}/ --scope-to-path ...</code></td><td><a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/scrape_website/scraper.py#L1575">scraper.py:1575</a></td></tr></tbody></table></div>
+<p>This page traces <code>aaas.fas.harvard.edu</code> through the <em>proposed</em> update path: an update flag would be forwarded down this ladder; it does not exist yet.</p></section>
+
+<section id="a"><h2>Trace A: a changed page, host aaas.fas.harvard.edu</h2>
+<h3>1. Entry in sites.toml</h3>
+<pre class="code">url = https://aaas.fas.harvard.edu/undergraduate, resource = {&#x27;name&#x27;: &#x27;African and African American Studies&#x27;, &#x27;type&#x27;: &#x27;Concentration page&#x27;}, hostname = aaas.fas.harvard.edu, exclude_patterns = [&#x27;/file_url/1251&#x27;]</pre>
+<h3>2. Sitemap read: 1,402 URLs, scope applied (<a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/scrape_website/scraper.py#L192">_url_excluded</a>, <a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/aidocs/feature/scraper-update-mode/rules/rules.py#L119">evaluate</a>)</h3>
+<div class="tw"><table><thead><tr><th>Result</th><th>URLs</th></tr></thead><tbody><tr><td>in scope</td><td>1,402</td></tr></tbody></table></div>
+<h3>3. Plan: <a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/aidocs/feature/scraper-update-mode/rules/rules.py#L167">plan_update</a> with the July manifest date as baseline (2026-07-22, R13b)</h3>
+<div class="tw"><table><thead><tr><th>Outcome</th><th>Pages</th><th>Meaning</th></tr></thead><tbody><tr><td>new</td><td>3</td><td>in scope, not stored, dated after the baseline: fetch</td></tr><tr><td>changed</td><td>8</td><td>stored, date later than the baseline: fetch</td></tr><tr><td>no_lastmod</td><td>0</td><td>no date in the sitemap: always fetch</td></tr><tr><td>skip</td><td>902</td><td>unchanged</td></tr><tr><td>backfill</td><td>489</td><td>never captured, kept out of normal runs (R20)</td></tr></tbody></table></div>
+<h3>4. The pages it would fetch</h3>
+<div class="tw"><table><thead><tr><th>Reason</th><th>Page</th><th>Sitemap lastmod</th></tr></thead><tbody><tr><td>changed</td><td>https://aaas.fas.harvard.edu/african-studies-track</td><td>2026-09-01T15:11:44+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/graduate</td><td>2026-09-17T19:37:29+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/people/brandon-terry</td><td>2026-10-09T13:41:20+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/people/eli-bernhardt</td><td>2026-09-17T19:28:17+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/people/giovanna-micconi-phd</td><td>2026-09-17T19:30:34+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/people/keirsten-melbourne</td><td>2026-09-17T19:29:02+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/people/walter-johnson</td><td>2026-09-09T17:04:32+00:00</td></tr><tr><td>changed</td><td>https://aaas.fas.harvard.edu/undergraduate</td><td>2026-09-17T19:38:14+00:00</td></tr><tr><td>new</td><td>https://aaas.fas.harvard.edu/people/eden-wolde</td><td>2026-09-23T14:53:01+00:00</td></tr><tr><td>new</td><td>https://aaas.fas.harvard.edu/people/rico-givens-padilla</td><td>2026-09-23T14:43:45+00:00</td></tr><tr><td>new</td><td>https://aaas.fas.harvard.edu/people/tamira-stephens</td><td>2026-09-17T19:35:47+00:00</td></tr></tbody></table></div>
+<p>Sample of the 489 never-captured pages that stay out of the run: <code>/2020-faculty-reading-recommendations</code>, <code>/2020FacultyPlaylist</code>, <code>/50TH</code>, <code>/aaas</code>, <code>/aaas-50th-anniversary-symposium</code>.</p>
+<h3>5. Hand-off: what is missing between the plan and the scraper</h3>
+<ul><li><a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/scrape_website/scraper.py#L360">_should_fetch</a>: the gate exists, the plan is not connected.</li>
+<li><a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/scrape_website/scraper.py#L621">upsert_metadata</a>: no per-URL <code>lastmod</code> column, so the plan above used the manifest date as a stand-in.</li>
+<li><a href="https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L324">ingest.py:324</a>: ingest would hash-compare each fetched page and upload only the ones that differ.</li></ul></section>
+
+<section id="b"><h2>Trace B: a missing page, host aaas.fas.harvard.edu</h2>
+<h3>1. Departures: in the 2026-07-28 snapshot, not in 2026-10-15 (<a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/aidocs/feature/scraper-update-mode/rules/rules.py#L248">R15</a>)</h3>
+<p>4 departure(s); removals held: <code>None</code>.</p>
+<div class="tw"><table><thead><tr><th>Departure candidate</th></tr></thead><tbody><tr><td>https://aaas.fas.harvard.edu/people/bojana-coulibaly</td></tr><tr><td>https://aaas.fas.harvard.edu/people/sidney-chalhoub</td></tr><tr><td>https://aaas.fas.harvard.edu/people/terrence-l-johnson</td></tr><tr><td>https://aaas.fas.harvard.edu/people/vincent-brown</td></tr></tbody></table></div>
+<h3>2. A fetch decides (<a href="https://github.com/Harvard-ATG/scrape-website/blob/a70def7326f47b25d0325744dff4e7c126870347/aidocs/feature/scraper-update-mode/rules/rules.py#L260">classify_confirmation</a>)</h3>
+<p>Example inputs, no fetch performed.</p>
+<div class="tw"><table><thead><tr><th>HTTP status</th><th>Redirect</th><th>Decision</th></tr></thead><tbody><tr><td>200</td><td></td><td><b>keep</b></td></tr><tr><td>404</td><td></td><td><b>retire</b></td></tr><tr><td>410</td><td></td><td><b>retire</b></td></tr><tr><td>403</td><td></td><td><b>hold</b></td></tr><tr><td>301</td><td>https://example.edu/new</td><td><b>follow</b></td></tr><tr><td>503</td><td></td><td><b>unknown</b></td></tr><tr><td>None</td><td></td><td><b>unknown</b></td></tr></tbody></table></div>
+<h3>3. Today in apo-mcp-server (outside the PR)</h3>
+<p><a href="https://github.com/Harvard-ATG/apo-mcp-server/blob/37e6bfce3ee320f882b31a9738e8815048811bf9/ingest.py#L71">deprecate_removed_urls</a> retires every record whose URL is not among the <code>.md</code> files on disk, with no cap and no confirmation. The proposed hand-off is the manifest, but ingest reads files on disk, so either the scraper deletes the file or ingest iterates the manifest.</p></section>
+
+<section id="moved"><h2>A moved host: oie.fas.harvard.edu</h2>
+<p>Plan result: <b>blocked: <code>sitemap_foreign_host</code></b>, fetches 0, departures 0. The sitemap now lists <code>studyabroad.college.harvard.edu</code>, so the planner skips the host and proposes no removals (R12).</p></section>
+
+<section id="cap"><h2>The departure cap trips: ofa.fas.harvard.edu</h2>
+<p>Plan result: removals held with <code>departure_cap:616/1085</code>; fetches still planned: 529. Proposed: raise a Sentry alert with the host, counts, sample URLs and links, and carry the entries forward.</p>
+<div class="tw"><table><thead><tr><th>Sample of held departures</th></tr></thead><tbody><tr><td>(list is empty when held: the cap stops them being proposed)</td></tr></tbody></table></div></section>
+
+<section id="sitemaps"><h2>Hosts with a sitemap and hosts without</h2>
+<p>Update mode lives on the sitemap: it is where the dates come from. Run on all 87 entries (83 hosts plus the 4 old moved names), with empty stored state:</p>
+<div class="tw"><table><thead><tr><th>Kind of host</th><th>Hosts</th><th>What the planner does</th><th>Hosts</th></tr></thead><tbody><tr><td>sitemap with dates</td><td>67</td><td>Normal planning: fetch new and changed pages, skip the rest.</td><td><small>aaas.fas, academicresourcecenter, advising.college, afvs.fas, anthropology.fas, archaeology, and 61 more</small></td></tr><tr><td>sitemap, partial dates</td><td>3</td><td>Pages without a date are fetched every run; the rest are planned normally.</td><td><small>complit.fas, emr.fas, engagedscholarship.fas</small></td></tr><tr><td>sitemap, no dates</td><td>1</td><td>Every page is fetched every run, so no saving over a full crawl of that host.</td><td><small>csadvising.seas</small></td></tr><tr><td>no sitemap, seeds refetched (R10)</td><td>3</td><td>Path-scoped host with a tiny section: only the seed pages are refetched each run. New pages inside are found only by the monthly full run.</td><td><small>ces.fas, courses.my, daviscenter.fas</small></td></tr><tr><td>no sitemap, blocked (R11)</td><td>5</td><td>Nothing is fetched and nothing is retired. The host is covered only by the monthly full run (R19).</td><td><small>astronomy.fas, careerservices.fas, scienceeducation.fas, statistics.fas, www.math</small></td></tr><tr><td>moved: sitemap lists another host (R12)</td><td>4</td><td>Blocked, no removals; the entry in sites.toml must point at the new hostname.</td><td><small>incomingstudents.college, oaisc.fas, oie.fas, summerfunding.college</small></td></tr><tr><td>new hostname, no snapshot yet</td><td>4</td><td>These replaced the four moved names; the 2026-10-15 snapshot has no record for them, so this is a gap in the input, not proof they lack a sitemap. Re-run the cadence fetch to include them.</td><td><small>firstyear.college, secretary.college, sfsao.college, studyabroad.college</small></td></tr></tbody></table></div>
+<p>Two kinds of sitemap exist. The XML sitemap (<code>/sitemap.xml</code>, 79 of 83 hosts) has dates. The markdown <code>/sitemap-llm</code> (52 Drupal 10 hosts) lists pages and files with no dates, so it cannot say what changed. The snapshot records only "no sitemap", so it cannot tell a host with no sitemap from one that was unreadable (503) on the day; both are handled the same way.</p>
+<p>Today, with no update mode, no host depends on a sitemap: the crawl follows links, and sitemap seeding is off in production unless <code>use_sitemap</code> is set (<code>scrape.py</code> passes False by default).</p></section>
+
+<section id="reproduce"><h2>Reproduce</h2>
+<pre class="code">cd aidocs/feature/scraper-update-mode/review
+MANIFEST_CACHE=&lt;manifest-cache dir&gt; SITES_TOML=&lt;apo-mcp-server/sites.toml&gt; python trace_run.py</pre>
+<p>Inputs: <code>rules/fixtures/sitemaps_2026-07-28.json.gz</code>, <code>sitemaps_2026-10-15.json.gz</code>, <code>sites.toml</code>, cached QA manifests. Output: <code>traces-run.html</code>.</p></section>
+</main>

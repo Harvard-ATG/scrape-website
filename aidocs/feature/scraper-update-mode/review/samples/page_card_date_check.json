@@ -1,0 +1,262 @@
+[
+ {
+  "type": "news",
+  "host": "english.fas.harvard.edu",
+  "url": "https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing",
+  "status": 200,
+  "xml_lastmod": "2024-04-03T17:44:50+00:00",
+  "md_bytes": 1186,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "February 08, 2024",
+    "context": "hy AI hallucinations can be a good thing February 08, 2024 Martin Puchner's"
+   }
+  ]
+ },
+ {
+  "type": "news",
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes",
+  "status": 200,
+  "xml_lastmod": "2024-03-25T13:11:24+00:00",
+  "md_bytes": 995,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "February 14, 2024",
+    "context": "ge ratings focused on real-life outcomes February 14, 2024 [Harvard Gazette]"
+   }
+  ]
+ },
+ {
+  "type": "news",
+  "host": "history.fas.harvard.edu",
+  "url": "https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising",
+  "status": 200,
+  "xml_lastmod": "2022-04-25T21:23:39+00:00",
+  "md_bytes": 206,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "April 25, 2022",
+    "context": "Family Prizes for Excellence in Advising April 25, 2022 Share"
+   }
+  ]
+ },
+ {
+  "type": "news",
+  "host": "wgs.fas.harvard.edu",
+  "url": "https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0",
+  "status": 200,
+  "xml_lastmod": "2022-10-20T19:08:12+00:00",
+  "md_bytes": 696,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "October 13, 2022",
+    "context": "# Thesis Track Applications Due 11/4 October 13, 2022 Students who wis"
+   },
+   {
+    "form": "month_d_yyyy",
+    "value": "November 4, 2022",
+    "context": "to submit an application is **5:00 pm on Friday, November 4, 2022.** See"
+   }
+  ]
+ },
+ {
+  "type": "news",
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene",
+  "status": 200,
+  "xml_lastmod": "2020-08-25T20:26:57+00:00",
+  "md_bytes": 2208,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "July 23, 2020",
+    "context": "cous Flow of the Dirac Fluid in Graphene July 23, 2020 *It sounds like"
+   }
+  ]
+ },
+ {
+  "type": "events",
+  "host": "summerfunding.college.harvard.edu",
+  "url": "https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer",
+  "status": 200,
+  "xml_lastmod": "2025-11-20T20:43:08+00:00",
+  "md_bytes": 356,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "March 24, 2026",
+    "context": "r #### calendar\\_today Date and Time **March 24, 2026** 11:59PM - 11:59PM E"
+   }
+  ]
+ },
+ {
+  "type": "events",
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila",
+  "status": 200,
+  "xml_lastmod": "2021-02-02T02:08:52+00:00",
+  "md_bytes": 867,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "April 12, 2018",
+    "context": "## calendar\\_today Date and Time **April 10 - April 12, 2018** 04:30PM - 04:30PM E"
+   }
+  ]
+ },
+ {
+  "type": "events",
+  "host": "nelc.fas.harvard.edu",
+  "url": "https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes",
+  "status": 200,
+  "xml_lastmod": "2022-11-14T15:36:55+00:00",
+  "md_bytes": 1300,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "November 17, 2022",
+    "context": "s #### calendar\\_today Date and Time **November 17, 2022** 04:30PM - 04:30PM E"
+   }
+  ]
+ },
+ {
+  "type": "events",
+  "host": "tdm.fas.harvard.edu",
+  "url": "https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister",
+  "status": 200,
+  "xml_lastmod": "2019-02-28T20:50:37+00:00",
+  "md_bytes": 1636,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "March 6, 2019",
+    "context": "r #### calendar\\_today Date and Time **March 6, 2019** 06:00PM - 06:00PM E"
+   }
+  ]
+ },
+ {
+  "type": "events",
+  "host": "wgs.fas.harvard.edu",
+  "url": "https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau",
+  "status": 200,
+  "xml_lastmod": "2017-02-23T15:13:54+00:00",
+  "md_bytes": 1509,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "March 23, 2017",
+    "context": "u #### calendar\\_today Date and Time **March 23, 2017** 05:00PM - 05:00PM E"
+   }
+  ]
+ },
+ {
+  "type": "publications",
+  "host": "classics.fas.harvard.edu",
+  "url": "https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia",
+  "status": 403,
+  "xml_lastmod": "2024-07-17T17:06:23+00:00",
+  "md_bytes": 0,
+  "dates_in_md": []
+ },
+ {
+  "type": "publications",
+  "host": "philosophy.fas.harvard.edu",
+  "url": "https://philosophy.fas.harvard.edu/publications/collected-works",
+  "status": 403,
+  "xml_lastmod": "2014-07-10T17:39:30+00:00",
+  "md_bytes": 0,
+  "dates_in_md": []
+ },
+ {
+  "type": "publications",
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century",
+  "status": 403,
+  "xml_lastmod": "2018-05-22T20:44:06+00:00",
+  "md_bytes": 0,
+  "dates_in_md": []
+ },
+ {
+  "type": "publications",
+  "host": "linguistics.fas.harvard.edu",
+  "url": "https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages",
+  "status": 403,
+  "xml_lastmod": "2013-06-19T03:50:01+00:00",
+  "md_bytes": 0,
+  "dates_in_md": []
+ },
+ {
+  "type": "publications",
+  "host": "histsci.fas.harvard.edu",
+  "url": "https://histsci.fas.harvard.edu/publications/carbon-technocracy",
+  "status": 403,
+  "xml_lastmod": "2025-09-23T21:00:30+00:00",
+  "md_bytes": 0,
+  "dates_in_md": []
+ },
+ {
+  "type": "blog",
+  "host": "medieval.fas.harvard.edu",
+  "url": "https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here",
+  "status": 200,
+  "xml_lastmod": "2024-11-30T21:57:28+00:00",
+  "md_bytes": 251,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "November 13, 2016",
+    "context": "# Want your CFP to appear here? November 13, 2016 Email your call f"
+   }
+  ]
+ },
+ {
+  "type": "blog",
+  "host": "linguistics.fas.harvard.edu",
+  "url": "https://linguistics.fas.harvard.edu/blog/week-may-20",
+  "status": 200,
+  "xml_lastmod": "2019-05-21T20:59:24+00:00",
+  "md_bytes": 987,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "May 21, 2019",
+    "context": "# Week of May 20 May 21, 2019 ### Harvard at C"
+   }
+  ]
+ },
+ {
+  "type": "blog",
+  "host": "www.chemistry.harvard.edu",
+  "url": "https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry",
+  "status": 200,
+  "xml_lastmod": "2021-12-16T19:43:48+00:00",
+  "md_bytes": 855,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "December 16, 2021",
+    "context": "tion Open - CWRU Department of Chemistry December 16, 2021 - [ Blog ](/news-"
+   }
+  ]
+ },
+ {
+  "type": "blog",
+  "host": "writingcenter.fas.harvard.edu",
+  "url": "https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay",
+  "status": 200,
+  "xml_lastmod": "2020-08-23T02:50:12+00:00",
+  "md_bytes": 4003,
+  "dates_in_md": [
+   {
+    "form": "month_d_yyyy",
+    "value": "August 23, 2020",
+    "context": "ps for creating a well-structured essay. August 23, 2020 by Jessica Diaz"
+   }
+  ]
+ }
+]

@@ -1,0 +1,54 @@
+#  Andrés Muedano 
+
+ 
+
+ 
+
+
+
+   ![Andres Muedano](/sites/g/files/omnuum4436/files/styles/hwp_4_5__320x400/public/2026-10/AndresMuedano_ADF25Applicant_Headshot%20copy.jpg?itok=rQ9IyKUS) 
+
+ 
+
+
+
+ 
+
+ email <amuedanososa@college.harvard.edu> 
+
+ 
+
+
+
+ 
+
+- **What do you like about studying philosophy at Harvard?** There are many things I like about philosophy—its quest for clarity and precision, for instance, or the slow and careful attentiveness it demands. And there are also many things I like about philosophy at Harvard—the classes, my peers and professors, the great sense of intellectual community. But if I were to choose one thing, it is the kind of conversation philosophy can trigger. So much progress in philosophy can happen just by talking with other people.
+- **House:** Adams
+- **Concentration:** Philosophy
+- **Other Concentrations Considered:** (In chronological order) Chemical and Physical Biology, Integrative Biology, History and Science, Social Studies, Comparative Literature, Special Concentration
+- **Philosophy Courses Taken:** Introduction to Social Studies (SOC-STD 10), Scientific Critical Thinking (GENED 1024), Safra Fellowship in Ethics (GOV 94SAF), Plato’s Theory of the Self (PHIL 101A), Force and Freedom in Early Modern Philosophy (PHIL 97), Praise and Blame (PHIL 178P), Supervised Reading and Research in Logic (PHIL 91R), Foundations of Phenomenology (PHIL 98), Is Ethics Objective? (PHIL 173)
+- **Thesis:** Your friend has cheated on his boyfriend, or shoplifted toothpaste from CVS, or made a subtly sexist remark. My thesis asks two questions. First, are you failing as a friend if you judge your friend blameworthy? (Or, put differently, does friendship render blame inappropriate?) And second, if you are to communicate your blame to your friend, how exactly should you do so?
+- **Other Interests / Notes:** I first came into Harvard an eager and aspiring scientist; freshman year I took LS50 and CHEM 20, after which I got interested in (and worried about) the problem of determinism. Having now fully switched to the humanities, I continue to be interested in this topic, but I’m now more broadly interested in ethics, aesthetics, and epistemology—especially at the boundaries where these three domains meet. I also enjoy thinking a lot about the method of philosophy. Much of what we do in our field seems to ‘work’ by ‘appealing to intuitions.’ But what are these intuitions, exactly? Where do they come from? And more urgently: Why should we trust them? Beside philosophy, I love reading fiction, and sometimes writing it, too. I’ve also worked as a journalist for publications like The Nation, Harvard Magazine, and Inside Climate News. I’m more than happy to talk with students about switching from the sciences to the humanities, and about any kind of public writing as well.
+
+
+
+ 
+
+ 
+
+ 
+
+
+
+
+
+ 
+
+ 
+
+- ## Department Roles
+    
+     [Philosophy Concentration Fellow](/department-roles/philosophy-concentration-fellow)
+- ## People Terms
+    
+     [Peer Concentration Fellow](/people-terms/peer-concentration-fellow)

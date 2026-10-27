@@ -1,0 +1,30 @@
+{
+ "type": "news",
+ "host": "english.fas.harvard.edu",
+ "url": "https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing",
+ "md_url": "https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing.md",
+ "xml_lastmod_snapshot": "2024-04-03T17:44:50+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 57180,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 1188,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1637,
+  "line_number": 950,
+  "line": "- [Why AI hallucinations can be a good thing](https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing.md)",
+  "before": "- [GOSPEL Live! Presented by Henry Louis Gates, Jr.](https://english.fas.harvard.edu/news/gospel-live-presented-henry-louis-gates-jr.md)",
+  "after": "- [How The Sympathizer Pulled off an Audacious, Ferocious Adaptation](https://english.fas.harvard.edu/news/how-sympathizer-pulled-audacious-ferocious-adaptation.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://english.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing</loc>\n  <lastmod>2024-04-03T17:44:50+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

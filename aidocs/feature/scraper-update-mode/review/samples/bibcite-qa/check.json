@@ -1,0 +1,62 @@
+[
+ {
+  "host": "classics.fas.harvard.edu",
+  "ris_url": "https://classics.fas.harvard.edu/bibcite/export?content_filter%5B0%5D=1594296&format=ris",
+  "found_on": "https://classics.fas.harvard.edu/publication/persuasion-rhetoric-and-roman-poetry",
+  "ris_status": 200,
+  "page_status": 200,
+  "ris_bytes": 273,
+  "records_in_export": 1,
+  "fields": {}
+ },
+ {
+  "host": "sociology.fas.harvard.edu",
+  "ris_url": "https://sociology.fas.harvard.edu/bibcite/export?content_filter%5B0%5D=274636&format=ris",
+  "found_on": "https://sociology.fas.harvard.edu/publications/cultural-matrix-understanding-black-youth",
+  "ris_status": 200,
+  "page_status": 200,
+  "ris_bytes": 194,
+  "records_in_export": 1,
+  "fields": {}
+ },
+ {
+  "host": "linguistics.fas.harvard.edu",
+  "ris_url": "https://linguistics.fas.harvard.edu/bibcite/export?content_filter%5B0%5D=88216&format=ris",
+  "found_on": "https://linguistics.fas.harvard.edu/publications/onsets-contribute-syllable-weight-statistical-evidence-stress-and-meter",
+  "ris_status": 200,
+  "page_status": 200,
+  "ris_bytes": 163,
+  "records_in_export": 1,
+  "fields": {}
+ },
+ {
+  "host": "astronomy.fas.harvard.edu",
+  "ris_url": "https://astronomy.fas.harvard.edu/bibcite/export?content_filter%5B0%5D=964956&format=ris",
+  "found_on": "https://astronomy.fas.harvard.edu/publications/harvard-observing-project-monitoring-boyajians-star-kic-8462852",
+  "ris_status": 200,
+  "page_status": 200,
+  "ris_bytes": 512,
+  "records_in_export": 1,
+  "fields": {}
+ },
+ {
+  "host": "heb.fas.harvard.edu",
+  "ris_url": "https://heb.fas.harvard.edu/bibcite/export?content_filter%5B0%5D=716&format=ris",
+  "found_on": "https://heb.fas.harvard.edu/publication/goodness-paradox-strange-relationship-between-virtue-and-violence-human-evolution",
+  "ris_status": 200,
+  "page_status": 200,
+  "ris_bytes": 2418,
+  "records_in_export": 1,
+  "fields": {}
+ },
+ {
+  "host": "slavic.fas.harvard.edu",
+  "ris_url": "https://slavic.fas.harvard.edu/bibcite/export?content_filter%5B0%5D=58471&format=ris",
+  "found_on": "https://slavic.fas.harvard.edu/publications/worlds-dissent-charter-77-plastic-people-universe-and-czech-culture-under-0",
+  "ris_status": 200,
+  "page_status": 200,
+  "ris_bytes": 3369,
+  "records_in_export": 1,
+  "fields": {}
+ }
+]

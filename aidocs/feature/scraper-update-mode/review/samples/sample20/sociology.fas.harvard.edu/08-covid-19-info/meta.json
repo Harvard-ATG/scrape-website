@@ -1,0 +1,31 @@
+{
+ "url": "https://sociology.fas.harvard.edu/covid-19-info",
+ "xml_lastmod": "2022-08-17T16:25:17+00:00",
+ "page.html": {
+  "url": "https://sociology.fas.harvard.edu/covid-19-info",
+  "status": 200,
+  "bytes": 40735,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://sociology.fas.harvard.edu/covid-19-info.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"COVID-19 Info\"",
+   "last-modified": "Wed, 21 Oct 2026 03:10:41 GMT",
+   "etag": "\"1792552241\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:40 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://sociology.fas.harvard.edu/covid-19-info.md",
+  "status": 200,
+  "bytes": 1681,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:42 GMT",
+   "etag": "\"1792584642\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:42 GMT"
+  }
+ }
+}

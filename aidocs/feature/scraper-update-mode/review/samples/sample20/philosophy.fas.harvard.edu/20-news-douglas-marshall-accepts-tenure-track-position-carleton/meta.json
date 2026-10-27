@@ -1,0 +1,31 @@
+{
+ "url": "https://philosophy.fas.harvard.edu/news/douglas-marshall-accepts-tenure-track-position-carleton-college",
+ "xml_lastmod": "2014-03-01T04:30:05+00:00",
+ "page.html": {
+  "url": "https://philosophy.fas.harvard.edu/news/douglas-marshall-accepts-tenure-track-position-carleton-college",
+  "status": 200,
+  "bytes": 44628,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://philosophy.fas.harvard.edu/news/douglas-marshall-accepts-tenure-track-position-carleton-college.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Douglas Marshall (PhD 2011) accepts tenure-track position at Carleton College\"",
+   "last-modified": "Wed, 21 Oct 2026 12:11:43 GMT",
+   "etag": "\"1792584703\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:43 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://philosophy.fas.harvard.edu/news/douglas-marshall-accepts-tenure-track-position-carleton-college.md",
+  "status": 200,
+  "bytes": 587,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:45 GMT",
+   "etag": "\"1792584705\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:46 GMT"
+  }
+ }
+}

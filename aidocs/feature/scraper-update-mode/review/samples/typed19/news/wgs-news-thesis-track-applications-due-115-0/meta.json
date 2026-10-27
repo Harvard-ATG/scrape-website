@@ -1,0 +1,30 @@
+{
+ "type": "news",
+ "host": "wgs.fas.harvard.edu",
+ "url": "https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0",
+ "md_url": "https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0.md",
+ "xml_lastmod_snapshot": "2022-10-20T19:08:12+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 48483,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 696,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1041,
+  "line_number": 303,
+  "line": "- [Thesis Track Applications Due 11/4](https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0.md)",
+  "before": "- [Meredith Reiches's Essay Appears in L.A. Review of Books](https://wgs.fas.harvard.edu/news/wgs-affiliate-essay-published-la-review-books.md)",
+  "after": "- [Deidre Lynch's Essay Appears in LA Review of Books](https://wgs.fas.harvard.edu/news/deidre-lynchs-essay-appears-la-review-books.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://wgs.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0</loc>\n  <lastmod>2022-10-20T19:08:12+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

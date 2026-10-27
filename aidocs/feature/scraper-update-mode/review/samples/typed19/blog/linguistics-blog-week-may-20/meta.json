@@ -1,0 +1,30 @@
+{
+ "type": "blog",
+ "host": "linguistics.fas.harvard.edu",
+ "url": "https://linguistics.fas.harvard.edu/blog/week-may-20",
+ "md_url": "https://linguistics.fas.harvard.edu/blog/week-may-20.md",
+ "xml_lastmod_snapshot": "2019-05-21T20:59:24+00:00",
+ "page.html": {
+  "status": 200,
+  "bytes": 45576,
+  "content_type": "text/html; charset=UTF-8"
+ },
+ "page.md": {
+  "status": 200,
+  "bytes": 987,
+  "content_type": "text/markdown; charset=utf-8"
+ },
+ "sitemap_llm": {
+  "host_status": 200,
+  "total_lines": 1865,
+  "line_number": 703,
+  "line": "- [Week of May 20](https://linguistics.fas.harvard.edu/blog/week-may-20.md)",
+  "before": "- [Week of May 13](https://linguistics.fas.harvard.edu/blog/week-may-13.md)",
+  "after": "- [Week of June 10](https://linguistics.fas.harvard.edu/blog/week-june-10.md)"
+ },
+ "xml_entry": {
+  "child_sitemap": "https://linguistics.fas.harvard.edu/sitemap.xml",
+  "child_index": null,
+  "block": "<url>\n  <loc>https://linguistics.fas.harvard.edu/blog/week-may-20</loc>\n  <lastmod>2019-05-21T20:59:24+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+ }
+}

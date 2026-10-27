@@ -1,0 +1,31 @@
+{
+ "url": "https://english.fas.harvard.edu/english-198v-art-listening-how-sound-works-literature-undergraduategraduate-seminar",
+ "xml_lastmod": "2026-10-09T12:03:25+00:00",
+ "page.html": {
+  "url": "https://english.fas.harvard.edu/english-198v-art-listening-how-sound-works-literature-undergraduategraduate-seminar",
+  "status": 200,
+  "bytes": 56749,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://english.fas.harvard.edu/english-198v-art-listening-how-sound-works-literature-undergraduategraduate-seminar.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"English 198v. Art of Listening: How Sound Works in Literature (Undergraduate/Graduate Seminar)\"",
+   "last-modified": "Wed, 21 Oct 2026 12:10:00 GMT",
+   "etag": "\"1792584600\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:00 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://english.fas.harvard.edu/english-198v-art-listening-how-sound-works-literature-undergraduategraduate-seminar.md",
+  "status": 200,
+  "bytes": 2144,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:10:03 GMT",
+   "etag": "\"1792584603\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:10:03 GMT"
+  }
+ }
+}

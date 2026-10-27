@@ -1,0 +1,31 @@
+{
+ "url": "https://philosophy.fas.harvard.edu/people/anna-popnikolova",
+ "xml_lastmod": "2026-10-08T14:36:06+00:00",
+ "page.html": {
+  "url": "https://philosophy.fas.harvard.edu/people/anna-popnikolova",
+  "status": 200,
+  "bytes": 46064,
+  "headers": {
+   "content-type": "text/html; charset=UTF-8",
+   "x-drupal-dynamic-cache": "MISS",
+   "link": "<https://philosophy.fas.harvard.edu/people/anna-popnikolova.md>; rel=\"alternate\"; type=\"text/markdown\"; title=\"Anna Popnikolova\"",
+   "last-modified": "Wed, 21 Oct 2026 12:11:27 GMT",
+   "etag": "\"1792584687\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:27 GMT"
+  }
+ },
+ "page.md": {
+  "url": "https://philosophy.fas.harvard.edu/people/anna-popnikolova.md",
+  "status": 200,
+  "bytes": 1791,
+  "headers": {
+   "content-type": "text/markdown; charset=utf-8",
+   "x-drupal-dynamic-cache": "UNCACHEABLE (poor cacheability)",
+   "last-modified": "Wed, 21 Oct 2026 12:11:30 GMT",
+   "etag": "\"1792584690\"",
+   "cache-control": "public, max-age=300, s-maxage=86400",
+   "date": "Wed, 21 Oct 2026 12:11:30 GMT"
+  }
+ }
+}
