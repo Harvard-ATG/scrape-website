@@ -7,6 +7,7 @@ import os
 import random
 import re
 import sqlite3
+import time
 import logging
 import json
 from urllib.parse import urlparse, urlsplit, urlunsplit, parse_qsl, urlencode
@@ -49,7 +50,10 @@ CONFIG = {
 
 # HTTP status codes that warrant retry (transient server issues).
 # 429 is NOT here — it escalates to Tier 2/3 immediately rather than
-# burning retries against a WAF that won't relent on the same fingerprint.
+# burning retries against a WAF that won't relent on the same fingerprint
+# (9e7e46e). When EVERY tier answers 429 the cause is not the fingerprint but
+# the request rate (the College WordPress platform, openresty, 2026-10-28), so
+# fetch_with_retry then pauses the host and retries; see _RATE_LIMIT_BACKOFF.
 RETRYABLE_STATUS = {500, 502, 503, 504}
 
 # Sticky Tier 2: after this many consecutive Tier 1 (aiohttp) 403/429s on a host,
@@ -57,6 +61,14 @@ RETRYABLE_STATUS = {500, 502, 503, 504}
 # stops feeding the bot wall a stream of bot-fingerprint hits. Any Tier 1 success
 # resets the count; Tier 1 is still the last resort if Tier 2/3 fail.
 _TIER1_SKIP_AFTER = 5
+
+# A 429 from every tier is "slow down", not "access denied". The College WordPress
+# platform (openresty) rate-limits per client address and answered 429 to 10-45%
+# of requests on advising, gened and oue on 2026-10-28, including to the headed
+# browser; each was counted as denied, and a denied page is retired from prod.
+# On such a 429 the whole host pauses for the backoff and the page is retried;
+# after the last backoff the 429 is returned and counted as denied, as before.
+_RATE_LIMIT_BACKOFF = (15, 30, 60)   # seconds, per successive 429 on one URL
 
 # File extensions to download
 DOWNLOADABLE_EXTENSIONS = {
@@ -841,6 +853,7 @@ class WebsiteScraper:
         # Sticky Tier 2 state (see _TIER1_SKIP_AFTER)
         self._tier1_blocks_in_a_row = 0
         self._skip_tier1 = False
+        self._rate_limited_until = 0.0   # monotonic time until which fetches on this host wait (429)
         self.denied_urls: list[str] = []
         self.failed_urls: list[str] = []
 
@@ -1266,6 +1279,23 @@ class WebsiteScraper:
     # header support.
 
     async def fetch_with_retry(self, url: str, method: str = 'GET') -> tuple:
+        """Tiered fetch plus rate-limit handling (see _RATE_LIMIT_BACKOFF)."""
+        remaining = self._rate_limited_until - time.monotonic()
+        if remaining > 0:
+            await asyncio.sleep(remaining)
+        for attempt in range(len(_RATE_LIMIT_BACKOFF) + 1):
+            result = await self._fetch_tiered(url, method)
+            if result[3] != 429 or attempt == len(_RATE_LIMIT_BACKOFF):
+                return result
+            wait = _RATE_LIMIT_BACKOFF[attempt]
+            self._rate_limited_until = max(self._rate_limited_until, time.monotonic() + wait)
+            self.logger.info(
+                f"Rate limited (429) on {self.base_domain}; pausing fetches {wait}s "
+                f"(retry {attempt + 1}/{len(_RATE_LIMIT_BACKOFF)}): {url}"
+            )
+            await asyncio.sleep(wait)
+
+    async def _fetch_tiered(self, url: str, method: str = 'GET') -> tuple:
         """Fetch a URL, escalating through tiers on 403 or 429.
 
         Flow: aiohttp → (on 403/429) → curl_cffi → (on fail) → Playwright → (on fail) → return status
