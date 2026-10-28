@@ -107,6 +107,11 @@ _R7_KEEP_EVENT_HOSTS_RE = "|".join(re.escape(h) for h in _R7_KEEP_EVENT_HOSTS)
 _R7_EVENT_PATTERN = rf"(?i)^(?!https?://(?:{_R7_KEEP_EVENT_HOSTS_RE})/).*/events?/[^/]+/?$"
 
 _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
+    # Media are not pages. Without this, image links are fetched as HTML, decoded as
+    # text and parsed for links; on 2026-10-28 seas.harvard.edu's /sites/default/files
+    # images did exactly that and the binary logged to stdout killed the orchestrator's
+    # log drain. Documents (pdf, docx, ...) are still downloaded as files.
+    r"(?i)\.(jpe?g|png|gif|webp|svg|bmp|ico|tiff?|heic|mp4|mov|avi|webm|mkv|mp3|wav|m4a|ogg|flac)(\?.*)?$",
     r"/tag/",
     r"/author/",
     r"/feed/?$",
@@ -855,6 +860,7 @@ class WebsiteScraper:
             'denied': 0,
             'not_found': 0,   # 4xx/5xx responses: not saved, links not followed
             'offsite': 0,     # redirect chain left the host: not saved, links not followed
+            'media': 0,       # image/audio/video response: not saved, links not followed
             'total_bytes': 0,
         }
 
@@ -1464,6 +1470,14 @@ class WebsiteScraper:
                     self.stats['offsite'] += 1
                     return
 
+                if content_kind == 'html' and (content_type or '').lower().split(';')[0].strip().startswith(
+                        ('image/', 'video/', 'audio/')):
+                    # The URL did not say media but the server did. Binary is not a
+                    # page: nothing to save, no links to follow, nothing to log.
+                    self.stats['media'] += 1
+                    self.logger.debug(f"Media response ({content_type}), not saved: {url}")
+                    return
+
                 if content_kind == 'file':
                     if len(content) > self.max_file_size:
                         self.logger.debug(f"Skipping large file: {url} ({len(content) / (1024*1024):.2f} MB)")
@@ -1521,6 +1535,7 @@ class WebsiteScraper:
                 f"{self.stats['denied']} denied | "
                 f"{self.stats['not_found']} not found | "
                 f"{self.stats['offsite']} off-host | "
+                f"{self.stats['media']} media | "
                 f"{self.stats['errors']} errors | "
                 f"{self.stats['total_bytes'] / (1024*1024):.1f} MB | "
                 f"{len(self.urls_to_visit)} queued"
@@ -1702,6 +1717,7 @@ class WebsiteScraper:
         self.logger.info(f"Access denied: {self.stats['denied']}")
         self.logger.info(f"Error pages skipped (4xx/5xx): {self.stats['not_found']}")
         self.logger.info(f"Off-host redirects skipped: {self.stats['offsite']}")
+        self.logger.info(f"Media responses skipped: {self.stats['media']}")
         self.logger.info(f"Total data: {self.stats['total_bytes'] / (1024*1024):.2f} MB")
         self.logger.info(f"Errors: {self.stats['errors']}")
         self.logger.info(f"Output location: {self.base_dir}")
