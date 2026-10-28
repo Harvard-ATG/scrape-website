@@ -853,6 +853,8 @@ class WebsiteScraper:
             'text_extracted': 0,
             'errors': 0,
             'denied': 0,
+            'not_found': 0,   # 4xx/5xx responses: not saved, links not followed
+            'offsite': 0,     # redirect chain left the host: not saved, links not followed
             'total_bytes': 0,
         }
 
@@ -934,6 +936,20 @@ class WebsiteScraper:
 
     def is_same_domain(self, url: str) -> bool:
         return self.extract_domain(url) == self.base_domain
+
+    def _left_host(self, final_url: str) -> bool:
+        """True when a redirect chain ended on another host (www. prefix ignored).
+
+        Such a response is not this site's page: saving it would file outside
+        content under this hostname, and resolving its relative links against
+        the original URL manufactures phantom URLs on this host (classics'
+        /links/<slug> redirects produced 1,898 "Page not found" fetches).
+        """
+        final_host = self.extract_domain(str(final_url)).lower()
+        if not final_host:
+            return False
+        strip = lambda h: h[4:] if h.startswith('www.') else h
+        return strip(final_host) != strip(self.base_domain.lower())
 
     def should_download_file(self, url: str, content_type: str = None) -> bool:
         path = urlparse(url).path.lower()
@@ -1117,7 +1133,11 @@ class WebsiteScraper:
                     return None
 
                 # Determine file vs HTML
-                if self.should_download_file(url, content_type):
+                is_file = self.should_download_file(url, content_type)
+                if not is_file and self._left_host(resp.url):
+                    self.logger.info(f"Redirected off-host, not saved: {url} -> {resp.url}")
+                    return '', content_type, 'offsite', status
+                if is_file:
                     self.logger.info(f"Fetched via curl_cffi (Tier 2, file): {url}")
                     return resp.content, content_type, 'file', status
 
@@ -1186,6 +1206,9 @@ class WebsiteScraper:
             content_type = response.headers.get('content-type', '')
 
             is_file = self.should_download_file(url, content_type)
+            if not is_file and self._left_host(page.url):
+                self.logger.info(f"Redirected off-host, not saved: {url} -> {page.url}")
+                return '', content_type, 'offsite', status
 
             if is_file:
                 # PDFs/docs: get raw response body (not rendered DOM)
@@ -1294,7 +1317,12 @@ class WebsiteScraper:
                         self._tier1_blocks_in_a_row = 0
 
                     # Determine if this is a downloadable file or HTML
-                    if self.should_download_file(url, content_type):
+                    is_file = self.should_download_file(url, content_type)
+                    if not is_file and self._left_host(response.url):
+                        await response.read()
+                        self.logger.info(f"Redirected off-host, not saved: {url} -> {response.url}")
+                        return '', content_type, 'offsite', status
+                    if is_file:
                         content = await response.read()
                         self.logger.info(f"Fetched via aiohttp (Tier 1, file): {url}")
                         return content, content_type, 'file', status
@@ -1432,6 +1460,10 @@ class WebsiteScraper:
 
                 content, content_type, content_kind, status = await self.fetch_with_retry(url)
 
+                if content_kind == 'offsite':
+                    self.stats['offsite'] += 1
+                    return
+
                 if content_kind == 'file':
                     if len(content) > self.max_file_size:
                         self.logger.debug(f"Skipping large file: {url} ({len(content) / (1024*1024):.2f} MB)")
@@ -1442,6 +1474,13 @@ class WebsiteScraper:
                         self.stats['denied'] += 1
                         self.denied_urls.append(url)
                         self.logger.debug(f"Access denied ({status}): {url}")
+                        return
+
+                    if status >= 400:
+                        # Error pages ("Page not found") are not content and their
+                        # links are the site chrome, not new pages.
+                        self.stats['not_found'] += 1
+                        self.logger.debug(f"Error page ({status}), not saved: {url}")
                         return
 
                     # Offload parsing + text extraction to process pool
@@ -1480,6 +1519,8 @@ class WebsiteScraper:
                 f"{self.stats['text_extracted']} text | "
                 f"{self.stats['files_downloaded']} files | "
                 f"{self.stats['denied']} denied | "
+                f"{self.stats['not_found']} not found | "
+                f"{self.stats['offsite']} off-host | "
                 f"{self.stats['errors']} errors | "
                 f"{self.stats['total_bytes'] / (1024*1024):.1f} MB | "
                 f"{len(self.urls_to_visit)} queued"
@@ -1659,6 +1700,8 @@ class WebsiteScraper:
         self.logger.info(f"Text extracted: {self.stats['text_extracted']}")
         self.logger.info(f"Files downloaded: {self.stats['files_downloaded']}")
         self.logger.info(f"Access denied: {self.stats['denied']}")
+        self.logger.info(f"Error pages skipped (4xx/5xx): {self.stats['not_found']}")
+        self.logger.info(f"Off-host redirects skipped: {self.stats['offsite']}")
         self.logger.info(f"Total data: {self.stats['total_bytes'] / (1024*1024):.2f} MB")
         self.logger.info(f"Errors: {self.stats['errors']}")
         self.logger.info(f"Output location: {self.base_dir}")

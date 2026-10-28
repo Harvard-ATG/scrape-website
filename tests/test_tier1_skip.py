@@ -13,6 +13,7 @@ URL = "https://example.com/page"
 class _Response:
     def __init__(self, status):
         self.status = status
+        self.url = URL
         self.headers = {"Content-Type": "text/html"}
         self.charset = "utf-8"
 
