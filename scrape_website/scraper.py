@@ -112,6 +112,11 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # images did exactly that and the binary logged to stdout killed the orchestrator's
     # log drain. Documents (pdf, docx, ...) are still downloaded as files.
     r"(?i)\.(jpe?g|png|gif|webp|svg|bmp|ico|tiff?|heic|mp4|mov|avi|webm|mkv|mp3|wav|m4a|ogg|flac)(\?.*)?$",
+    # Faceted listing pages (Drupal search_api facets: ?f[0]=..., encoded f%5B0%5D=).
+    # Each is one filter combination of a directory page and links to more
+    # combinations; on www.chemistry.harvard.edu 2026-10-28 they were ~2,300 of the
+    # first 5,300 fetches and the entire remaining queue, all discarded as thin.
+    r"[?&]f(?:\[\d+\]|%5B\d+%5D)=",
     r"/tag/",
     r"/author/",
     r"/feed/?$",

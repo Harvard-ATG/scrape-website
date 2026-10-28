@@ -87,3 +87,20 @@ def test_advising_hosts_keep_their_event_pages():
         "https://specialconcentrations.fas.harvard.edu/event/spring-application-deadline-3",
     ):
         assert _url_excluded(url, COMPILED), url
+
+
+def test_drupal_facet_filter_urls_are_excluded_by_default():
+    """Faceted listing pages (Drupal search_api facets, `f[N]=...`) are filter
+    combinations of one directory page; each links to more combinations. On
+    www.chemistry.harvard.edu 2026-10-28 they were ~2,300 of the first 5,300
+    fetches and the whole remaining queue, all thin pages the text extractor
+    discarded."""
+    excludes = [re.compile(p) for p in _DEFAULT_EXCLUDE_PATTERNS]
+    for u in (
+        "https://www.chemistry.harvard.edu/people?f%5B0%5D=hwp_c_administrationstaff%3A159181",
+        "https://www.chemistry.harvard.edu/people?f[0]=role:faculty&f[1]=area:organic",
+        "https://example.com/news?page=2&f%5B1%5D=year%3A2024",
+    ):
+        assert _url_excluded(u, excludes), u
+    assert not _url_excluded("https://www.chemistry.harvard.edu/people", excludes)
+    assert not _url_excluded("https://example.com/page?format=pdf", excludes)
