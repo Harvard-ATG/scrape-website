@@ -1,0 +1,217 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Scraper refinements (slides 1-19)",
+  "description": "Code walkthrough for the registration refresh, scraper side. Step N matches slide N of the deck. Pinned to ffe35d6 (PR #10 head, the commit apo-mcp-server v1.1.0-rc12 to rc14 pin).",
+  "ref": "ffe35d6d8275eb7a0c0ae3a45be0aab61f99e64c",
+  "nextTour": "Refresh orchestration (slides 9-14)",
+  "steps": [
+    {
+      "title": "1 · Start here",
+      "description": "## Scraper refinements, line by line\n\nThis tour follows the deck **Scraper Refinements: Code Walkthrough**. Step numbers match slide numbers: step 7 and slide 7 show the same code.\n\n- scrape-website moved from `37bce63` (prod's July pin, apo-mcp-server v1.0.1) to `ffe35d6` (this commit): 47 commits, +2,234 lines across `scraper.py` and 10 test files.\n- apo-mcp-server v1.1.0-rc1 to rc14 carry the run settings and the scraper pin. Those steps are in the second tour, **Refresh orchestration**.\n\nCheck you are on the right code first:\n\n```\ngit rev-parse --short HEAD   # ffe35d6\n```\n\n>> uv run --extra dev pytest -q tests"
+    },
+    {
+      "title": "2 · How to use this walkthrough",
+      "description": "Three lengths:\n\n| Length | Slides | Tour |\n|---|---|---|\n| 15 min | Core (red tag) | not opened |\n| 25 min | Core plus blue tag | open at steps 7 and 12 |\n| 40 min | all 19 | every step, side by side |\n\nThe minute-by-minute plan is in `aidocs/feature/scraper-refinements/review/REHEARSAL.md`."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 790,
+      "title": "3 · Map: the scraper class",
+      "description": "Everything in the crawl section of the map is a method of `WebsiteScraper`:\n\n- `crawl()` seeds from the sitemap and runs the loop (slides 10, 12)\n- `process_url()` decides what counts as a page (slide 11)\n- `fetch_with_retry()` handles 429s (slide 7)\n- `_fetch_tiered()` escalates through three tiers (slides 5, 6)\n\nThe constructor takes `concurrency`, `delay` and `event_keep_since`, which apo-mcp-server's `scrape.py` sets per site."
+    },
+    {
+      "title": "4 · Revision history",
+      "description": "Read the scraper commits oldest first; each message says what prod showed.\n\n```\ngit log --reverse --oneline 37bce63..ffe35d6 -- scrape_website tests\n```\n\nThe commits that moved the prod pin:\n\n| apo-mcp-server tag | scraper pin | change |\n|---|---|---|\n| rc1 | 539aeda | keep sitemap events dated on or after event_keep_since |\n| rc2 | 5fe26d8 | skip off-host redirects and 4xx/5xx pages |\n| rc10 | 6fafc93 | media are not pages |\n| rc11 | 9e963ed | exclude facet listing URLs |\n| rc12 | ffe35d6 | a 429 from every tier pauses the host and retries |\n\nrc5 to rc9 changed only apo-mcp-server (concurrency, fast retirement, ingest workers); see the orchestration tour.\n\n**Q1:** prod pins this commit, the head of PR #10, which is still a draft against `feature/python-package`."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1298,
+      "title": "5a · Three tiers: _fetch_tiered",
+      "description": "Tier 1 aiohttp, Tier 2 curl_cffi, Tier 3 Playwright. Every path returns `(content, content_type, kind, status)`, so callers never know which tier served the page.\n\nIf all tiers fail, the original status comes back and `process_url` counts the page as denied.\n\nCame in with PR #6 (merged Jul 24); prod's July pin did not have it."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 186,
+      "title": "5b · Browser slots",
+      "description": "Tier 3 browsers are capped per container with `fcntl.flock` on slot files. `SCRAPE_MAX_BROWSERS` sets the cap (default 3; prod tasks set 8).\n\n**Ask the room:** when every slot is taken, Tier 3 is skipped and the page counts as denied. Should it wait instead?\n\nTests: `tests/test_browser_slots.py`, 14."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 63,
+      "title": "6a · Sticky Tier 2: the constant",
+      "description": "After 5 consecutive Tier 1 403/429s on a host, every later fetch starts at Tier 2. Commit `8beb100`."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1331,
+      "title": "6b · Sticky Tier 2: the counter",
+      "description": "The counter increments on a Tier 1 block and resets on any Tier 1 success (line 1358). Once `_skip_tier1` is set, nothing clears it for the rest of the crawl.\n\n**Ask the room:** should it test Tier 1 again every few hundred pages?\n\nTests: `tests/test_tier1_skip.py`, 3."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 51,
+      "title": "7a · Rate limit: why 429 is not in RETRYABLE_STATUS",
+      "description": "The comment block records the three revisions:\n\n1. `6e629f3` escalate a 429 to Tier 2/3 after retries\n2. `9e7e46e` escalate at once; retrying the same fingerprint only fed the WAF\n3. `ffe35d6` when every tier answers 429, the cause is the request rate: pause the host and retry\n\n`_RATE_LIMIT_BACKOFF = (15, 30, 60)` at line 71."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1281,
+      "title": "7b · fetch_with_retry",
+      "description": "The whole fix is this function:\n\n1. Wait out any pause already set for this host.\n2. Call `_fetch_tiered`.\n3. On a final 429, set `_rate_limited_until` for the host, sleep 15, 30, then 60 s, and retry.\n4. After the last backoff, return the 429; it is counted denied as before.\n\nOn rc12 the College WordPress group (advising, gened, oue) went from 10-45% denied to 0.\n\n**Ask the room (Q2):** `_rate_limited_until` is per scraper, so per host. The platform limits per client address, so sibling hosts in one task do not share the pause. Today the run settings cover it (WordPress at concurrency 1, 3 sites at a time).\n\n**Q3:** after 105 s of pauses the page still counts denied, and a `--fresh` ingest retires its row."
+    },
+    {
+      "file": "tests/test_rate_limit.py",
+      "line": 1,
+      "title": "7c · The three rate-limit tests",
+      "description": "- a 429 is retried after the first backoff and the retry's 200 is returned\n- successive 429s wait 15, 30, 60 s, and the last 429 is returned (still counted denied)\n- a 429 on one URL pauses the next fetch on the same host\n\n>> uv run --extra dev pytest -q tests/test_rate_limit.py"
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 121,
+      "title": "8a · Default excludes",
+      "description": "Each pattern carries the measurement behind it:\n\n| pattern | commit | why |\n|---|---|---|\n| media extensions | 6fafc93 | seas images were parsed as pages |\n| `[?&]f[N]=` facets | 9e963ed | chemistry: ~2,300 of the first 5,300 fetches |\n| `/bibcite/export` | bec9247 | six citation formats per publication; ingest reads none |\n| `\\.ics$`, `/search\\?` | PR #4 | calendar files, search results |\n| R7 events | 4ae59f9 | 74% of economics' sitemap |\n\nscrape.py in apo-mcp-server appends each site's `exclude_patterns` from sites.toml.\n\nTests: `tests/test_default_excludes.py`, 8; `tests/test_media_not_pages.py`, 2."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 252,
+      "title": "8b · Where excludes apply",
+      "description": "`_url_excluded` runs at link extraction (`_extract_links_lxml`) and at sitemap seeding in `crawl()`. A dropped sitemap entry is counted under `excluded` in the per-host sitemap log line.\n\n**Ask the room:** a pattern that is too broad drops content silently. Who reads that count?"
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 102,
+      "title": "9a · R7: the keep hosts",
+      "description": "The keep list settled over eight commits: `4ae59f9`, `1886cc6`, `59e35fd`, `9652ff4`, `cd5930a`, `2e7b372`, `d127c45`, `539aeda`. Each host was checked against its sitemap lastmod; hosts whose event pages were 2013-2020 calendars were dropped.\n\nThe pattern at line 119 excludes `/event(s)/<one segment>` everywhere except these hosts. Listings (`/events`, `/calendar`) stay."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1635,
+      "title": "9b · R7: the date rule",
+      "description": "A sitemap entry that R7 excludes is kept when its lastmod is on or after `event_keep_since` and nothing else excludes it. apo-mcp-server sets `EVENT_KEEP_SINCE = \"2026-06-01\"` in scrape.py.\n\n**Ask the room (Q5):**\n- Only sitemap entries get this check. A current event reached by a link stays excluded.\n- `lastmod[:10] >= event_keep_since` is a string comparison; it assumes W3C (ISO) dates, which the sitemap protocol requires.\n- Who moves the date forward each summer?"
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 296,
+      "title": "10a · Sitemap discovery",
+      "description": "robots.txt `Sitemap:` lines first; the standard paths only when robots lists none. Fetched through the tiers (`97311a1`): a plain client got 403 on Akamai hosts and seeded nothing. Returns `(loc, lastmod)` pairs; cap 50,000 (`b31a696`).\n\nTests: `tests/test_sitemap_discovery.py`, 12."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 393,
+      "title": "10b · The truncation TODO",
+      "description": "**Ask the room (Q6):** discovery logs a warning when the cap cuts the list, but does not return a flag. The weekly update planner (rules R11, R15) cannot tell a truncated sitemap from removed pages."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1601,
+      "title": "10c · Seeding, never silent",
+      "description": "Every entry is seeded or counted under a drop reason: off-host, out of scope, not included, excluded, already known. One INFO line per host (`95cfdb9`); a failure logs a WARNING (`8e54252`); no sitemap logs that too."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 964,
+      "title": "11a · _left_host",
+      "description": "True when a redirect chain ends on another host (`www.` ignored). Without it, classics' `/links/<slug>` redirects were saved, and their relative links resolved against classics made 1,898 phantom URLs."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1504,
+      "title": "11b · Three gates in process_url",
+      "description": "1. `offsite`: not saved, links not followed\n2. media by content type: the URL looked like a page, the server said image, video or audio\n3. `status >= 400`: an error page is not content; its links are site chrome\n\nEach has its own counter in `self.stats`.\n\n**Ask the room:** none of these are saved, so a `--fresh` ingest retires the old row. Right for moved sites; is it right for a page that now redirects to a sister site we do not crawl?\n\nTests: `tests/test_offsite_and_error_pages.py`, 6."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 817,
+      "title": "12a · Concurrency: the constructor",
+      "description": "`concurrency` becomes `self.max_concurrent`; `delay` becomes `self.delay`. apo-mcp-server's scrape.py passes the `--concurrency` flag if given, else the sites.toml value, else 1 (orchestration tour, step 12)."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1498,
+      "title": "12b · One slot per request",
+      "description": "The delay sleeps inside the semaphore slot, so throughput is roughly `concurrency / (delay + latency)`. seas measured: 1 → about 2,000 pages an hour; 2 → 97 a minute, 0 denied; 3 → about 220 a minute."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1668,
+      "title": "12c · The task cap in crawl()",
+      "description": "The loop never has more than `max_concurrent` tasks in flight; the semaphore in `process_url` enforces the same number."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1796,
+      "title": "12d · The CLI default",
+      "description": "**Ask the room (Q4):** run directly, the scraper defaults to `CONFIG['max_concurrent']` = 100 requests in flight with a 0.1 s delay. apo-mcp-server always passes its own values (default 1 and 0.75 s), so this only bites someone using the CLI on a real site."
+    },
+    {
+      "title": "13 · Scrape sets",
+      "description": "Scrape sets live in apo-mcp-server: `aidocs/fix/scrape-and-ingest-ordering/RUN_ORDER.md`, section \"Replaying the run on QA\". Continue with the **Refresh orchestration** tour, step 13."
+    },
+    {
+      "title": "14 · Fast retirement",
+      "description": "Fast retirement is `ingest.py` in apo-mcp-server. See the **Refresh orchestration** tour, step 14."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1601,
+      "title": "15a · Trace: seeded from the sitemap",
+      "description": "Trace one WordPress page end to end. Step 1: the sitemap entry passes the scope checks and is appended to `urls_to_visit` with no `found_on`."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 442,
+      "title": "15b · Trace: _should_fetch",
+      "description": "Step 2: not yet seen this run and not visited in the URL store, so it is fetched; `crawl()` marks it visited before the task starts."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1498,
+      "title": "15c · Trace: a slot and the delay",
+      "description": "Step 3: `process_url` takes a semaphore slot and waits `self.delay`."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1286,
+      "title": "15d · Trace: 429 from every tier",
+      "description": "Step 4: Tiers 1, 2 and 3 all answer 429. The host pauses 15 s, the page is fetched again and gets 200. Before rc12 this ended at denied, and the page left the manifest."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 576,
+      "title": "15e · Trace: parse in the process pool",
+      "description": "Step 5: on host, HTML, status 200, so `_parse_and_extract` runs in the `ProcessPoolExecutor`: lxml links plus trafilatura Markdown, with the dedup cache cleared per page (see CLAUDE.md)."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1474,
+      "title": "15f · Trace: saved and stamped",
+      "description": "Step 6: `save_text` writes the `.md` with front matter, and `upsert_metadata` records it at this crawl generation."
+    },
+    {
+      "file": "scrape_website/scraper.py",
+      "line": 1708,
+      "title": "15g · Trace: the manifest",
+      "description": "Step 7: `run()` writes `manifest.json` only after a complete, uncapped pass, so a crashed run leaves the last good manifest. Step 8, ingest, is in the orchestration tour."
+    },
+    {
+      "file": "tests/test_crawl_flow.py",
+      "line": 1,
+      "title": "16 · Tests",
+      "description": "Run on Nov 5 at this commit:\n\n| suite | result |\n|---|---|\n| `tests/` (scraper) | 80 passed |\n| `aidocs/feature/scraper-update-mode/rules/tests` | 198 passed, 2 skipped (no cached QA manifests) |\n| apo-mcp-server rc14: args, defaults, ingest | 34 passed |\n\nNot covered by tests: live sites, throughput at each concurrency, gateway limits. Those were measured in prod runs on Oct 27-28.\n\n>> uv run --extra dev pytest -q tests"
+    },
+    {
+      "title": "17 · Decisions we need",
+      "description": "Q1 merge PR #10 or move the pin · Q2 share the 429 pause across a platform · Q3 keep the old row after a final 429 · Q4 lower the CLI default concurrency · Q5 owner for EVENT_KEEP_SINCE · Q6 sitemap truncation flag · Q7 one attribute builder for upload and retirement · Q8 scrape sets in Terraform or a script\n\nFull list with context: `aidocs/feature/scraper-refinements/review/OPEN_QUESTIONS.md`."
+    },
+    {
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 175,
+      "title": "18 · Not built: the weekly update",
+      "description": "`plan_update` is reference code only: nothing in `scraper.py` calls it. The existing tours **Scrape update mode (PR #10)** and **Scrape traces** walk this design."
+    },
+    {
+      "title": "19 · Read it yourself",
+      "description": "Start with `ffe35d6` (32 lines and a 74-line test), then `5fe26d8` (the not-a-page gates, 6 tests). Leave comments on PR #10 by question number.\n\nNext: the **Refresh orchestration** tour in apo-mcp-server."
+    }
+  ]
+}
