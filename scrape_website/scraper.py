@@ -104,19 +104,19 @@ DOWNLOADABLE_MIMES = {
 # lastmod: every page on every host here is dated 2026, so a host-level keep cannot serve a
 # stale date. histlit, socialstudies, espp, specialconcentrations and psychology were tried and
 # dropped: their event pages are 2013-2020 calendars.
-_R7_KEEP_EVENT_HOSTS = (
+_EVENT_KEEP_HOSTS = (
     "incomingstudents.college.harvard.edu",
     "firstyear.college.harvard.edu",          # incomingstudents now redirects here
     "www.hio.harvard.edu",                    # international-student orientations; 32 of 32 dated 2026
     "ofa.fas.harvard.edu",                    # Clay 101 sections, workshops, artist talks; 42 of 42 dated 2026
 )
-_R7_KEEP_EVENT_HOSTS_RE = "|".join(re.escape(h) for h in _R7_KEEP_EVENT_HOSTS)
+_EVENT_KEEP_HOSTS_RE = "|".join(re.escape(h) for h in _EVENT_KEEP_HOSTS)
 
-# R7: one page per event. Matched against the full URL; the keep hosts above are exempt.
+# Event pages: one page per event. Matched against the full URL; the keep hosts above are exempt.
 # A scraper built with event_keep_since=<ISO date> also seeds event pages whose sitemap
 # lastmod is on or after that date (see WebsiteScraper.run), so current-year department
 # events come in while 2013-2025 calendars stay out.
-_R7_EVENT_PATTERN = rf"(?i)^(?!https?://(?:{_R7_KEEP_EVENT_HOSTS_RE})/).*/events?/[^/]+/?$"
+_EVENT_PAGE_PATTERN = rf"(?i)^(?!https?://(?:{_EVENT_KEEP_HOSTS_RE})/).*/events?/[^/]+/?$"
 
 _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # Media are not pages. Without this, image links are fetched as HTML, decoded as
@@ -143,15 +143,15 @@ _DEFAULT_EXCLUDE_PATTERNS: list[str] = [
     # publication list is offered in six formats as small text files that ingest never reads
     # (it only takes .pdf, .docx, .pptx and .doc), so they cost crawl time for no content.
     r"/bibcite/export",
-    # Individual event pages (R7): one page per seminar or talk, almost all past by the time they
+    # Individual event pages: one page per seminar or talk, almost all past by the time they
     # are read; on economics they are 74% of the sitemap. Listings (/events, /calendar,
     # /event-topic/x) stay: the pattern needs exactly one path segment after the events folder.
     # Kept on purpose (Splunk, Jul-Oct 2026: the only event content users actually hit):
     #   - /calendar_event/ and /calendar-event/ pages: registrar-style deadlines on OUE and SAS,
     #     ~40 pages across all hosts, the most-cited event URLs in the logs.
-    #   - the _R7_KEEP_EVENT_HOSTS above, whose /event/ pages are this year's advising
+    #   - the _EVENT_KEEP_HOSTS above, whose /event/ pages are this year's advising
     #     items, not seminars (26 pages).
-    _R7_EVENT_PATTERN,
+    _EVENT_PAGE_PATTERN,
 ]
 
 # Query-string params that are tracking only — safe to drop to prevent
@@ -803,7 +803,7 @@ class WebsiteScraper:
                  event_keep_since: str | None = None):
         self.start_url = start_url
         # ISO date (YYYY-MM-DD). When set, a sitemap-seeded event page whose lastmod is on or
-        # after this date is crawled even though R7 would exclude it. None keeps R7 strict.
+        # after this date is crawled even though the event-page exclude would drop it. None keeps it strict.
         self.event_keep_since = event_keep_since
         self.s3_bucket = s3_bucket
         self.base_domain = self.extract_domain(start_url)
@@ -840,9 +840,9 @@ class WebsiteScraper:
         self._compiled_exclude_patterns: list[re.Pattern] = [
             re.compile(p) for p in self._exclude_pattern_strings
         ]
-        self._event_pattern = re.compile(_R7_EVENT_PATTERN)
+        self._event_pattern = re.compile(_EVENT_PAGE_PATTERN)
         self._compiled_non_event_excludes: list[re.Pattern] = [
-            p for p in self._compiled_exclude_patterns if p.pattern != _R7_EVENT_PATTERN
+            p for p in self._compiled_exclude_patterns if p.pattern != _EVENT_PAGE_PATTERN
         ]
         self._include_pattern_strings: list[str] = include_patterns or []
         self._compiled_include_patterns: list[re.Pattern] = [
@@ -1837,7 +1837,7 @@ def parse_args():
     parser.set_defaults(scope_to_path=None)
     parser.add_argument('--event-keep-since', default=None, metavar='YYYY-MM-DD',
                         help='Also crawl sitemap-listed event pages whose lastmod is on or after this date '
-                             '(R7 excludes event pages otherwise)')
+                             '(individual event pages are excluded by default otherwise)')
     parser.add_argument('--no-playwright', action='store_true', default=False,
                         help="Disable Tier 3 Playwright escalation (stop at curl_cffi)")
     return parser.parse_args()
