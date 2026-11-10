@@ -11,6 +11,7 @@ what changed, and what the refresh showed. Set up so a reviewer can orient in 5,
 | Before-and-after page, "Less Junk, Faster, Still Complete" | https://claude.ai/artifact/Ju9LDiV5YuhYwYKioMuF7y | private; share from its Share menu |
 | Resources page (every link here, the video build order, the message to the team) | https://claude.ai/artifact/LbH1XV64fTd1qyFbtaBzo5 | private; share from its Share menu |
 | Code-walkthrough deck, 19 slides (one slide per tour step) | https://claude.ai/artifact/QVZER3WsXLeHekUocHNrLN | private; share from its Share menu |
+| Sprint demo deck, slides 4 to 8: moved sites, the rules funnel, "Smarter scraper, smarter tool" (problem we hit / what fixed it, the three request tiers, 1 to 6 concurrency), refresh cadence, sitemap updates | https://claude.ai/artifact/CQ5Mx6BQ66X8nCBZEXCdRU#slide-4 | private; stakeholder-level explanation of the same fixes |
 | Update-mode walkthrough (the sitemap-driven update design, not yet wired in) | https://claude.ai/artifact/BzBBvTUTpjikp2f1Lq9bcy | private; reference only |
 | Scraper tour, 37 steps | `.tours/scraper-refinements.tour` (ref `4b7befc`) | on this branch |
 | Orchestration tour, 11 steps | `apo-mcp-server/.tours/refresh-orchestration.tour` (ref `c833135`) | local only |
