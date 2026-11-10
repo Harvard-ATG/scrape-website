@@ -5,7 +5,7 @@ what changed, and what the refresh showed. Set up so a reviewer can orient in 5,
 
 | Piece | Where | Status |
 |---|---|---|
-| Narrated video, full (14 min 3 s, 52 MB) and short (5 min 18 s, 20 MB) | At the top of PR #10, https://github.com/Harvard-ATG/scrape-website/pull/10 | attached to the PR description |
+| Narrated video, full (14 min 3 s, 55 MB) and short (5 min 18 s, 20 MB); files `scraper-changes-june-october-2026-11-10.mp4` and `-short-2026-11-10.mp4` | At the top of PR #10, https://github.com/Harvard-ATG/scrape-website/pull/10 | attached to the PR description |
 | Captions and transcript for the full video | `scraper-changes-june-october.vtt`, `.srt` | this folder |
 | Deck, 19 slides, "Scraper Changes: June vs October" (the source of both videos) | https://claude.ai/artifact/6cLjdW4u6YqWXNy16Huthv | private; share from its Share menu |
 | Before-and-after page, "Less Junk, Faster, Still Complete" | https://claude.ai/artifact/Ju9LDiV5YuhYwYKioMuF7y | private; share from its Share menu |
