@@ -2,7 +2,7 @@
   "$schema": "https://aka.ms/codetour-schema",
   "title": "Scraper refinements (slides 1-19)",
   "description": "Code walkthrough for the registration refresh, scraper side. Step N matches slide N of the deck. Pinned to ffe35d6 (PR #10 head, the commit apo-mcp-server v1.1.0-rc12 to rc14 pin).",
-  "ref": "ffe35d6d8275eb7a0c0ae3a45be0aab61f99e64c",
+  "ref": "4b7befc07a19a6cd4dffb1ea4650fafb1e475e49",
   "nextTour": "Refresh orchestration (slides 9-14)",
   "steps": [
     {
@@ -69,7 +69,7 @@
       "file": "scrape_website/scraper.py",
       "line": 121,
       "title": "8a · Default excludes",
-      "description": "Each pattern carries the measurement behind it:\n\n| pattern | commit | why |\n|---|---|---|\n| media extensions | 6fafc93 | seas images were parsed as pages |\n| `[?&]f[N]=` facets | 9e963ed | chemistry: ~2,300 of the first 5,300 fetches |\n| `/bibcite/export` | bec9247 | six citation formats per publication; ingest reads none |\n| `\\.ics$`, `/search\\?` | PR #4 | calendar files, search results |\n| R7 events | 4ae59f9 | 74% of economics' sitemap |\n\nscrape.py in apo-mcp-server appends each site's `exclude_patterns` from sites.toml.\n\nTests: `tests/test_default_excludes.py`, 8; `tests/test_media_not_pages.py`, 2."
+      "description": "Each pattern carries the measurement behind it:\n\n| pattern | commit | why |\n|---|---|---|\n| media extensions | 6fafc93 | seas images were parsed as pages |\n| `[?&]f[N]=` facets | 9e963ed | chemistry: ~2,300 of the first 5,300 fetches |\n| `/bibcite/export` | bec9247 | six citation formats per publication; ingest reads none |\n| `\\.ics$`, `/search\\?` | PR #4 | calendar files, search results |\n| individual event pages | 4ae59f9 | 74% of economics' sitemap |\n\nscrape.py in apo-mcp-server appends each site's `exclude_patterns` from sites.toml.\n\nTests: `tests/test_default_excludes.py`, 8; `tests/test_media_not_pages.py`, 2."
     },
     {
       "file": "scrape_website/scraper.py",
@@ -80,14 +80,14 @@
     {
       "file": "scrape_website/scraper.py",
       "line": 102,
-      "title": "9a · R7: the keep hosts",
+      "title": "9a · Event pages: the keep hosts",
       "description": "The keep list settled over eight commits: `4ae59f9`, `1886cc6`, `59e35fd`, `9652ff4`, `cd5930a`, `2e7b372`, `d127c45`, `539aeda`. Each host was checked against its sitemap lastmod; hosts whose event pages were 2013-2020 calendars were dropped.\n\nThe pattern at line 119 excludes `/event(s)/<one segment>` everywhere except these hosts. Listings (`/events`, `/calendar`) stay."
     },
     {
       "file": "scrape_website/scraper.py",
       "line": 1635,
-      "title": "9b · R7: the date rule",
-      "description": "A sitemap entry that R7 excludes is kept when its lastmod is on or after `event_keep_since` and nothing else excludes it. apo-mcp-server sets `EVENT_KEEP_SINCE = \"2026-06-01\"` in scrape.py.\n\n**Ask the room (Q5):**\n- Only sitemap entries get this check. A current event reached by a link stays excluded.\n- `lastmod[:10] >= event_keep_since` is a string comparison; it assumes W3C (ISO) dates, which the sitemap protocol requires.\n- Who moves the date forward each summer?"
+      "title": "9b · Event pages: the date rule",
+      "description": "An event page that the default exclude would drop is kept when its lastmod is on or after `event_keep_since` and nothing else excludes it. apo-mcp-server sets `EVENT_KEEP_SINCE = \"2026-06-01\"` in scrape.py.\n\n**Ask the room (Q5):**\n- Only sitemap entries get this check. A current event reached by a link stays excluded.\n- `lastmod[:10] >= event_keep_since` is a string comparison; it assumes W3C (ISO) dates, which the sitemap protocol requires.\n- Who moves the date forward each summer?"
     },
     {
       "file": "scrape_website/scraper.py",

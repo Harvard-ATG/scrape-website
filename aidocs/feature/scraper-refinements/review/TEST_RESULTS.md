@@ -19,7 +19,7 @@ Skips: `test_all_hosts.py:97` (empty host parameter set) and `:123` (no cached Q
 | test_browser_slots.py | Tier 3 browser cap across processes | 14 |
 | test_offsite_and_error_pages.py | off-host redirects and 4xx/5xx not saved or expanded | 6 |
 | test_media_not_pages.py | media URLs and media content types | 2 |
-| test_default_excludes.py | default patterns, R7 keep hosts | 8 |
+| test_default_excludes.py | default patterns, event keep hosts | 8 |
 | test_sitemap_discovery.py | robots-first discovery, tiers, lastmod, logging | 12 |
 | test_crawl_flow.py | fetch paths, manifest atomicity | 10 |
 | test_crawl_generation.py | crawl generation decisions | 18 |

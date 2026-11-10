@@ -28,7 +28,7 @@ Narration per slide is the speaker note read at 150 words a minute. Discussion i
 | 6 | Sticky Tier 2 | 25 min | 0:50 | | 1:00 | 1:30 | 6a, 6b | re-probe Tier 1? |
 | 7 | 429 means slow down | Core | 0:59 | 2:00 | 3:00 | 4:00 | 7a–7c | Q2, Q3 |
 | 8 | Default excludes | Core | 0:50 | 1:00 | 1:15 | 2:00 | 8a, 8b | who reads "excluded" |
-| 9 | R7 events | 25 min | 0:54 | | 1:15 | 2:00 | 9a, 9b, orch. 9 | Q5 |
+| 9 | Event pages | 25 min | 0:54 | | 1:15 | 2:00 | 9a, 9b, orch. 9 | Q5 |
 | 10 | Sitemap seeding | 25 min | 0:57 | | 1:15 | 2:00 | 10a–10c | Q6 |
 | 11 | Not pages | Core | 0:56 | 1:15 | 1:30 | 2:30 | 11a, 11b | sister-site redirects |
 | 12 | Concurrency flag | Core | 0:52 | 1:45 | 3:00 | 3:30 | 12a–12d, orch. 12a–12d | Q4 |

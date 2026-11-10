@@ -4,7 +4,7 @@
 frames:
   - frame: s1-cover
     track: "Core"
-    narration: "This is the code walkthrough for the scraper refinements that went into the registration refresh. The high-level demo told the story; this one opens the code. Two repos changed. In scrape-website, the scraper moved from commit 37bce63, which prod ran in July, to ffe35d6, the head of pull request 10. In apo-mcp-server, the release tags v1.1.0 rc1 through rc14 carry the run settings and the scraper pin. Every slide names the file and line, pinned to those commits, so what you read is what ran."
+    narration: "This is the code walkthrough for the scraper refinements that went into the registration refresh. The high-level demo told the story; this one opens the code. Two repos changed. In scrape-website, the scraper moved from commit 37bce63, which prod ran in July, to 4b7befc, the head of pull request 10. In apo-mcp-server, the release tags v1.1.0 rc1 through rc14 carry the run settings and the scraper pin. Every slide names the file and line, pinned to those commits, so what you read is what ran."
     targets:
       title: "Scraper refinements,"
       scraper: "37bce63 → ffe35d6"
@@ -102,7 +102,7 @@ frames:
       - {at: 57, target: none}
   - frame: s8-excludes
     track: "Core"
-    narration: "Scope is where most of the cleanup came from. Every default exclude now has a comment with the measurement behind it. Media: seas image links were fetched as if they were pages. Facets: on chemistry, filter combinations were about twenty-three hundred of the first fifty-three hundred fetches. Bibcite exports: six citation formats for each publication, and ingest reads none of them. Calendar files and search results. And R7, individual event pages, which were seventy-four percent of economics' sitemap. The patterns run at link extraction and at sitemap seeding, and a site can add its own in sites.toml. The risk to discuss is that a pattern that is too broad removes content without an error. The sitemap log does count exclusions. The question is who reads it."
+    narration: "Scope is where most of the cleanup came from. Every default exclude now has a comment with the measurement behind it. Media: seas image links were fetched as if they were pages. Facets: on chemistry, filter combinations were about twenty-three hundred of the first fifty-three hundred fetches. Bibcite exports: six citation formats for each publication, and ingest reads none of them. Calendar files and search results. And individual event pages, which were seventy-four percent of economics' sitemap. The patterns run at link extraction and at sitemap seeding, and a site can add its own in sites.toml. The risk to discuss is that a pattern that is too broad removes content without an error. The sitemap log does count exclusions. The question is who reads it."
     targets:
       media: "6fafc93"
       facets: "9e963ed"
@@ -118,7 +118,7 @@ frames:
       - {at: 48, target: none}
   - frame: s9-r7
     track: "25 min"
-    narration: "R7 is the best example of how these rules were settled: by evidence, one commit at a time. The first version excluded every one-page-per-event URL. Then we found registrar-style deadline pages under calendar_event that students do read, so those stayed. Then advising hosts whose event pages are this year's deadlines. Several hosts were tried and dropped, because their event pages turned out to be 2013 to 2020 calendars. The last change replaced guessing hosts with a date rule: a sitemap event page is kept if its lastmod is on or after event_keep_since, which apo-mcp-server sets to June 1, 2026. Two things to discuss. Only sitemap entries get the date check, so an event found by following a link stays excluded. And that date has to move forward every summer, so someone needs to own it."
+    narration: "The event-page exclude is the best example of how these rules were settled: by evidence, one commit at a time. The first version excluded every one-page-per-event URL. Then we found registrar-style deadline pages under calendar_event that students do read, so those stayed. Then advising hosts whose event pages are this year's deadlines. Several hosts were tried and dropped, because their event pages turned out to be 2013 to 2020 calendars. The last change replaced guessing hosts with a date rule: a sitemap event page is kept if its lastmod is on or after event_keep_since, which apo-mcp-server sets to June 1, 2026. Two things to discuss. Only sitemap entries get the date check, so an event found by following a link stays excluded. And that date has to move forward every summer, so someone needs to own it."
     targets:
       history: "How the keep list settled"
       code: "# crawl(), sitemap seeding (names shortened)"

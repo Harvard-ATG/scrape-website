@@ -12,7 +12,7 @@ what changed, and what the refresh showed. Set up so a reviewer can orient in 5,
 | Resources page (every link here, the video build order, the message to the team) | https://claude.ai/artifact/LbH1XV64fTd1qyFbtaBzo5 | private; share from its Share menu |
 | Code-walkthrough deck, 19 slides (one slide per tour step) | https://claude.ai/artifact/QVZER3WsXLeHekUocHNrLN | private; share from its Share menu |
 | Update-mode walkthrough (the sitemap-driven update design, not yet wired in) | https://claude.ai/artifact/BzBBvTUTpjikp2f1Lq9bcy | private; reference only |
-| Scraper tour, 37 steps | `.tours/scraper-refinements.tour` (ref `ffe35d6`) | on this branch |
+| Scraper tour, 37 steps | `.tours/scraper-refinements.tour` (ref `4b7befc`) | on this branch |
 | Orchestration tour, 11 steps | `apo-mcp-server/.tours/refresh-orchestration.tour` (ref `c833135`) | local only |
 | Live tour, 15 minutes | Tuesday, November 10; follows one page end to end through the scraper in VS Code using the scraper tour | scheduled |
 | Rehearsal, three lengths | `REHEARSAL.md` | this folder |
@@ -27,7 +27,7 @@ and 14 and the apo-mcp-server parts of 4, 9 and 12 are in the orchestration tour
 
 ## Code under review
 
-- scrape-website `37bce63` → `ffe35d6`: 47 commits, `scraper.py` plus 10 test files. `ffe35d6` is the head of PR #10,
+- scrape-website `37bce63` → `4b7befc`: 48 commits, `scraper.py` plus 10 test files. `4b7befc` is the head of PR #10,
   which contains PRs #4, #7, #8 and the 429 fix; merging it closes the others.
 - apo-mcp-server `v1.0.1` → `v1.1.0-rc14` (`c833135`, branch `fix/scrape-and-ingest-ordering`): the pin, run flags, fast retirement.
 - Review the 10 files under `scrape_website/` and `tests/`. Everything under `aidocs/` is reference material and tooling
