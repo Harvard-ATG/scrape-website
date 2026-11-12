@@ -1,0 +1,1257 @@
+[
+ {
+  "dir": "blog/linguistics-blog-week-may-20",
+  "type": "blog",
+  "host": "linguistics.fas.harvard.edu",
+  "url": "https://linguistics.fas.harvard.edu/blog/week-may-20",
+  "md_url": "https://linguistics.fas.harvard.edu/blog/week-may-20.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2019-05-21T20:59:24+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://linguistics.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://linguistics.fas.harvard.edu/blog/week-may-20</loc>\n  <lastmod>2019-05-21T20:59:24+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1865,
+   "line_number": 703,
+   "line": "- [Week of May 20](https://linguistics.fas.harvard.edu/blog/week-may-20.md)",
+   "before": "- [Week of May 13](https://linguistics.fas.harvard.edu/blog/week-may-13.md)",
+   "after": "- [Week of June 10](https://linguistics.fas.harvard.edu/blog/week-june-10.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "May 21, 2019",
+    "text": "May 21, 2019"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2019-05-21T12:00:00Z",
+    "May 21, 2019"
+   ]
+  ],
+  "ours_dates": [],
+  "md_words": 130,
+  "ours_words": 137,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "May 21, 2019"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 2,
+  "ours_headings": 2,
+  "md_links": 10,
+  "ours_links": 7,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "blog/medieval-blog-want-your-cfp-appear-here",
+  "type": "blog",
+  "host": "medieval.fas.harvard.edu",
+  "url": "https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here",
+  "md_url": "https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2024-11-30T21:57:28+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://medieval.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here</loc>\n  <lastmod>2024-11-30T21:57:28+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1559,
+   "line_number": 344,
+   "line": "- [Want your CFP to appear here?](https://medieval.fas.harvard.edu/blog/want-your-cfp-appear-here.md)",
+   "before": "- [Heinz Bluhm Memorial Lecture Series](https://medieval.fas.harvard.edu/event/heinz-bluhm-memorial-lecture-series.md)",
+   "after": "- [Harvard Theater and Performance Colloquium](https://medieval.fas.harvard.edu/event/harvard-theater-and-performance-colloquium.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": false,
+   "reason": "outside_path",
+   "rule": "R3",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R3"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "November 13, 2016",
+    "text": "November 13, 2016"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2016-11-13T12:00:00Z",
+    "November 13, 2016"
+   ]
+  ],
+  "ours_dates": [
+   {
+    "line": 1,
+    "date": "November 13, 2016",
+    "text": "Want your CFP to appear here? November 13, 2016 Email your call for papers to josephshack@g.harvard.edu to be included on this page."
+   }
+  ],
+  "md_words": 30,
+  "ours_words": 25,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 0,
+  "md_links": 3,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "blog/writingcenter-blog-does-my-paper-flow-tips-creating-well-structu",
+  "type": "blog",
+  "host": "writingcenter.fas.harvard.edu",
+  "url": "https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay",
+  "md_url": "https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2020-08-23T02:50:12+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://writingcenter.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay</loc>\n  <lastmod>2020-08-23T02:50:12+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 94,
+   "line_number": 2,
+   "line": "- [Does my paper flow? Tips for creating a well-structured essay.](https://writingcenter.fas.harvard.edu/blog/does-my-paper-flow-tips-creating-well-structured-essay.md)",
+   "before": "- [Welcome to the Barker Underground!](https://writingcenter.fas.harvard.edu/blog/welcome-barker-underground.md)",
+   "after": "- [Why would anyone want to meet with a writing tutor? ](https://writingcenter.fas.harvard.edu/faq/why-would-anyone-want-meet-writing-tutor.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "August 23, 2020",
+    "text": "August 23, 2020"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2020-08-23T12:00:00Z",
+    "August 23, 2020"
+   ],
+   [
+    "page_card_date",
+    "August 19, 2020"
+   ]
+  ],
+  "ours_dates": [],
+  "md_words": 672,
+  "ours_words": 669,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "August 23, 2020"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 1,
+  "md_links": 0,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "blog/www-blog-assistant-professor-position-open-cwru-depart",
+  "type": "blog",
+  "host": "www.chemistry.harvard.edu",
+  "url": "https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry",
+  "md_url": "https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2021-12-16T19:43:48+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://www.chemistry.harvard.edu/sitemap.xml?page=1",
+   "child_index": 1,
+   "block": "<url>\n  <loc>https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry</loc>\n  <lastmod>2021-12-16T19:43:48+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 2893,
+   "line_number": 1459,
+   "line": "- [Assistant Professor Position Open - CWRU Department of Chemistry](https://www.chemistry.harvard.edu/blog/assistant-professor-position-open-cwru-department-chemistry.md)",
+   "before": "- [Jarad Mason wins the 2021 Dream Chemistry Award](https://www.chemistry.harvard.edu/news/professor-jarad-mason-wins-2021-dream-chemistry-award.md)",
+   "after": "- [Yahya Chaudhry](https://www.chemistry.harvard.edu/people/yahya-chaudhry.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "December 16, 2021",
+    "text": "December 16, 2021"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2021-12-16T12:00:00Z",
+    "December 16, 2021"
+   ]
+  ],
+  "ours_dates": [],
+  "md_words": 92,
+  "ours_words": 67,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "December 16, 2021"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 1,
+  "md_links": 6,
+  "ours_links": 1,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "events/nelc-event-christianity-iraq-challenges-and-hopes",
+  "type": "events",
+  "host": "nelc.fas.harvard.edu",
+  "url": "https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes",
+  "md_url": "https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2022-11-14T15:36:55+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://nelc.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes</loc>\n  <lastmod>2022-11-14T15:36:55+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1690,
+   "line_number": 637,
+   "line": "- [Christianity in Iraq: Challenges and Hopes](https://nelc.fas.harvard.edu/event/christianity-iraq-challenges-and-hopes.md)",
+   "before": "- [Seminar: Manifesto of the Great Resurrection (Qiy\u0101mat-i buzurg)](https://nelc.fas.harvard.edu/event/seminar-manifesto-great-resurrection-qiy%C4%81mat-i-buzurg.md)",
+   "after": "- [Harvard Crimson Interview with NELC Professor Peter Der Manuelian](https://nelc.fas.harvard.edu/harvard-crimson-interview-nelc-professor-peter-der-manuelian.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "event_page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R7 (proposed)"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 9,
+    "date": "November 17, 2022",
+    "text": "**November 17, 2022**"
+   }
+  ],
+  "html_time_tags": [],
+  "ours_dates": [
+   {
+    "line": 5,
+    "date": "November 17, 2022",
+    "text": "**November 17, 2022**"
+   }
+  ],
+  "md_words": 178,
+  "ours_words": 137,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 3,
+  "ours_headings": 3,
+  "md_links": 5,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "events/summerfunding-event-students-must-accept-or-decline-funding-offe",
+  "type": "events",
+  "host": "summerfunding.college.harvard.edu",
+  "url": "https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer",
+  "md_url": "https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2025-11-20T20:43:08+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://summerfunding.college.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer</loc>\n  <lastmod>2025-11-20T20:43:08+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 128,
+   "line_number": 106,
+   "line": "- [Students must accept or decline funding offer](https://sfsao.college.harvard.edu/event/students-must-accept-or-decline-funding-offer.md)",
+   "before": "- [Funding decisions released](https://sfsao.college.harvard.edu/event/funding-decisions-released.md)",
+   "after": "- [Deadline to submit pre-departure requirements to receive funding](https://sfsao.college.harvard.edu/event/deadline-submit-pre-departure-requirements-receive-funding.md)"
+  },
+  "host_in_sites_toml": false,
+  "scope": {
+   "in_scope": false,
+   "reason": "foreign_host",
+   "rule": "R2",
+   "kind": "event_page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R2"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 9,
+    "date": "March 24, 2026",
+    "text": "**March 24, 2026**"
+   }
+  ],
+  "html_time_tags": [],
+  "ours_dates": [
+   {
+    "line": 41,
+    "date": "March 24, 2026",
+    "text": "March 24, 2026"
+   }
+  ],
+  "md_words": 44,
+  "ours_words": 105,
+  "ours_is_navigation": true,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 2,
+  "ours_headings": 0,
+  "md_links": 4,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "events/tdm-event-perspectives-performance-narcissister",
+  "type": "events",
+  "host": "tdm.fas.harvard.edu",
+  "url": "https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister",
+  "md_url": "https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2019-02-28T20:50:37+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://tdm.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister</loc>\n  <lastmod>2019-02-28T20:50:37+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1329,
+   "line_number": 455,
+   "line": "- [Perspectives on Performance with Narcissister](https://tdm.fas.harvard.edu/event/perspectives-performance-narcissister.md)",
+   "before": "- [TDM Open Seminars presents I Am the Seagull with Johnny Moreno](https://tdm.fas.harvard.edu/event/tdm-open-seminars-presents-i-am-seagull-johnny-moreno.md)",
+   "after": "- [TDM Master Class with Young Joo Lee](https://tdm.fas.harvard.edu/event/tdm-master-class-young-joo-lee.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "event_page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R7 (proposed)"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 9,
+    "date": "March 6, 2019",
+    "text": "**March 6, 2019**"
+   }
+  ],
+  "html_time_tags": [],
+  "ours_dates": [
+   {
+    "line": 5,
+    "date": "March 6, 2019",
+    "text": "**March 6, 2019**"
+   }
+  ],
+  "md_words": 229,
+  "ours_words": 160,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 3,
+  "ours_headings": 3,
+  "md_links": 8,
+  "ours_links": 0,
+  "md_images": 1,
+  "ours_images": 0
+ },
+ {
+  "dir": "events/wgs-event-queer-theory-french-response-talk-bruno-perr",
+  "type": "events",
+  "host": "wgs.fas.harvard.edu",
+  "url": "https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau",
+  "md_url": "https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2017-02-23T15:13:54+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://wgs.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau</loc>\n  <lastmod>2017-02-23T15:13:54+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1041,
+   "line_number": 492,
+   "line": "- [RESCHEDULED Queer Theory: The French Response -- talk by Bruno Perreau](https://wgs.fas.harvard.edu/event/queer-theory-french-response-talk-bruno-perreau.md)",
+   "before": "- [ \"Dark Girls\" -- film screening](https://wgs.fas.harvard.edu/event/dark-girls-film-screening.md)",
+   "after": "- [Pan-Harvard LGBTQ Town Hall](https://wgs.fas.harvard.edu/event/pan-harvard-lgbtq-town-hall.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "event_page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R7 (proposed)"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 9,
+    "date": "March 23, 2017",
+    "text": "**March 23, 2017**"
+   }
+  ],
+  "html_time_tags": [],
+  "ours_dates": [
+   {
+    "line": 5,
+    "date": "March 23, 2017",
+    "text": "**March 23, 2017**"
+   }
+  ],
+  "md_words": 225,
+  "ours_words": 168,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 3,
+  "ours_headings": 3,
+  "md_links": 5,
+  "ours_links": 0,
+  "md_images": 1,
+  "ours_images": 0
+ },
+ {
+  "dir": "events/www-event-loeb-lectures-margaret-murnane-jila",
+  "type": "events",
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila",
+  "md_url": "https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2021-02-02T02:08:52+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://www.physics.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila</loc>\n  <lastmod>2021-02-02T02:08:52+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 842,
+   "line_number": 159,
+   "line": "- [Loeb Lectures: Margaret Murnane (JILA)](https://www.physics.harvard.edu/event/loeb-lectures-margaret-murnane-jila.md)",
+   "before": "- [Lee Historical Lecture: Rainer Weiss (MIT)](https://www.physics.harvard.edu/event/lee-historical-lecture-rainer-weiss-mit.md)",
+   "after": "- [Lee Historical Lecture: Michael Berry (U Bristol)](https://www.physics.harvard.edu/event/lee-historical-lecture-michael-berry-u-bristol.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "event_page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R7 (proposed)"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 9,
+    "date": "April 12, 2018",
+    "text": "**April 10 - April 12, 2018**"
+   }
+  ],
+  "html_time_tags": [],
+  "ours_dates": [
+   {
+    "line": 5,
+    "date": "April 12, 2018",
+    "text": "**April 10 - April 12, 2018**"
+   }
+  ],
+  "md_words": 118,
+  "ours_words": 113,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 2,
+  "ours_headings": 2,
+  "md_links": 6,
+  "ours_links": 1,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "news/english-news-why-ai-hallucinations-can-be-good-thing",
+  "type": "news",
+  "host": "english.fas.harvard.edu",
+  "url": "https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing",
+  "md_url": "https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2024-04-03T17:44:50+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://english.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing</loc>\n  <lastmod>2024-04-03T17:44:50+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1637,
+   "line_number": 950,
+   "line": "- [Why AI hallucinations can be a good thing](https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing.md)",
+   "before": "- [GOSPEL Live! Presented by Henry Louis Gates, Jr.](https://english.fas.harvard.edu/news/gospel-live-presented-henry-louis-gates-jr.md)",
+   "after": "- [How The Sympathizer Pulled off an Audacious, Ferocious Adaptation](https://english.fas.harvard.edu/news/how-sympathizer-pulled-audacious-ferocious-adaptation.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "February 08, 2024",
+    "text": "February 08, 2024"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2024-02-08T12:00:00Z",
+    "February 08, 2024"
+   ]
+  ],
+  "ours_dates": [],
+  "md_words": 172,
+  "ours_words": 252,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "February 08, 2024"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 1,
+  "md_links": 5,
+  "ours_links": 1,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "news/history-news-kirin-gupta-and-jane-kamensky-awarded-star-fa",
+  "type": "news",
+  "host": "history.fas.harvard.edu",
+  "url": "https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising",
+  "md_url": "https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising.md",
+  "html_status": 404,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2022-04-25T21:23:39+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://history.fas.harvard.edu/sitemap.xml?page=1",
+   "child_index": 1,
+   "block": "<url>\n  <loc>https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising</loc>\n  <lastmod>2022-04-25T21:23:39+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 5792,
+   "line_number": 3897,
+   "line": "- [Kirin Gupta and Jane Kamensky Awarded Star Family Prizes for Excellence in Advising](https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising.md)",
+   "before": "- [Global American Studies Conference with Sara Awartani, Kris Klein Hernandez, Evan Taparata, Ida Yalzadeh](https://history.fas.harvard.edu/event/global-american-studies-conference-sara-awartani-kris-klein-hernandez-evan-taparata.md)",
+   "after": "- [A Year of Black History: Coming of Age in Jim Crow D.C.](https://history.fas.harvard.edu/event/year-black-history-coming-age-jim-crow-dc.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "April 25, 2022",
+    "text": "April 25, 2022"
+   }
+  ],
+  "html_time_tags": [],
+  "ours_dates": [],
+  "md_words": 21,
+  "ours_words": 21,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "April 25, 2022"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 0,
+  "md_links": 3,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "news/sociology-news-christina-ciocca-ellers-recent-paper-urges-co",
+  "type": "news",
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes",
+  "md_url": "https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2024-03-25T13:11:24+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://sociology.fas.harvard.edu/sitemap.xml?page=1",
+   "child_index": 1,
+   "block": "<url>\n  <loc>https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes</loc>\n  <lastmod>2024-03-25T13:11:24+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 2245,
+   "line_number": 886,
+   "line": "- [Christina Ciocca Eller's recent paper urges college ratings focused on real-life outcomes](https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes.md)",
+   "before": "- [James Chu: How Beneficiaries Become Sources of Normative Control](https://sociology.fas.harvard.edu/event/james-chu-how-beneficiaries-become-sources-normative-control.md)",
+   "after": "- [Riva Kastoryano: Negotiating Diversity in European Public Spaces](https://sociology.fas.harvard.edu/event/riva-kastoryano-negotiating-diversity-european-public-spaces.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "February 14, 2024",
+    "text": "February 14, 2024"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2024-02-14T12:00:00Z",
+    "February 14, 2024"
+   ]
+  ],
+  "ours_dates": [],
+  "md_words": 136,
+  "ours_words": 106,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "February 14, 2024"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 1,
+  "md_links": 10,
+  "ours_links": 3,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "news/wgs-news-thesis-track-applications-due-115-0",
+  "type": "news",
+  "host": "wgs.fas.harvard.edu",
+  "url": "https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0",
+  "md_url": "https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2022-10-20T19:08:12+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://wgs.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0</loc>\n  <lastmod>2022-10-20T19:08:12+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1041,
+   "line_number": 303,
+   "line": "- [Thesis Track Applications Due 11/4](https://wgs.fas.harvard.edu/news/thesis-track-applications-due-115-0.md)",
+   "before": "- [Meredith Reiches's Essay Appears in L.A. Review of Books](https://wgs.fas.harvard.edu/news/wgs-affiliate-essay-published-la-review-books.md)",
+   "after": "- [Deidre Lynch's Essay Appears in LA Review of Books](https://wgs.fas.harvard.edu/news/deidre-lynchs-essay-appears-la-review-books.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "October 13, 2022",
+    "text": "October 13, 2022"
+   },
+   {
+    "line": 21,
+    "date": "November 4, 2022",
+    "text": "The deadline for juniors to submit an application is **5:00 pm on Friday, November 4, 2022.**"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2022-10-13T12:00:00Z",
+    "October 13, 2022"
+   ]
+  ],
+  "ours_dates": [
+   {
+    "line": 7,
+    "date": "November 4, 2022",
+    "text": "The deadline for juniors to submit an application is **5:00 pm on Friday, November 4, 2022.**"
+   }
+  ],
+  "md_words": 82,
+  "ours_words": 73,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "October 13, 2022"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 1,
+  "md_links": 6,
+  "ours_links": 2,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "news/www-news-imaging-viscous-flow-dirac-fluid-graphene",
+  "type": "news",
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene",
+  "md_url": "https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene.md",
+  "html_status": 200,
+  "md_status": 200,
+  "xml_lastmod_snapshot": "2020-08-25T20:26:57+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://www.physics.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene</loc>\n  <lastmod>2020-08-25T20:26:57+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 842,
+   "line_number": 203,
+   "line": "- [Imaging Viscous Flow of the Dirac Fluid in Graphene](https://www.physics.harvard.edu/news/imaging-viscous-flow-dirac-fluid-graphene.md)",
+   "before": "- [Quantum Science Center: A Partnership to Drive the the Development of New Quantum Technologies](https://www.physics.harvard.edu/news/quantum-science-center-partnership-drive-development-new-quantum-technologies.md)",
+   "after": "- [Congratulations to 2020 Harvard Physics Graduates!](https://www.physics.harvard.edu/news/congratulations-2020-harvard-physics-graduates.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [
+   {
+    "line": 11,
+    "date": "July 23, 2020",
+    "text": "July 23, 2020"
+   }
+  ],
+  "html_time_tags": [
+   [
+    "2020-07-23T12:00:00Z",
+    "July 23, 2020"
+   ]
+  ],
+  "ours_dates": [],
+  "md_words": 341,
+  "ours_words": 343,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": [
+    "July 23, 2020"
+   ]
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 1,
+  "ours_headings": 1,
+  "md_links": 2,
+  "ours_links": 2,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "publications/classics-publications-cambridge-songs-carmina-cantabrigiens",
+  "type": "publications",
+  "host": "classics.fas.harvard.edu",
+  "url": "https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia",
+  "md_url": "https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia.md",
+  "html_status": 200,
+  "md_status": 403,
+  "xml_lastmod_snapshot": "2024-07-17T17:06:23+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://classics.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia</loc>\n  <lastmod>2024-07-17T17:06:23+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 574,
+   "line_number": 498,
+   "line": "- [The Cambridge Songs (Carmina cantabrigiensia)](https://classics.fas.harvard.edu/publications/cambridge-songs-carmina-cantabrigiensia.md)",
+   "before": "- [Singers and Tales in the Twenty-First Century](https://classics.fas.harvard.edu/publications/singers-and-tales-twenty-first-century.md)",
+   "after": "- [Solomon and Marcolf](https://classics.fas.harvard.edu/publications/solomon-and-marcolf-0.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [],
+  "html_time_tags": [],
+  "ours_dates": [],
+  "md_words": 0,
+  "ours_words": 176,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 0,
+  "ours_headings": 3,
+  "md_links": 0,
+  "ours_links": 1,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "publications/histsci-publications-carbon-technocracy",
+  "type": "publications",
+  "host": "histsci.fas.harvard.edu",
+  "url": "https://histsci.fas.harvard.edu/publications/carbon-technocracy",
+  "md_url": "https://histsci.fas.harvard.edu/publications/carbon-technocracy.md",
+  "html_status": 200,
+  "md_status": 403,
+  "xml_lastmod_snapshot": "2025-09-23T21:00:30+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://histsci.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://histsci.fas.harvard.edu/publications/carbon-technocracy</loc>\n  <lastmod>2025-09-23T21:00:30+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 881,
+   "line_number": 837,
+   "line": "- [Carbon Technocracy: Energy Regimes in Modern East Asia](https://histsci.fas.harvard.edu/publications/carbon-technocracy.md)",
+   "before": "- [Einstein's Clock's, Poincar\u00e9's Maps](https://histsci.fas.harvard.edu/publications/einsteins-clocks-poincar%C3%A9s-maps.md)",
+   "after": "- [Why Trust Science?](https://histsci.fas.harvard.edu/publications/why-trust-science.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": false,
+   "reason": "outside_path",
+   "rule": "R3",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": false,
+    "rule": "R3"
+   }
+  },
+  "md_dates": [],
+  "html_time_tags": [],
+  "ours_dates": [],
+  "md_words": 0,
+  "ours_words": 311,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 0,
+  "ours_headings": 3,
+  "md_links": 0,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "publications/linguistics-publications-reference-kinds-across-languages",
+  "type": "publications",
+  "host": "linguistics.fas.harvard.edu",
+  "url": "https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages",
+  "md_url": "https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages.md",
+  "html_status": 200,
+  "md_status": 403,
+  "xml_lastmod_snapshot": "2013-06-19T03:50:01+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://linguistics.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages</loc>\n  <lastmod>2013-06-19T03:50:01+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 1865,
+   "line_number": 1831,
+   "line": "- [Reference to Kinds across Languages](https://linguistics.fas.harvard.edu/publications/reference-kinds-across-languages.md)",
+   "before": "- [Dynamics of Meaning: Anaphora, Presupposition, and the Theory of Grammar](https://linguistics.fas.harvard.edu/publications/dynamics-meaning-anaphora-presupposition-and-theory-grammar.md)",
+   "after": "- [Backwards vs. Forward Anaphora: Reconstruction in Child Language](https://linguistics.fas.harvard.edu/publications/backwards-vs-forward-anaphora-reconstruction-child-language.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [],
+  "html_time_tags": [],
+  "ours_dates": [],
+  "md_words": 0,
+  "ours_words": 37,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 0,
+  "ours_headings": 2,
+  "md_links": 0,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "publications/philosophy-publications-collected-works",
+  "type": "publications",
+  "host": "philosophy.fas.harvard.edu",
+  "url": "https://philosophy.fas.harvard.edu/publications/collected-works",
+  "md_url": "https://philosophy.fas.harvard.edu/publications/collected-works.md",
+  "html_status": 200,
+  "md_status": 403,
+  "xml_lastmod_snapshot": "2014-07-10T17:39:30+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://philosophy.fas.harvard.edu/sitemap.xml",
+   "child_index": null,
+   "block": "<url>\n  <loc>https://philosophy.fas.harvard.edu/publications/collected-works</loc>\n  <lastmod>2014-07-10T17:39:30+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 973,
+   "line_number": 948,
+   "line": "- [Collected Works](https://philosophy.fas.harvard.edu/publications/collected-works.md)",
+   "before": "- [The Sources of Normativity](https://philosophy.fas.harvard.edu/publications/sources-normativity.md)",
+   "after": "- [Deductive Logic](https://philosophy.fas.harvard.edu/publications/deductive-logic.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [],
+  "html_time_tags": [],
+  "ours_dates": [],
+  "md_words": 0,
+  "ours_words": 27,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 0,
+  "ours_headings": 0,
+  "md_links": 0,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ },
+ {
+  "dir": "publications/sociology-publications-coming-age-america-transition-adultho",
+  "type": "publications",
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century",
+  "md_url": "https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century.md",
+  "html_status": 200,
+  "md_status": 403,
+  "xml_lastmod_snapshot": "2018-05-22T20:44:06+00:00",
+  "xml_entry": {
+   "child_sitemap": "https://sociology.fas.harvard.edu/sitemap.xml?page=1",
+   "child_index": 1,
+   "block": "<url>\n  <loc>https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century</loc>\n  <lastmod>2018-05-22T20:44:06+00:00</lastmod>\n  <priority>0.5</priority>\n </url>"
+  },
+  "sitemap_llm": {
+   "host_status": 200,
+   "total_lines": 2245,
+   "line_number": 2182,
+   "line": "- [Coming of Age in America: The Transition to Adulthood in the Twenty-First Century](https://sociology.fas.harvard.edu/publications/coming-age-america-transition-adulthood-twenty-first-century.md)",
+   "before": "- [Survey Methods for Network Data](https://sociology.fas.harvard.edu/publications/survey-methods-network-data.md)",
+   "after": "- [Racial and Ethnic Diversity and Public Policy](https://sociology.fas.harvard.edu/publications/racial-and-ethnic-diversity-and-public-policy.md)"
+  },
+  "host_in_sites_toml": true,
+  "scope": {
+   "in_scope": true,
+   "reason": "ok",
+   "rule": "in scope",
+   "kind": "page",
+   "with_proposed_event_rule": {
+    "in_scope": true,
+    "rule": "in scope"
+   }
+  },
+  "md_dates": [],
+  "html_time_tags": [],
+  "ours_dates": [],
+  "md_words": 0,
+  "ours_words": 0,
+  "ours_is_navigation": false,
+  "facts_only_in_md": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "facts_only_in_ours": {
+   "emails": [],
+   "phones": [],
+   "dates": []
+  },
+  "md_headings": 0,
+  "ours_headings": 0,
+  "md_links": 0,
+  "ours_links": 0,
+  "md_images": 0,
+  "ours_images": 0
+ }
+]

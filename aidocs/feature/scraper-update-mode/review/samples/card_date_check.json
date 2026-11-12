@@ -1,0 +1,222 @@
+[
+ {
+  "host": "history.fas.harvard.edu",
+  "url": "https://history.fas.harvard.edu/resource/spring2021courselistdraftpdf",
+  "status": 200,
+  "xml_lastmod": "2020-07-06T17:25:24+00:00",
+  "card_date": "2020-07-06",
+  "size": "110.73 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "history.fas.harvard.edu",
+  "url": "https://history.fas.harvard.edu/resource/97dwhatisenvironmentalhistory2017pdf",
+  "status": 200,
+  "xml_lastmod": "2016-11-29T19:34:23+00:00",
+  "card_date": "2016-11-29",
+  "size": "338.06 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "history.fas.harvard.edu",
+  "url": "https://history.fas.harvard.edu/resource/swarthmoreundergraduatehistoryjournal-callforsubmissionsfall2021pdf",
+  "status": 200,
+  "xml_lastmod": "2021-10-04T17:08:52+00:00",
+  "card_date": "2021-10-04",
+  "size": "29.25 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "history.fas.harvard.edu",
+  "url": "https://history.fas.harvard.edu/resource/global-american-studies-poster",
+  "status": 200,
+  "xml_lastmod": "2024-11-14T10:22:57+00:00",
+  "card_date": "2014-12-05",
+  "size": "432.94 KB",
+  "format": "PDF",
+  "match_utc_date": false,
+  "match_et_date": false
+ },
+ {
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/resource/fallscheduletopostpdf-1",
+  "status": 200,
+  "xml_lastmod": "2024-06-27T12:04:38+00:00",
+  "card_date": "2013-08-19",
+  "size": "311.33 KB",
+  "format": "PDF",
+  "match_utc_date": false,
+  "match_et_date": false
+ },
+ {
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/resource/spring2020pdf-6",
+  "status": 200,
+  "xml_lastmod": "2019-10-23T01:58:53+00:00",
+  "card_date": "2019-10-23",
+  "size": "88.45 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": false
+ },
+ {
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/resource/fallscheduletopostpdf-15",
+  "status": 200,
+  "xml_lastmod": "2024-06-27T12:04:38+00:00",
+  "card_date": "2013-09-24",
+  "size": "313.61 KB",
+  "format": "PDF",
+  "match_utc_date": false,
+  "match_et_date": false
+ },
+ {
+  "host": "sociology.fas.harvard.edu",
+  "url": "https://sociology.fas.harvard.edu/resource/statementofintentpdf-9",
+  "status": 200,
+  "xml_lastmod": "2017-10-03T15:22:43+00:00",
+  "card_date": "2017-10-03",
+  "size": "279.97 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/resource/2021-01-25-xiaoxing-xi-chat-transcriptpdf",
+  "status": 200,
+  "xml_lastmod": "2021-02-08T14:47:13+00:00",
+  "card_date": "2021-02-08",
+  "size": "169.78 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/resource/cwm-programing-guide",
+  "status": 200,
+  "xml_lastmod": "2019-11-10T17:16:53+00:00",
+  "card_date": "2019-11-10",
+  "size": "13.37 MB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/resource/sol38pdf",
+  "status": 200,
+  "xml_lastmod": "2020-05-15T16:28:03+00:00",
+  "card_date": "2020-05-15",
+  "size": "82.04 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.physics.harvard.edu",
+  "url": "https://www.physics.harvard.edu/resource/prob63pdf",
+  "status": 200,
+  "xml_lastmod": "2020-05-15T16:20:53+00:00",
+  "card_date": "2020-05-15",
+  "size": "25.48 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "nelc.fas.harvard.edu",
+  "url": "https://nelc.fas.harvard.edu/resource/aiaflyerspdf",
+  "status": 200,
+  "xml_lastmod": "2024-11-15T09:00:29+00:00",
+  "card_date": "2014-09-09",
+  "size": "149.74 KB",
+  "format": "PDF",
+  "match_utc_date": false,
+  "match_et_date": false
+ },
+ {
+  "host": "nelc.fas.harvard.edu",
+  "url": "https://nelc.fas.harvard.edu/resource/postdoc-assyriology-deadline-7312015",
+  "status": 200,
+  "xml_lastmod": "2024-11-15T09:00:29+00:00",
+  "card_date": "2015-07-20",
+  "size": "44.13 KB",
+  "format": "PDF",
+  "match_utc_date": false,
+  "match_et_date": false
+ },
+ {
+  "host": "nelc.fas.harvard.edu",
+  "url": "https://nelc.fas.harvard.edu/resource/fellowshipsinassyriologyaug15pdf",
+  "status": 200,
+  "xml_lastmod": "2017-06-29T13:29:06+00:00",
+  "card_date": "2017-06-29",
+  "size": "43.19 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "nelc.fas.harvard.edu",
+  "url": "https://nelc.fas.harvard.edu/resource/uirarabiclangaugesummerprogrammay19pdf",
+  "status": 200,
+  "xml_lastmod": "2017-04-17T13:59:53+00:00",
+  "card_date": "2017-04-17",
+  "size": "72.52 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.chemistry.harvard.edu",
+  "url": "https://www.chemistry.harvard.edu/resource/websiteorientationcalendar2018pdf",
+  "status": 200,
+  "xml_lastmod": "2018-07-12T19:45:00+00:00",
+  "card_date": "2018-07-12",
+  "size": "67.85 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.chemistry.harvard.edu",
+  "url": "https://www.chemistry.harvard.edu/resource/20211102fordyceabstractdocx",
+  "status": 200,
+  "xml_lastmod": "2021-10-28T17:00:31+00:00",
+  "card_date": "2021-10-28",
+  "size": "12.98 KB",
+  "format": "DOCX",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.chemistry.harvard.edu",
+  "url": "https://www.chemistry.harvard.edu/resource/umnadpdf",
+  "status": 200,
+  "xml_lastmod": "2018-09-10T19:09:46+00:00",
+  "card_date": "2018-09-10",
+  "size": "101.69 KB",
+  "format": "PDF",
+  "match_utc_date": true,
+  "match_et_date": true
+ },
+ {
+  "host": "www.chemistry.harvard.edu",
+  "url": "https://www.chemistry.harvard.edu/resource/img8134jpeg",
+  "status": 200,
+  "xml_lastmod": "2024-02-12T18:42:13+00:00",
+  "card_date": null,
+  "size": null,
+  "format": null,
+  "match_utc_date": false,
+  "match_et_date": false
+ }
+]

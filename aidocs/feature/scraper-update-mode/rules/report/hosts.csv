@@ -1,0 +1,88 @@
+host,kind,sitemap,sitemap_urls,note,blocked,backfill,departures,in_scope_resource_pages,first_run_new_resource_pages,in_scope,changed_30d,out_of_scope,lastmod_cov,in_scope_event_feeds,removal_blocked,changed_7d,in_scope_event_pages,skip,no_lastmod,first_run_changed,first_run_new,manifest_baseline,first_run_if_proposed_adopted
+aaas.fas.harvard.edu,subpath,ok,1402,,,489,4,119,0,1402,9,0,1.0,0,,1,311,902,0,8,3,2026-07-22,11
+academicresourcecenter.harvard.edu,root,ok,117,,,62,4,0,0,117,0,0,0.915,0,,0,0,41,6,3,5,2026-07-22,8
+advising.college.harvard.edu,root,ok,253,,,146,5,0,0,253,3,0,0.933,0,,0,0,64,10,15,18,2026-07-22,33
+afvs.fas.harvard.edu,subpath,ok,805,,,351,16,90,1,805,20,0,1.0,0,,3,188,409,0,26,18,2026-07-22,45
+anthropology.fas.harvard.edu,subpath,ok,832,,,123,4,97,0,832,16,0,1.0,0,,8,169,684,0,20,5,2026-07-22,25
+archaeology.harvard.edu,scoped,ok,521,,,0,0,0,0,1,0,520,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+astronomy.fas.harvard.edu,subpath,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+careerservices.fas.harvard.edu,root,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+celtic.fas.harvard.edu,scoped,ok,178,,,0,0,0,0,1,0,177,1.0,0,,0,0,0,0,0,0,,0
+ces.fas.harvard.edu,scoped,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+classics.fas.harvard.edu,subpath,ok,577,,,227,2,49,4,577,21,0,1.0,0,,5,0,302,0,18,26,2026-07-22,48
+college.harvard.edu,scoped,ok,2495,,,0,0,0,0,1,0,2494,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+collegehousing.fas.harvard.edu,root,ok,57,,,6,1,0,0,57,3,0,0.93,0,,1,0,30,4,14,3,2026-07-22,17
+complit.fas.harvard.edu,subpath,ok,865,,,289,17,0,0,848,77,17,0.869,0,,10,0,282,0,71,206,2026-07-22,268
+courses.my.harvard.edu,scoped,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+csadvising.seas.harvard.edu,subpath,ok,38,,,0,0,0,0,38,0,0,0.0,0,,0,0,0,0,0,38,2026-07-22,38
+dao.fas.harvard.edu,root,ok,50,,,13,1,0,0,50,4,0,0.92,0,,3,0,25,1,7,4,2026-07-22,11
+daviscenter.fas.harvard.edu,scoped,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+dso.college.harvard.edu,root,ok,808,,,252,35,139,0,808,33,0,1.0,0,,8,0,484,0,39,33,2026-07-22,72
+eas.fas.harvard.edu,subpath,ok,94,,,42,1,9,2,94,20,0,1.0,0,,3,9,25,0,24,1,2026-07-22,27
+edsecondary.fas.harvard.edu,root,ok,390,,,197,1,63,0,390,14,0,1.0,0,,1,1,171,0,8,14,2026-07-22,22
+emr.fas.harvard.edu,scoped,ok,176,,,0,0,0,0,1,1,175,0.778,0,,1,0,0,0,0,0,2026-07-22,0
+engagedscholarship.fas.harvard.edu,root,ok,87,,,19,0,0,0,77,0,10,0.816,0,,0,0,50,5,1,2,2026-07-22,3
+english.fas.harvard.edu,subpath,ok,1643,,,423,7,390,0,1643,40,0,1.0,0,,16,125,1151,0,53,16,2026-07-22,69
+eps.harvard.edu,subpath,ok,1012,,,680,12,0,0,1006,34,6,1.0,0,,8,0,237,0,34,55,2026-07-22,68
+espp.fas.harvard.edu,subpath,ok,458,,,172,3,75,1,458,11,0,1.0,0,,7,202,265,0,13,7,2026-07-22,21
+firstyear.college.harvard.edu,root,none/unreadable,0,no snapshot (new hostname),,,,,,,,,,,,,,,,,,,
+firstyearseminarprogram.college.harvard.edu,root,ok,137,,,19,5,0,0,137,9,0,0.971,0,,2,0,4,1,7,106,2026-07-22,113
+folkmyth.fas.harvard.edu,subpath,ok,151,,,34,0,2,0,151,0,0,1.0,0,,0,22,117,0,0,0,2026-07-22,0
+gened.college.harvard.edu,root,ok,406,,,136,6,0,0,406,30,0,0.988,0,,15,0,210,5,18,37,2026-07-22,55
+german.fas.harvard.edu,subpath,ok,443,,,71,0,38,1,443,13,0,1.0,0,,2,128,354,0,7,10,2026-07-22,14
+ghhp.fas.harvard.edu,scoped,ok,477,,,0,0,0,0,1,0,476,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+haa.fas.harvard.edu,scoped,ok,2814,,,0,0,0,0,1,0,2813,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+handbook.college.harvard.edu,include,ok,3,,,0,0,0,0,1,0,2,1.0,0,,0,0,0,0,1,0,2026-07-22,1
+heb.fas.harvard.edu,subpath,ok,456,,,108,13,40,0,456,54,0,1.0,0,,0,159,274,0,34,40,2026-07-22,70
+histlit.fas.harvard.edu,root,ok,832,,,317,1,229,0,832,20,0,1.0,0,,5,34,475,0,36,4,2026-07-22,40
+history.fas.harvard.edu,subpath,ok,5790,,,1195,25,1117,0,5790,54,0,1.0,0,,6,3810,4514,0,31,50,2026-07-22,54
+histsci.fas.harvard.edu,scoped,ok,887,,,0,0,0,0,1,0,886,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+hscrb.harvard.edu,subpath,ok,5022,,,1981,1,0,0,5004,23,18,1.0,0,,0,0,2946,0,25,52,2026-07-22,77
+incomingstudents.college.harvard.edu,moved(old name),ok,30,,sitemap_foreign_host,,,,,,,,1.0,,,,,,,,,,
+iop.harvard.edu,scoped,ok,7016,,,0,0,0,0,1,0,7015,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+language.fas.harvard.edu,scoped,ok,28,,,0,0,0,0,1,1,27,1.0,0,,0,0,0,0,0,0,2026-07-23,0
+library.harvard.edu,scoped,ok,258,,,0,0,0,0,0,0,258,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+linguistics.fas.harvard.edu,subpath,ok,1863,,,418,11,418,5,1863,25,0,1.0,0,,7,821,1381,0,22,37,2026-07-22,43
+lpce.college.harvard.edu,root,ok,133,,,36,7,0,0,133,87,0,1.0,0,,53,0,10,0,34,53,2026-07-22,87
+mbb.harvard.edu,scoped,ok,830,,,0,0,0,0,1,0,829,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+medieval.fas.harvard.edu,scoped,ok,1557,,,0,0,0,0,2,0,1555,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+msi.harvard.edu,scoped,ok,109,,,0,0,0,0,1,0,108,1.0,0,,0,0,0,0,0,0,2026-07-22,0
+music.fas.harvard.edu,include,ok,480,,,0,0,0,0,10,2,470,1.0,0,,1,0,4,0,6,0,2026-07-23,6
+nelc.fas.harvard.edu,subpath,ok,1694,,,939,4,842,1,1694,20,0,1.0,0,,6,317,705,0,34,15,2026-07-22,44
+oaisc.fas.harvard.edu,moved(old name),ok,48,,sitemap_foreign_host,,,,,,,,0.958,,,,,,,,,,
+ofa.fas.harvard.edu,root,ok,755,,,170,0,191,3,755,44,0,1.0,0,departure_cap:616/1085,14,42,56,0,217,309,2026-07-22,513
+oie.fas.harvard.edu,moved(old name),ok,1182,,sitemap_foreign_host,,,,,,,,1.0,,,,,,,,,,
+oue.fas.harvard.edu,root,ok,186,,,66,34,0,0,185,28,1,0.952,0,,9,0,56,6,18,39,2026-07-22,57
+philosophy.fas.harvard.edu,subpath,ok,981,,,234,20,163,2,981,26,0,1.0,0,,7,338,689,0,28,28,2026-07-22,46
+placement.college.harvard.edu,root,ok,31,,,21,0,0,0,31,2,0,0.968,0,,0,0,5,0,3,2,2026-07-22,5
+publicservice.fas.harvard.edu,root,ok,939,,,787,0,163,0,939,17,0,1.0,0,,10,291,134,0,13,5,2026-07-22,18
+qrd.college.harvard.edu,root,ok,80,,,72,1,0,0,80,0,0,0.988,0,,0,0,7,1,0,0,2026-07-22,0
+registrar.fas.harvard.edu,root,ok,951,,,616,4,236,4,951,61,0,1.0,0,,23,63,202,0,31,98,2026-07-22,126
+rll.fas.harvard.edu,subpath,ok,456,,,74,3,11,0,456,10,0,1.0,0,,3,73,335,0,29,18,2026-07-22,46
+sas.fas.harvard.edu,subpath,ok,317,,,98,24,0,0,317,0,0,0.997,0,,0,0,121,0,7,91,2026-07-22,12
+scienceeducation.fas.harvard.edu,subpath,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+seas.harvard.edu,root,ok,5946,,,1588,154,0,0,5946,101,0,1.0,0,,10,1,3876,0,81,401,2026-07-22,482
+secretary.college.harvard.edu,root,none/unreadable,0,no snapshot (new hostname),,,,,,,,,,,,,,,,,,,
+seo.harvard.edu,root,ok,182,,,111,3,54,5,182,3,0,1.0,0,,0,2,41,0,23,2,2026-07-22,30
+sfsao.college.harvard.edu,root,none/unreadable,0,no snapshot (new hostname),,,,,,,,,,,,,,,,,,,
+slavic.fas.harvard.edu,subpath,ok,1085,,,167,1,95,0,1085,12,0,1.0,0,,1,470,878,0,32,8,2026-07-22,36
+socialstudies.fas.harvard.edu,subpath,ok,269,,,39,8,6,0,269,5,0,1.0,0,,3,24,174,0,43,13,2026-07-22,56
+sociology.fas.harvard.edu,subpath,ok,2246,,,812,15,731,0,2246,21,0,1.0,0,,4,513,1356,0,58,20,2026-07-22,77
+specialconcentrations.fas.harvard.edu,subpath,ok,183,,,74,2,38,0,183,7,0,1.0,0,,0,54,101,0,5,3,2026-07-22,8
+statistics.fas.harvard.edu,subpath,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+studyabroad.college.harvard.edu,root,none/unreadable,0,no snapshot (new hostname),,,,,,,,,,,,,,,,,,,
+studyofreligion.fas.harvard.edu,subpath,ok,251,,,149,1,0,0,247,5,4,0.924,0,,2,0,49,1,8,40,2026-07-22,48
+summerfunding.college.harvard.edu,moved(old name),ok,127,,sitemap_foreign_host,,,,,,,,1.0,,,,,,,,,,
+tdm.fas.harvard.edu,subpath,ok,1336,,,112,176,346,3,1336,14,0,1.0,0,,7,651,1121,0,35,65,2026-07-22,93
+undergrad.psychology.fas.harvard.edu,root,ok,1630,,,1522,148,1416,28,1630,10,0,1.0,0,,3,107,61,0,18,1,2026-07-22,47
+uraf.harvard.edu,root,ok,441,,,263,2,262,2,441,34,0,1.0,0,,6,0,120,0,50,6,2026-07-22,58
+wgs.fas.harvard.edu,subpath,ok,1043,,,97,5,61,1,1043,2,0,1.0,0,,0,371,928,0,7,10,2026-07-22,17
+writingcenter.fas.harvard.edu,root,ok,95,,,40,0,11,0,95,2,0,1.0,0,,1,0,40,0,13,2,2026-07-22,15
+writingprogram.college.harvard.edu,root,ok,97,,,21,12,0,0,97,12,0,0.969,0,,3,0,48,0,14,14,2026-07-22,28
+www.chemistry.harvard.edu,subpath,ok,2895,,,556,8,528,8,2895,6,0,1.0,0,,3,1085,2281,0,29,21,2026-07-22,46
+www.economics.harvard.edu,subpath,ok,6235,,,774,4,785,0,6235,170,0,1.0,0,,39,4593,5006,0,158,297,2026-07-22,197
+www.gov.harvard.edu,subpath,ok,705,,,361,4,0,0,705,25,0,1.0,0,,5,0,297,0,30,17,2026-07-23,45
+www.hio.harvard.edu,root,ok,244,,,0,0,2,2,244,38,0,1.0,0,,5,32,0,0,0,242,,212
+www.math.harvard.edu,include,none/unreadable,0,unreadable,,,,,,,,,,,,,,,,,,,
+www.mcb.harvard.edu,scoped,ok,7326,,,154,1,1,0,182,7,7144,1.0,0,,3,0,14,0,9,5,2026-07-22,14
+www.physics.harvard.edu,subpath,ok,848,,,482,5,396,7,848,18,0,1.0,0,,8,40,323,0,24,12,2026-07-22,43

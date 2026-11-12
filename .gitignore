@@ -6,3 +6,9 @@ data/
 .DS_Store
 uv.lock
 log.txt
+
+# Cadence tooling runtime scratch (S3-pulled manifests, regenerable)
+aidocs/feature/scraper-update-mode/evidence/cadence-analysis/manifest-cache/
+
+# Regenerable cadence output: rebuild with analyze_cadence.py --stage fetch (about 14 MB, 91k URLs)
+aidocs/feature/scraper-update-mode/evidence/cadence-analysis/sitemap_urls.json

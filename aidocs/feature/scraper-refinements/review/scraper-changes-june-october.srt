@@ -1,0 +1,547 @@
+1
+00:00:00,000 --> 00:00:07,010
+This walkthrough covers the scraper changes between the June crawl and the October refresh.
+
+2
+00:00:07,010 --> 00:00:15,176
+The goal is for you to understand what the code does and to check that the evidence supports each change.
+
+3
+00:00:15,176 --> 00:00:16,640
+Two repos changed.
+
+4
+00:00:16,640 --> 00:00:23,342
+In scrape-website the scraper went from b4fb6ac, which the June crawl ran, to ffe35d6.
+
+5
+00:00:23,342 --> 00:00:29,890
+In apo-mcp-server, the run settings went from the June code to release candidate 14.
+
+6
+00:00:29,890 --> 00:00:36,900
+Every code panel in this deck is copied from git at those commits, with real line numbers.
+
+7
+00:00:37,000 --> 00:00:44,258
+The purpose of every change in this deck is the same: students’ answers should come from current, relevant pages.
+
+8
+00:00:44,258 --> 00:00:46,634
+The scraper serves that in two ways.
+
+9
+00:00:46,634 --> 00:00:54,791
+Less junk: fetch and keep only real pages, so error pages, duplicates, search results and past seminars never reach an answer.
+
+10
+00:00:54,791 --> 00:01:00,444
+Faster: a full refresh in hours instead of days, so the content can be refreshed often.
+
+11
+00:01:00,444 --> 00:01:10,206
+And one guardrail: every filter could drop a real page and every speed-up could get us blocked, so the deck also shows that nothing important was lost.
+
+12
+00:01:10,206 --> 00:01:15,088
+What we ask of you is to read what each change does and check the evidence.
+
+13
+00:01:15,088 --> 00:01:22,410
+Every change slide has four parts: what we saw, what changed, the code before and after, and what the run showed.
+
+14
+00:01:22,510 --> 00:01:24,005
+Here is the baseline.
+
+15
+00:01:24,005 --> 00:01:31,195
+The June 27 prod run reached only 30 of 81 sites; the other 51 refused it on the very first request.
+
+16
+00:01:31,195 --> 00:01:45,931
+So the 23 largest sites were crawled from a laptop, one request at a time, from early June 27 to early June 29, about two days, restarted by hand four or five times because each site hit a two-hour timeout.
+
+17
+00:01:45,931 --> 00:01:51,341
+What prod held afterwards, 156 thousand rows, was about sixty percent junk.
+
+18
+00:01:51,341 --> 00:02:03,230
+In October, the same prod setup reached 90 of 91 sites during the refresh, in about nine hours, and the only miss, math, is blocked by Cloudflare and was run locally.
+
+19
+00:02:03,330 --> 00:02:05,413
+Site by site, the same story.
+
+20
+00:02:05,413 --> 00:02:11,376
+History took over 36 hours in June, start to finish, and visited 28 thousand URLs.
+
+21
+00:02:11,376 --> 00:02:16,333
+In October it took 26 minutes and saved about 2,600 pages and files.
+
+22
+00:02:16,333 --> 00:02:27,252
+Economics went from over 26 hours to 39 minutes; chemistry from nineteen and a half hours to 25 minutes; seas from nine and a half hours to 50 minutes.
+
+23
+00:02:27,252 --> 00:02:37,310
+The June times include the gaps between restarts, so they overstate active crawling, but they are the real time it took to get the content.
+
+24
+00:02:37,310 --> 00:02:38,962
+Two things drive this.
+
+25
+00:02:38,962 --> 00:02:41,979
+Fewer URLs is the junk work in section A.
+
+26
+00:02:41,979 --> 00:02:48,660
+Minutes instead of hours comes from less to fetch, plus more requests at once, in section B.
+
+27
+00:02:48,760 --> 00:02:52,015
+Before the detail, the shape of the change.
+
+28
+00:02:52,015 --> 00:03:04,353
+In scrape-website there are no new source files: every change is in one file, scraper dot py, which grew from about 1,100 lines in June to about 1,900 in October.
+
+29
+00:03:04,353 --> 00:03:08,062
+Some of that arrived in July, in prod version 1.
+
+30
+00:03:08,062 --> 00:03:08,214
+0.
+
+31
+00:03:08,214 --> 00:03:14,345
+1: the fetch tiers that retry as Chrome and as a real browser, and retry backoff.
+
+32
+00:03:14,345 --> 00:03:18,205
+Everything else in this deck is the October round.
+
+33
+00:03:18,205 --> 00:03:20,476
+There are ten new test files.
+
+34
+00:03:20,476 --> 00:03:26,456
+In apo-mcp-server, five existing files were edited, with three new test files.
+
+35
+00:03:26,456 --> 00:03:32,890
+The same release also carries course-catalog work, which is not part of this review.
+
+36
+00:03:32,990 --> 00:03:36,402
+Before the code, a picture of what a crawl does.
+
+37
+00:03:36,402 --> 00:03:41,306
+In June, each site had one starting page, the url in sites dot toml.
+
+38
+00:03:41,306 --> 00:03:44,576
+For classics that was the undergraduate page.
+
+39
+00:03:44,576 --> 00:03:55,237
+The crawler opened it, collected its links, queued them in state dot db with the page they were found on, and went down the page, one link at a time.
+
+40
+00:03:55,237 --> 00:04:04,335
+That is how it reached junk: search result pages, the same page again over http, and six citation-export files per publication.
+
+41
+00:04:04,335 --> 00:04:07,889
+And a page that nothing links to was never found.
+
+42
+00:04:07,889 --> 00:04:13,504
+Classics took eight hours fifteen minutes and visited over four thousand URLs.
+
+43
+00:04:13,504 --> 00:04:21,820
+In October, the crawler starts from the site’s own list, its sitemap: 577 pages, each with the date it last changed.
+
+44
+00:04:21,820 --> 00:04:29,425
+The exclude rules run on that list before anything is fetched, and all 577 go into the queue at the start.
+
+45
+00:04:29,425 --> 00:04:31,274
+Links are still followed.
+
+46
+00:04:31,274 --> 00:04:36,320
+Classics took 21 minutes, one request at a time, and visited 673 URLs.
+
+47
+00:04:36,420 --> 00:04:38,143
+Here is the code for that.
+
+48
+00:04:38,143 --> 00:04:43,112
+In June, scrape dot py passed use sitemap false, and no site turned it on.
+
+49
+00:04:43,112 --> 00:04:54,441
+The old discovery used a plain client, tried two fixed addresses, and on any failure returned an empty list, so a site that refused it looked like a site with no sitemap.
+
+50
+00:04:54,441 --> 00:04:56,561
+In October the default is true.
+
+51
+00:04:56,561 --> 00:05:02,126
+Discovery reads robots dot txt first, and fetches through the same tiers as a page.
+
+52
+00:05:02,126 --> 00:05:09,414
+Every entry is seeded or counted under a reason, like dropped excluded, and one log line per site reports it.
+
+53
+00:05:09,414 --> 00:05:22,400
+Across the October run: fifty-four thousand seeds from eighty-nine thousand sitemap entries on seventy-eight sites, and seventeen and a half thousand junk addresses dropped before a single fetch.
+
+54
+00:05:22,500 --> 00:05:24,965
+Some responses are not pages at all.
+
+55
+00:05:24,965 --> 00:05:31,677
+In a test run, classics fetched almost 2,500 pages, and nearly 1,900 of them were page not found.
+
+56
+00:05:31,677 --> 00:05:41,881
+Its links pages redirect to other websites, and the scraper read those sites’ links as if they were classics pages, inventing hundreds of addresses.
+
+57
+00:05:41,881 --> 00:05:48,181
+In June, process url saved whatever came back, as long as it was not an access-denied page.
+
+58
+00:05:48,181 --> 00:05:58,523
+Now there are three checks after the fetch: did the redirect leave the site, did the server send an image, video or audio, and is the status an error.
+
+59
+00:05:58,523 --> 00:06:00,988
+None of those is saved or followed.
+
+60
+00:06:00,988 --> 00:06:09,480
+Classics dropped from 65 minutes to 21, and across the refresh almost six thousand off-site and error pages were not saved.
+
+61
+00:06:09,580 --> 00:06:13,709
+The exclude rules are a list of URL patterns the crawler skips.
+
+62
+00:06:13,709 --> 00:06:18,232
+In June the list had eight blog patterns, like tag and author pages.
+
+63
+00:06:18,232 --> 00:06:20,854
+Measurements showed what else was junk.
+
+64
+00:06:20,854 --> 00:06:28,391
+On chemistry, filter links, one per combination of directory filters, were about 2,300 of the first 5,300 fetches.
+
+65
+00:06:28,391 --> 00:06:34,028
+Publication pages offered six citation-export formats each, which ingest never reads.
+
+66
+00:06:34,028 --> 00:06:37,567
+Search pages and calendar files are not pages either.
+
+67
+00:06:37,567 --> 00:06:44,581
+Each new pattern carries a comment with the measurement behind it, so you can check the reason, not guess.
+
+68
+00:06:44,581 --> 00:06:55,330
+The rules apply both when links are found and when the sitemap is read, and in October they dropped seventeen and a half thousand sitemap entries before any fetch.
+
+69
+00:06:55,430 --> 00:06:58,633
+Event pages were the biggest single kind of junk.
+
+70
+00:06:58,633 --> 00:07:09,813
+Seventy-four percent of the economics sitemap was one page per past seminar, going back years, and a student asking what is coming up could get an answer from an old one.
+
+71
+00:07:09,813 --> 00:07:12,428
+In June there was no event rule at all.
+
+72
+00:07:12,428 --> 00:07:25,568
+Now event pages are excluded by default, with three exceptions: deadline pages, four student-facing sites whose event pages are all this year, and any event the sitemap dates on or after June 1, 2026.
+
+73
+00:07:25,568 --> 00:07:29,687
+That date lives in scrape dot py and needs moving each summer.
+
+74
+00:07:29,687 --> 00:07:34,525
+The keep list came from Splunk: which event pages answers actually cited.
+
+75
+00:07:34,525 --> 00:07:42,370
+Economics went from over six thousand sitemap entries to under two thousand seeds, and 270 of those are current events.
+
+76
+00:07:42,470 --> 00:07:43,884
+Junk also means stale.
+
+77
+00:07:43,884 --> 00:07:50,507
+Pages deleted from department sites since June were still in the knowledge base, still marked current.
+
+78
+00:07:50,507 --> 00:07:56,036
+After a fresh scrape, every stored page the new crawl did not find is marked removed.
+
+79
+00:07:56,036 --> 00:08:03,494
+In June that took two gateway calls per page: read the file’s attributes, then write them back with the new status.
+
+80
+00:08:03,494 --> 00:08:12,817
+Measured in dev, an update replaces the whole attribute set, so the fast path rebuilds every attribute from the Postgres row and sends one call.
+
+81
+00:08:12,817 --> 00:08:23,425
+During the refresh, 92 thousand rows were retired with no failures; economics later had two failures out of 23 thousand, on June files that never finished indexing.
+
+82
+00:08:23,425 --> 00:08:27,540
+Career services’ June event pages now come back marked removed.
+
+83
+00:08:27,640 --> 00:08:28,332
+Now speed.
+
+84
+00:08:28,332 --> 00:08:36,982
+In June, seas was crawled one request at a time, about 40 pages a minute, and its scrape was estimated at almost five hours.
+
+85
+00:08:36,982 --> 00:08:45,564
+The number of requests at once came only from sites dot toml, so changing it meant a code change and a new container image.
+
+86
+00:08:45,564 --> 00:08:55,321
+Now scrape and ingest takes a concurrency flag and a delay flag, passes them to scrape dot py, and scrape dot py prefers them over the file.
+
+87
+00:08:55,321 --> 00:09:02,241
+Measured on seas: about 40 pages a minute at one, 97 at two, and 187 at three, with nothing denied.
+
+88
+00:09:02,241 --> 00:09:07,570
+The full seas scrape took 50 minutes; in June it took nine and a half hours.
+
+89
+00:09:07,670 --> 00:09:14,544
+Not all of the speed came from code, and you should know that so you do not look for it in the scraper.
+
+90
+00:09:14,544 --> 00:09:23,888
+When eight sites ran together in one task, raising the requests per site did nothing: each site still managed only 20 to 75 pages a minute.
+
+91
+00:09:23,888 --> 00:09:26,691
+The task’s two CPUs were completely busy.
+
+92
+00:09:26,691 --> 00:09:31,163
+So the run gave each task four CPUs and sixteen gigabytes instead.
+
+93
+00:09:31,163 --> 00:09:42,242
+Combined throughput went up three to four times: task C went from about 280 pages a minute to over 1,200, and individual sites then finished in five to nine minutes.
+
+94
+00:09:42,242 --> 00:09:46,180
+This is a run setting, recorded in the run order document.
+
+95
+00:09:46,280 --> 00:09:49,146
+Going faster has a risk: sites push back.
+
+96
+00:09:49,146 --> 00:09:57,255
+The sixteen College WordPress sites limit how many requests one client can make, and answer 429, too many requests.
+
+97
+00:09:57,255 --> 00:10:07,041
+Every fetch method got that answer, even a real browser, and the page was counted as lost: ten to forty-five percent of those sites’ pages.
+
+98
+00:10:07,041 --> 00:10:11,026
+In June, fetch with retry had no answer for this at all.
+
+99
+00:10:11,026 --> 00:10:16,338
+Now, when every tier says 429, the scraper reads it as a rate, not a block.
+
+100
+00:10:16,338 --> 00:10:25,565
+It pauses that whole site for fifteen seconds, then thirty, then sixty, retrying after each, and only then counts the page as lost.
+
+101
+00:10:25,565 --> 00:10:29,480
+The WordPress group then lost zero pages on every site.
+
+102
+00:10:29,580 --> 00:10:33,519
+The fetch tiers sit behind both of the last two slides.
+
+103
+00:10:33,519 --> 00:10:41,613
+Sites behind Akamai refuse a plain client, and in June, prod was refused by 51 of 81 sites on its first request.
+
+104
+00:10:41,613 --> 00:10:49,706
+The June report put that down to the network address; in October the same prod network reached all but one site.
+
+105
+00:10:49,706 --> 00:10:53,932
+In June the scraper had one way to fetch: a plain request.
+
+106
+00:10:53,932 --> 00:10:55,723
+In July, prod version 1.
+
+107
+00:10:55,723 --> 00:10:55,866
+0.
+
+108
+00:10:55,866 --> 00:11:00,808
+1 added tiers: on a 403 it retries as Chrome, then as a real browser.
+
+109
+00:11:00,808 --> 00:11:12,411
+October adds one rule: after five refusals in a row, start with the Chrome tier for the rest of that site, which skips a request we already know will be refused.
+
+110
+00:11:12,411 --> 00:11:16,780
+That rule has no separate measurement, and we should say so.
+
+111
+00:11:16,880 --> 00:11:23,761
+The last speed piece is a procedure, not code, and reviewers will otherwise look for it in the scraper.
+
+112
+00:11:23,761 --> 00:11:29,105
+Sites run in groups by hosting platform, each group with settings that suit it.
+
+113
+00:11:29,105 --> 00:11:32,311
+The four largest sites each get their own task.
+
+114
+00:11:32,311 --> 00:11:37,989
+The Akamai Drupal sites run eight to a task at five to seven requests, on four CPUs.
+
+115
+00:11:37,989 --> 00:11:39,593
+Pantheon runs at three.
+
+116
+00:11:39,593 --> 00:11:45,605
+The WordPress sites run three at a time, one request each, because they limit per client.
+
+117
+00:11:45,605 --> 00:11:52,753
+Two rules hold it together: no site is in two groups, and upload workers across all tasks stay near sixty.
+
+118
+00:11:52,753 --> 00:11:56,961
+At about 120, the gateway refused about five thousand uploads.
+
+119
+00:11:56,961 --> 00:11:59,700
+The procedure lives in RUN ORDER dot md.
+
+120
+00:11:59,800 --> 00:12:00,794
+The guardrail.
+
+121
+00:12:00,794 --> 00:12:07,821
+Every filter can drop a real page, and every speed-up can get us blocked, so did we lose anything?
+
+122
+00:12:07,821 --> 00:12:17,120
+Out of 79 thousand URLs visited during the refresh, 267 were denied, and most of those are unpublished pages that refuse everyone.
+
+123
+00:12:17,120 --> 00:12:24,076
+Every site with a sitemap logs one line that accounts for every entry, seeded or dropped and why.
+
+124
+00:12:24,076 --> 00:12:28,406
+The WordPress sites lost no pages once the 429 pause was in.
+
+125
+00:12:28,406 --> 00:12:33,659
+There are known gaps, and showing them is what makes the rest believable.
+
+126
+00:12:33,659 --> 00:12:37,918
+Math is blocked by Cloudflare from AWS and was run locally.
+
+127
+00:12:37,918 --> 00:12:44,448
+282 PowerPoint and old Word files could not be converted, which release candidate 13 fixes.
+
+128
+00:12:44,448 --> 00:12:50,340
+And 5,367 uploads refused by the overloaded gateway were sent in a follow-up pass.
+
+129
+00:12:50,440 --> 00:13:05,252
+Each behavior in sections A and B has tests that pin it: the 429 pause, the sticky Chrome tier, the browser cap, off-site and error pages, media, the exclude rules with the event keep list, and sitemap discovery.
+
+130
+00:13:05,252 --> 00:13:12,938
+All 80 scraper tests pass at the October commit, and the 34 orchestration tests pass at release candidate 14.
+
+131
+00:13:12,938 --> 00:13:22,580
+What the tests do not cover is live sites and real speed: they use simulated fetches, so the run figures are the only evidence for those.
+
+132
+00:13:22,680 --> 00:13:26,429
+Four things a reviewer should know before approving.
+
+133
+00:13:26,429 --> 00:13:31,115
+First, prod runs code from a pull request that is still a draft.
+
+134
+00:13:31,115 --> 00:13:36,234
+Second, the June 1 event cutoff needs an owner to move it each summer.
+
+135
+00:13:36,234 --> 00:13:50,725
+Third, the 429 pause applies to one site, but the WordPress platform counts requests per client address, so sites sharing a task do not share the pause; today the run recipe protects us, not the code.
+
+136
+00:13:50,725 --> 00:13:58,439
+Fourth, a sitemap cut off at fifty thousand entries is logged but not flagged to the rest of the pipeline.
+
+137
+00:13:58,439 --> 00:14:02,620
+None of these blocks the changes; they are what to watch.

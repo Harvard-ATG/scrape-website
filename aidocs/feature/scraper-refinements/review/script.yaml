@@ -1,0 +1,291 @@
+# Generated from the deck's speaker notes by make_script.py. Edit the notes, then regenerate.
+# targets: name -> visible text on the slide (capture.mjs finds boxes by this text, never by pixels).
+# cue times are estimates at 150 words a minute; adjust after voicing.
+frames:
+  - frame: s1-cover
+    track: "Core"
+    narration: "This is the code walkthrough for the scraper refinements that went into the registration refresh. The high-level demo told the story; this one opens the code. Two repos changed. In scrape-website, the scraper moved from commit 37bce63, which prod ran in July, to 4b7befc, the head of pull request 10. In apo-mcp-server, the release tags v1.1.0 rc1 through rc14 carry the run settings and the scraper pin. Every slide names the file and line, pinned to those commits, so what you read is what ran."
+    targets:
+      title: "Scraper refinements,"
+      scraper: "37bce63 → ffe35d6"
+      server: "v1.0.1 → v1.1.0-rc14"
+    cues:
+      - {at: 0, target: title}
+      - {at: 14, target: scraper}
+      - {at: 24, target: server}
+      - {at: 32, target: none}
+  - frame: s2-use
+    track: "Core"
+    narration: "There are three tools, and they share one numbering. This deck says why each change exists. The code tour, in VS Code's CodeTour extension, is pinned to the same commits, and its step numbers match the slide numbers, so slide 7 and tour step 7 are the same code. The rehearsal guide has the timing for each length. For a fifteen-minute review, show only the slides with the red Core tag. For twenty-five, add the blue ones and open the tour on the rate-limit and concurrency slides. For forty, run the deck and the tour side by side."
+    targets:
+      deck: "This deck"
+      tour: "Code tour"
+      rehearsal: "Rehearsal guide"
+      short: "15 min"
+      long: "40 min"
+    cues:
+      - {at: 4, target: deck}
+      - {at: 9, target: tour}
+      - {at: 20, target: rehearsal}
+      - {at: 26, target: short}
+      - {at: 32, target: long}
+      - {at: 37, target: none}
+  - frame: s3-map
+    track: "Core"
+    narration: "Here is the map. On the left, apo-mcp-server launches a run: sites.toml holds per-site settings, scrape_and_ingest.py takes the run flags, and scrape.py builds one scraper per site. In the middle is the scraper itself, in scrape-website. The crawl loop seeds from the sitemap, process_url decides what counts as a page, fetch_with_retry handles rate limits, and _fetch_tiered escalates through three tiers. The default exclude list decides what is never fetched. On the right, the manifest hands off to ingest, which now retires stale rows in one call. The slide numbers on each box are where we read that code."
+    targets:
+      launch: "Launch · apo-mcp-server"
+      crawl: "Crawl · scrape-website"
+      ingest: "Ingest · apo-mcp-server"
+    cues:
+      - {at: 2, target: launch}
+      - {at: 12, target: crawl}
+      - {at: 30, target: ingest}
+      - {at: 37, target: none}
+  - frame: s4-revisions
+    track: "Core"
+    narration: "The revision history is the spine of this review. Over two days we cut fourteen release candidates. Every white row moved the scraper pin, and each one answers something prod showed us. rc1 kept this year's event pages. rc2 stopped saving off-host redirects and error pages, after classics produced almost nineteen hundred phantom pages. rc10 stopped treating images as pages. rc11 excluded facet URLs, which were most of chemistry's queue. rc12 is the rate-limit fix. The shaded rows changed only how we run the scraper: concurrency as a flag, faster retirement, and more upload workers. Read the commits in this order and each diff is small."
+    targets:
+      rc2: "rc2–4"
+      rc10: "rc10"
+      rc11: "rc11"
+      rc12: "rc12"
+      rc5: "rc5–7"
+    cues:
+      - {at: 10, target: rc2}
+      - {at: 20, target: rc10}
+      - {at: 24, target: rc11}
+      - {at: 28, target: rc12}
+      - {at: 33, target: rc5}
+      - {at: 40, target: none}
+  - frame: s5-tiers
+    track: "Core"
+    narration: "Fetching starts with three tiers. Tier 1 is a plain aiohttp request, and most pages stop there. On a 403 or 429, Tier 2 retries with curl_cffi, which presents Chrome's TLS fingerprint and takes about half a second. If that fails, Tier 3 opens a real headed browser with Playwright, about two seconds a page. Browsers are capped per container with a file lock, so eight parallel sites cannot launch eight browsers and run out of memory. Every tier returns the same four values, so the rest of the code never needs to know which tier served the page. This came from pull request 6; prod's July pin did not have it. One thing to discuss: when all browser slots are busy, Tier 3 is skipped and the page is counted denied."
+    targets:
+      t1: "Tier 1"
+      t2: "Tier 2"
+      t3: "Tier 3"
+      read: "What to read"
+      ask: "Ask the room"
+    cues:
+      - {at: 3, target: t1}
+      - {at: 8, target: t2}
+      - {at: 15, target: t3}
+      - {at: 30, target: read}
+      - {at: 45, target: ask}
+      - {at: 51, target: none}
+  - frame: s6-sticky
+    track: "25 min"
+    narration: "A refinement on top of the tiers. Each scraper counts consecutive Tier 1 blocks on its host. After five in a row, it sets a sticky flag, and from then on every fetch starts at Tier 2, with Tier 1 kept as the last resort. A single Tier 1 success resets the count. The reason is cost and noise: on Akamai hosts, every page used to start with a rejected request, and that stream of bot-looking requests is exactly what the wall watches for. Three tests pin it. The design question: once the flag is set, nothing clears it for the rest of the crawl. That suits a short crawl, but on a ten-thousand-page site we might want to test Tier 1 again now and then."
+    targets:
+      code: "self._tier1_blocks_in_a_row += 1"
+      why: "Why"
+      ask: "Ask the room"
+    cues:
+      - {at: 2, target: code}
+      - {at: 22, target: why}
+      - {at: 38, target: ask}
+      - {at: 48, target: none}
+  - frame: s7-ratelimit
+    track: "Core"
+    narration: "This is the change that mattered most for content. The 429 handling went through three revisions. First, a 429 escalated to Tier 2 after the normal retries. Then we escalated at once, because retrying the same fingerprint only fed the firewall. But on the College WordPress platform, every tier, even the real browser, got 429s, on ten to forty-five percent of pages. That is not a fingerprint problem. It is the request rate. So fetch_with_retry now checks the status after all tiers. On a 429 it sets a pause time for the whole host, waits fifteen seconds, retries, then thirty, then sixty. Only after that is the page counted denied. On rc12 the WordPress group lost zero pages. The open question: the pause belongs to one scraper, one host, but the platform counts requests per client address. Right now the run settings protect us. Should the code?"
+    targets:
+      history: "Three revisions"
+      code: "fetch_with_retry"
+      result: "WordPress sites: up to 45% denied → 0"
+      ask: "Ask the room:"
+    cues:
+      - {at: 5, target: history}
+      - {at: 28, target: code}
+      - {at: 46, target: result}
+      - {at: 50, target: ask}
+      - {at: 57, target: none}
+  - frame: s8-excludes
+    track: "Core"
+    narration: "Scope is where most of the cleanup came from. Every default exclude now has a comment with the measurement behind it. Media: seas image links were fetched as if they were pages. Facets: on chemistry, filter combinations were about twenty-three hundred of the first fifty-three hundred fetches. Bibcite exports: six citation formats for each publication, and ingest reads none of them. Calendar files and search results. And individual event pages, which were seventy-four percent of economics' sitemap. The patterns run at link extraction and at sitemap seeding, and a site can add its own in sites.toml. The risk to discuss is that a pattern that is too broad removes content without an error. The sitemap log does count exclusions. The question is who reads it."
+    targets:
+      media: "6fafc93"
+      facets: "9e963ed"
+      bibcite: "bec9247"
+      r7: "4ae59f9"
+      ask: "Ask the room:"
+    cues:
+      - {at: 8, target: media}
+      - {at: 14, target: facets}
+      - {at: 20, target: bibcite}
+      - {at: 28, target: r7}
+      - {at: 40, target: ask}
+      - {at: 48, target: none}
+  - frame: s9-r7
+    track: "25 min"
+    narration: "The event-page exclude is the best example of how these rules were settled: by evidence, one commit at a time. The first version excluded every one-page-per-event URL. Then we found registrar-style deadline pages under calendar_event that students do read, so those stayed. Then advising hosts whose event pages are this year's deadlines. Several hosts were tried and dropped, because their event pages turned out to be 2013 to 2020 calendars. The last change replaced guessing hosts with a date rule: a sitemap event page is kept if its lastmod is on or after event_keep_since, which apo-mcp-server sets to June 1, 2026. Two things to discuss. Only sitemap entries get the date check, so an event found by following a link stays excluded. And that date has to move forward every summer, so someone needs to own it."
+    targets:
+      history: "How the keep list settled"
+      code: "# crawl(), sitemap seeding (names shortened)"
+      ask: "Ask the room:"
+    cues:
+      - {at: 4, target: history}
+      - {at: 30, target: code}
+      - {at: 44, target: ask}
+      - {at: 52, target: none}
+  - frame: s10-sitemap
+    track: "25 min"
+    narration: "Sitemap seeding matters because it feeds both the crawl and the future weekly update. Discovery reads robots.txt first and only tries the usual sitemap paths if robots lists none. It fetches through the same tiers as pages; before that, Akamai hosts returned 403 to a plain client and we seeded nothing without noticing. It now returns each URL with its lastmod date, and the cap went up to fifty thousand, with a warning if it is hit. Most important for operations, every host now logs one line: how many entries were found, how many were seeded, and how many were dropped for each reason. Or that no sitemap was found. For discussion, there is a TODO in the code: discovery should report when the list was cut off, because the weekly update planner needs to tell a truncated sitemap from removed pages."
+    targets:
+      robots: "robots.txt"
+      tiers: "through the tiers"
+      lastmod: "(loc, lastmod)"
+      log: "scrape.log, one line per host"
+      ask: "Ask the room:"
+    cues:
+      - {at: 6, target: robots}
+      - {at: 12, target: tiers}
+      - {at: 20, target: lastmod}
+      - {at: 34, target: log}
+      - {at: 48, target: ask}
+      - {at: 55, target: none}
+  - frame: s11-notpages
+    track: "Core"
+    narration: "Before this change, the scraper saved anything that came back. process_url now has three gates. First, a redirect that leaves the host. That page is not this site's, and worse, resolving its relative links against our host invented URLs: classics produced eighteen hundred and ninety-eight phantom pages that way. Second, a response whose content type is image, video or audio, even when the URL looked like a page. Third, any status of 400 or more. A page-not-found is not content, and its links are only the site's menus. Each gate has its own counter, so the end-of-run stats show how many of each. For discussion: none of these are saved, so a fresh ingest retires the old row. That is right for sites that moved. Is it right when a page now redirects to a sister site we do not crawl?"
+    targets:
+      offsite: "Off-host redirect."
+      media: "Media by content type."
+      error: "Error page."
+      ask: "Ask the room:"
+    cues:
+      - {at: 8, target: offsite}
+      - {at: 26, target: media}
+      - {at: 32, target: error}
+      - {at: 46, target: ask}
+      - {at: 54, target: none}
+  - frame: s12-concurrency
+    track: "Core"
+    narration: "Concurrency is the number of requests in flight for one site. The scraper always supported it: one semaphore slot per request, and the crawl loop never starts more tasks than the limit. What changed is how we set it. It used to live in sites.toml, so rc5 and rc6 were image rebuilds just to move seas from one to two to three. rc7 added a concurrency flag to scrape_and_ingest.py, passed through to scrape.py, where it overrides sites.toml for every host in that task. Notice the delay sits inside the slot, so throughput is roughly concurrency divided by delay plus latency. On seas, one request at a time gave about two thousand pages an hour. Two gave ninety-seven a minute with nothing denied, and three about two hundred twenty a minute."
+    targets:
+      slot: "async with self.semaphore:"
+      flag: "--concurrency 3"
+      formula: "# pages per second, roughly:"
+      measured: "seas, measured"
+    cues:
+      - {at: 6, target: slot}
+      - {at: 16, target: flag}
+      - {at: 34, target: formula}
+      - {at: 40, target: measured}
+      - {at: 50, target: none}
+  - frame: s13-sets
+    track: "Core"
+    narration: "The second speed lever is scrape sets: separate ECS tasks, each with its own host list. Within one task, sites run in parallel, and each site has its own concurrency. We grouped hosts by the platform that serves them, because platforms behave differently. The four largest sites each get their own task, since any one of them can bound the whole run. The forty-four Akamai Drupal hosts run as three tasks at concurrency five to seven; they never rate-limited us, and on a bigger task the CPU was the only limit. Pantheon runs at three. WordPress, which limits per client address, runs three sites at a time at concurrency one. Two rules hold: a host is in exactly one list, and upload workers across all tasks stay near sixty, because about a hundred twenty drew hundreds of gateway rate limits in five minutes. For discussion: this lives in a run-order document, not in code."
+    targets:
+      big: "Four largest sites"
+      akamai: "Akamai Drupal, 44 hosts"
+      pantheon: "Pantheon, 9 hosts"
+      wordpress: "WordPress (openresty), 16 hosts"
+      rules: "Two hard rules"
+      ask: "Ask the room"
+    cues:
+      - {at: 10, target: big}
+      - {at: 22, target: akamai}
+      - {at: 30, target: pantheon}
+      - {at: 34, target: wordpress}
+      - {at: 42, target: rules}
+      - {at: 56, target: ask}
+      - {at: 60, target: none}
+  - frame: s14-retire
+    track: "25 min"
+    narration: "After a fresh crawl, ingest retires every row whose URL is no longer in the manifest. Before rc8, each retirement was two gateway calls, a retrieve and then an update, and seas had thousands of stale rows. The fast path sends one update. The subtle part is why it sends every attribute. We measured in dev that a vector store update replaces the whole attribute set: sending only source_status left a file with nothing else. So the function rebuilds the full set from the Postgres row, and derives content_type from the URL, because that is the one value the row does not store. This path runs only with --fresh; small incremental runs keep the safer two-call version. Two things for review: the attribute list is now written in two places, so a new attribute added to the upload would quietly be lost on retirement. And the loop is still serial."
+    targets:
+      code: "def _retire_file_fast(record):"
+      why: "Why every key is sent"
+      ask: "Ask the room:"
+    cues:
+      - {at: 8, target: code}
+      - {at: 22, target: why}
+      - {at: 48, target: ask}
+      - {at: 58, target: none}
+  - frame: s15-trace
+    track: "40 min"
+    narration: "Now one page, all the way through, using a WordPress page because it exercises the newest code. One: crawl seeds it from the sitemap, with its last-modified date. Two: the fetch gate checks that it has not been seen in this run and marks it visited. Three: process_url takes a concurrency slot and waits the delay. Four: Tier 1 gets a 429, then Tier 2, then the browser. fetch_with_retry sees a 429 from every tier, pauses the host for fifteen seconds, retries, and gets a 200. Five: the page is on the host, HTML, status 200, so it is parsed in the process pool. Six: the Markdown is saved and the row is stamped with this crawl generation. Seven: when the whole pass completes, the manifest is written. Eight: ingest uploads it if the content changed and retires anything the manifest no longer lists. Before rc12, step four ended at denied, and this page would have disappeared from prod."
+    targets:
+      s1: "crawl()"
+      s2: "_should_fetch"
+      s3: "process_url"
+      s4: "fetch_with_retry"
+      s5: "_parse_and_extract"
+      s6: "save_text"
+      s7: "run()"
+      s8: "ingest.py --fresh"
+      before: "Before rc12"
+    cues:
+      - {at: 5, target: s1}
+      - {at: 12, target: s2}
+      - {at: 16, target: s3}
+      - {at: 22, target: s4}
+      - {at: 34, target: s5}
+      - {at: 40, target: s6}
+      - {at: 46, target: s7}
+      - {at: 50, target: s8}
+      - {at: 58, target: before}
+      - {at: 62, target: none}
+  - frame: s16-tests
+    track: "40 min"
+    narration: "Each behavior we walked through has a test file. The rate-limit fix has three tests: a 429 is retried after the first backoff, successive 429s wait fifteen, thirty and sixty seconds and are then counted denied, and a 429 on one URL pauses the next fetch on the same host. Sticky Tier 2 has three, the browser cap fourteen, the not-a-page gates six, media two, default excludes eight, and sitemap discovery twelve. I ran them this morning: eighty scraper tests, a hundred ninety-eight rules tests with two skipped because no QA manifests are cached locally, and thirty-four orchestration tests at rc14. All pass. What the tests do not cover is live behavior: real sites, throughput at each concurrency, and the gateway's limits. Those numbers come from the prod runs on October 27 and 28."
+    targets:
+      rate: "test_rate_limit.py"
+      counts: "80 · 198 · 34"
+      gaps: "Not covered by tests"
+    cues:
+      - {at: 4, target: rate}
+      - {at: 30, target: counts}
+      - {at: 46, target: gaps}
+      - {at: 52, target: none}
+  - frame: s17-questions
+    track: "Core"
+    narration: "Here are the decisions we need, gathered from the Ask the room boxes. The biggest is the first: prod pins the head of pull request 10, which is still a draft against a feature branch, so the code in prod is not on main. Then the rate-limit questions: whether the pause should be shared across hosts on one platform, and whether a page that is still rate-limited after a hundred and five seconds should keep its old row instead of being retired. The scraper's own command line still defaults to a hundred requests in flight, which is fine for a test and rude to a real site. Then ownership of the event date, the sitemap cut-off flag the weekly update will need, one builder for vector store attributes, and whether the scrape sets belong in Terraform or a script instead of a document."
+    targets:
+      q1: "Q1"
+      q2: "Q2"
+      q3: "Q3"
+      q4: "Q4"
+      q5: "Q5"
+    cues:
+      - {at: 4, target: q1}
+      - {at: 14, target: q2}
+      - {at: 20, target: q3}
+      - {at: 28, target: q4}
+      - {at: 36, target: q5}
+      - {at: 55, target: none}
+  - frame: s18-notbuilt
+    track: "25 min"
+    narration: "What is not built. The next feature is the weekly update driven by sitemap dates. Its planner and the twenty rules behind it exist as reference code in aidocs, with a hundred ninety-eight tests, but nothing calls it from the scraper yet. When it is wired in, a weekly run fetches about three hundred forty changed pages instead of fifty-seven thousand. The two existing code tours cover that design. Schedules are sketched but not applied. From the refresh itself, a short list of known gaps: the math department site sits behind a Cloudflare challenge that no tier passes, about a hundred forty scanned PDFs have no text, one career services URL is too long for the vector store, three files need a hard delete, and the retirement loop is still serial."
+    targets:
+      next: "Next feature"
+      gaps: "Known gaps from the refresh"
+    cues:
+      - {at: 4, target: next}
+      - {at: 30, target: gaps}
+      - {at: 50, target: none}
+  - frame: s19-runit
+    track: "Core"
+    narration: "To read it yourself: check out ffe35d6, run the tests, and read the forty-seven commits in order. Each one is small, and each message says what prod showed. Then run the two code tours: scraper refinements first, then refresh orchestration in apo-mcp-server. If you only have ten minutes, start with the rate-limit fix, thirty-two lines and a seventy-four-line test, then the not-a-page gates. Leave comments on pull request 10, with the question number from the last slide, so we can close them one by one. Thank you."
+    targets:
+      commands: "git fetch origin && git checkout ffe35d6"
+      start: "Start with"
+      then: "Then"
+      comments: "Leave comments"
+    cues:
+      - {at: 2, target: commands}
+      - {at: 20, target: start}
+      - {at: 26, target: then}
+      - {at: 30, target: comments}
+      - {at: 33, target: none}
+    hold: 5
+# Respellings for the voice only (pronunciations.yaml in the reference pipeline). Captions keep the real text.
+pronunciations:
+  PR: "P-R"
+  CLI: "C-L-I"
+  vCPU: "V-C-P-U"
+  ECS: "E-C-S"
+  WAF: "waff"
+  TLS: "T-L-S"
+  lastmod: "last mod"
+  rc: "R-C"

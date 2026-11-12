@@ -1,0 +1,211 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "Scrape update mode (PR #10)",
+  "description": "Guided walk: cleaner full scrape, sitemap dates, incremental updates, moved sites, safe deletion. Reference code is not wired into the scraper.",
+  "steps": [
+    {
+      "title": "Start here: what this PR is",
+      "description": "**Point 0: read this first.** PR #10 stacks earlier scraper work and adds a taxonomy, rules R1 to R20, a tested reference implementation and a validation script under `aidocs/feature/scraper-update-mode/rules/`.\n\n**Important:** the reference code (`rules.py`) is *not wired into the scraper*. There is no `--update` flag yet. Anything proposed is labelled **proposed**.\n\nThe tour makes five points: (1) a full re-scrape is still needed and gets cleaner, (2) sitemap files give a map and only the XML one has dates, (3) intermediate updates fetch only what changed, (4) moved sites are recognized rather than mistaken for deletions, (5) deleting needs a fetch to agree.\n\nStatus tags: IN SCRAPER TODAY, REFERENCE CODE ONLY, TEST, OUTSIDE THIS PR.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)"
+    },
+    {
+      "title": "1. Default excludes (point 1) \u00b7 IN SCRAPER TODAY",
+      "description": "![Cleaner full scrape](./aidocs/feature/scraper-update-mode/rules/overview/tour/02-cleaner-full-scrape.png)\n\nPR #4 added `/search\\?` and `\\.ics$` to the default excludes. Why it matters: over the 143,477 pages saved in the July manifests, these two patterns plus URL canonicalization remove or merge 73,101 (50.9%): 23,896 search pages, 10,012 `.ics` feeds, 39,193 twin URLs.\n\nNotice: the two new patterns near the end of the list.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 84
+    },
+    {
+      "title": "2. Scope helpers (point 1) \u00b7 IN SCRAPER TODAY",
+      "description": "`_url_excluded` and `_url_within_path_prefix` (line 203) decide what is in scope. The new rules reuse them unchanged, so the reference code and the scraper cannot disagree about scope.\n\nNotice: the path-prefix check works on whole path segments.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 192
+    },
+    {
+      "title": "3. URL canonicalization (point 1) \u00b7 IN SCRAPER TODAY",
+      "description": "PR #4 rewrites `http` to `https` so one page is not crawled twice. Twin URLs (http/https, trailing slash) were 39,193 of the July pages.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 321
+    },
+    {
+      "title": "4. Link extraction order (point 1) \u00b7 IN SCRAPER TODAY",
+      "description": "![How a scrape works today](./aidocs/feature/scraper-update-mode/rules/overview/tour/01-today-flow.png)\n\nReturns a set, so crawl order is random. That is why the same settings once saved 45 to 136 pages on one site, and why a full re-scrape is still needed to catch pages a link-following crawl missed.\n\nNotice: the return type is a `set`.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 387
+    },
+    {
+      "title": "5. Sitemap discovery: URLs only (point 2) \u00b7 IN SCRAPER TODAY",
+      "description": "![Sitemap kinds](./aidocs/feature/scraper-update-mode/rules/overview/tour/03-sitemap-kinds.png)\n\nTiered sitemap discovery from PR #8. It returns URLs only, with no last-modified dates. That is the gap update mode fills: only the XML sitemap carries `<lastmod>`.\n\nNotice: the return value has no dates.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 228
+    },
+    {
+      "title": "6a. State database \u00b7 IN SCRAPER TODAY",
+      "description": "`URLStore` is the SQLite visited-URL tracker (unrelated to trafilatura's text dedup). PR #7 added `crawl_gen` and `last_fetched_at` columns.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 536
+    },
+    {
+      "title": "6b. `max_crawl_gen` \u00b7 IN SCRAPER TODAY",
+      "description": "Highest crawl generation recorded; the baseline for the next run.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 600
+    },
+    {
+      "title": "6c. `upsert_metadata` \u00b7 IN SCRAPER TODAY",
+      "description": "Records a saved page's metadata. A stored sitemap lastmod does not exist here yet; that is not built.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 621
+    },
+    {
+      "title": "6d. `export_manifest` \u00b7 IN SCRAPER TODAY",
+      "description": "Writes the per-host manifest that is the source for the 'stored' side of every comparison in the rules.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 638
+    },
+    {
+      "title": "7a. `_decide_crawl_gen` \u00b7 IN SCRAPER TODAY",
+      "description": "PR #7 seam: decides the generation number for this run (fresh, resuming, or next).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 342
+    },
+    {
+      "title": "7b. `_should_fetch` (point 3) \u00b7 IN SCRAPER TODAY",
+      "description": "![Proposed update flow](./aidocs/feature/scraper-update-mode/rules/overview/tour/04-update-flow.png)\n\nPR #7 seam. **This is where update mode would plug in**: instead of 'not visited yet', it would ask the plan whether the URL is new or changed.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 360
+    },
+    {
+      "title": "7c. `_should_write_manifest` \u00b7 IN SCRAPER TODAY",
+      "description": "PR #7 seam: only a complete, uncapped run writes a manifest. The deletion rules rely on that (R17).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 376
+    },
+    {
+      "title": "8a. `process_url` \u00b7 IN SCRAPER TODAY",
+      "description": "Fetch, extract, save one page. Sitemap seeding only happens when `use_sitemap` is on.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1323
+    },
+    {
+      "title": "8b. `crawl` \u00b7 IN SCRAPER TODAY",
+      "description": "The crawl loop.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1397
+    },
+    {
+      "title": "8c. `run` \u00b7 IN SCRAPER TODAY",
+      "description": "Entry point of a domain run.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "scrape_website/scraper.py",
+      "line": 1478
+    },
+    {
+      "title": "Part B: how the scraper is run \u00b7 OUTSIDE THIS PR",
+      "description": "![Deleting today and proposed](./aidocs/feature/scraper-update-mode/rules/overview/tour/07-deletion.png)\n\nLives in the sibling repo `apo-mcp-server` (not in this workspace; open it separately).\n\n- `scrape.py` lines 63 and 70: passes `use_sitemap` and `scope_to_path` from `sites.toml`; both default to False, so production crawls follow links only.\n- `scrape_and_ingest.py` about lines 258 to 330: *fresh* clears local data and re-crawls; normal pulls the last run from S3 and skips visited URLs.\n- `ingest.py`: `_ingest_hostname_locked` (line 290) builds the active set from files on disk; `deprecate_removed_urls` (line 71) retires every record for the host that is not in it, softly unless hard delete is on.\n\nThis is why deletion today means 'the crawl did not reach it'.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)"
+    },
+    {
+      "title": "9. Taxonomy (point 2) \u00b7 REFERENCE",
+      "description": "URL kinds, host classes and page states. Only the XML sitemap carries dates.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/RULES.md",
+      "line": 8
+    },
+    {
+      "title": "10. The rules table R1 to R20",
+      "description": "Each rule has an id, the code that implements it and the test that covers it. R6 and R7 are adopted policy but switched off in code until the scraper has them.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/RULES.md",
+      "line": 42
+    },
+    {
+      "title": "11a. `normalize_key` (R1) \u00b7 REFERENCE CODE ONLY",
+      "description": "R1: https, no trailing slash. Test: `test_rules_unit.py`.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 40
+    },
+    {
+      "title": "11b. `parse_lastmod` \u00b7 REFERENCE CODE ONLY",
+      "description": "Parses sitemap dates to UTC so the same instant in another offset is unchanged. Test: `test_same_instant_in_another_offset_is_unchanged` (test_plan.py line 36).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 47
+    },
+    {
+      "title": "11c. `url_kind` \u00b7 REFERENCE CODE ONLY",
+      "description": "Classifies a URL into the taxonomy.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 63
+    },
+    {
+      "title": "12. `evaluate` and scope rules R2 to R9 \u00b7 REFERENCE CODE ONLY",
+      "description": "![URL gates](./aidocs/feature/scraper-update-mode/rules/overview/tour/05-url-gates.png)\n\nRuns a URL through the gates: same host (R2), seed path (R3), include pattern (R4), excludes (R5 to R7), seeds (R9). Proposed excludes are inert unless `adopt_proposed` or `exclude_events` is set. `_entry_decision` is at line 94, `Decision` at line 88.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 119
+    },
+    {
+      "title": "13. `plan_update` and the order of checks (point 3) \u00b7 REFERENCE CODE ONLY",
+      "description": "![Order of checks](./aidocs/feature/scraper-update-mode/rules/overview/tour/11-plan-order.png)\n\nOne function turns a sitemap, the stored state and the host's entries into a plan: what to fetch and why, what to skip, backfill list, departures, or a block.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 167
+    },
+    {
+      "title": "14. Tiny path-scoped section (R10)",
+      "description": "A seed section with 0 to 2 pages on 13 hosts: refetch the seeds only and ignore the sitemap. Out-of-scope pages are counted (the fix in `a523244`: 56,992 in-scope pages overall, not 74,325). Test: `test_tiny_scoped_host_reports_the_sitemap_pages_outside_its_section_as_out_of_scope`.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 184
+    },
+    {
+      "title": "15. Unreadable or moved sitemap, R11 and R12 (point 4)",
+      "description": "![Moved host](./aidocs/feature/scraper-update-mode/rules/overview/tour/06-moved-host.png)\n\nR11: an unreadable or empty sitemap blocks the host, so an outage is never read as 'everything was deleted'. R12 (line 202): a sitemap that lists only another host means the site moved in the Harvard reorganization, so block, never propose departures. Four hosts moved; the `sites.toml` entries were updated in apo-mcp-server. Test: `test_moved_host_sitemap_blocks_and_never_proposes_departures` (test_plan.py line 87).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 199
+    },
+    {
+      "title": "16. Compare dates: new, changed, no date (R13, R13b, R20)",
+      "description": "![One host savings](./aidocs/feature/scraper-update-mode/rules/overview/tour/08-savings-one-host.png)\n\nEach in-scope URL is compared with what is stored. New or changed gets fetched; no date is refetched each run; never-captured pages go to a backfill list. Example: english.fas has 1,643 sitemap URLs, the first run fetches 69, then about 16 a week.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 215
+    },
+    {
+      "title": "17. Totals across hosts",
+      "description": "![All hosts savings](./aidocs/feature/scraper-update-mode/rules/overview/tour/09-savings-all-hosts.png)\n\n`validate_hosts.py` runs the plan over every host's real sitemap snapshot and writes `report/`. First run from July manifests: 4,339 pages (vs 56,992 full re-crawl); weekly about 341.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/validate_hosts.py",
+      "line": 39
+    },
+    {
+      "title": "18. Departures and the 30% cap (R15)",
+      "description": "Departures are URLs in the previous snapshot, in scope, and absent now. If more than 30% of the previous set would go, removal is held (ofa's 616 of 821 candidates are held this way). Test: `test_departure_cap_holds_removals_but_still_fetches` (test_plan.py line 122).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 248
+    },
+    {
+      "title": "19. Deleting needs a fetch to agree (point 5, R16)",
+      "description": "![Deletion flow](./aidocs/feature/scraper-update-mode/rules/overview/tour/07-deletion.png)\n\nBefore retiring a departure, fetch it: 404/410 retire, 403 hold, redirect follow, 200 keep, 5xx never retire. Test: `test_classify_confirmation` (line 138) and `test_server_errors_never_retire` (line 142).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 263
+    },
+    {
+      "title": "20. `host_moved` \u00b7 REFERENCE CODE ONLY",
+      "description": "Compares previous and new URL hosts to detect a move. Test: `test_host_moved_helper` (test_plan.py line 96).\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/rules.py",
+      "line": 276
+    },
+    {
+      "title": "21. Tests: one per rule",
+      "description": "![Test modes](./aidocs/feature/scraper-update-mode/rules/overview/tour/10-test-modes.png)\n\nReal URLs, one test per rule. Also `test_rules_unit.py`.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/tests/test_plan.py",
+      "line": 41
+    },
+    {
+      "title": "22. Documented exceptions per host",
+      "description": "Hosts with no sitemap, unreadable now, relative locs or low lastmod coverage are listed explicitly. A new deviation must be investigated, not added silently.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/tests/test_all_hosts.py",
+      "line": 18
+    },
+    {
+      "title": "23. A real bug found with the scraper's own extractor",
+      "description": "The Student Handbook 'fields of concentration' PDF (percent-20 naming) was missed by a looser pattern; the fixed pattern is in the `sites.toml` change in apo-mcp-server.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)",
+      "file": "aidocs/feature/scraper-update-mode/rules/tests/test_handbook_regression.py",
+      "line": 36
+    },
+    {
+      "title": "24. What is not built",
+      "description": "Not built: the `--update` flag, stored lastmod and snapshot persistence, the departures plus confirmation step in the scraper, the backfill run, monthly full-refresh scheduling.\n\nRun the tests from the repo root: `uv run pytest aidocs/feature/scraper-update-mode/rules/tests -q` (257 pass, 4 skip with the real `sites.toml` and cached manifests; fewer with missing inputs, which skip rather than fail) and `uv run pytest -q` for the repo's own 47.\n\nDocs: [RULES.md](./aidocs/feature/scraper-update-mode/rules/RULES.md) \u00b7 [OVERVIEW.md](./aidocs/feature/scraper-update-mode/rules/overview/OVERVIEW.md) \u00b7 [PRESENTATION_NOTES.md](./aidocs/feature/scraper-update-mode/rules/overview/PRESENTATION_NOTES.md) \u00b7 [TOUR_GUIDE.md](./aidocs/feature/scraper-update-mode/rules/overview/TOUR_GUIDE.md)"
+    }
+  ]
+}

@@ -43,3 +43,30 @@ Output per domain: `data/<domain>/{pages/,text/,files/,logs/}`. `text/` is Markd
 - License: MIT, copyright "Ventz Petkov".
 - Harvard repos: set `git config user.email "ventz@g.harvard.edu"` per-repo (not global).
 - No test suite; verify by exercising `_extract_text_trafilatura` directly on a fetched page rather than running a full live domain crawl unprompted (outward-facing load).
+
+### Branch conventions
+
+- Feature branches: `feat/{feature-name}` or `feat/{feature-name}-epcc` (for orchestrated work)
+- Fix branches: `fix/{description}`
+- Documentation: `docs/{description}`
+
+### aidocs conventions
+
+AI-generated planning artifacts are stored under `aidocs/` organized by branch type:
+
+```
+aidocs/
+├── feature/{branch-name}/
+├── fix/{branch-name}/
+├── refactor/{branch-name}/
+├── docs/{branch-name}/
+├── test/{branch-name}/
+└── chore/{branch-name}/
+```
+
+When working on a branch like `feat/new-filter`, save planning docs to `aidocs/feature/new-filter/`. This includes EPCC docs, exploration notes, and any other artifacts worth preserving for review.
+
+**Guidelines:**
+- Keep PRs small and focused — prefer more small PRs over fewer large ones
+- When submitting a PR, direct reviewers on where to focus (code vs. planning docs)
+- Any planning documents worth preserving or reviewing go in the branch folder

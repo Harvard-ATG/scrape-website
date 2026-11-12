@@ -1,0 +1,741 @@
+{
+ "aaas.fas.harvard.edu": {
+  "in_scope_urls": 1402,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "academicresourcecenter.harvard.edu": {
+  "in_scope_urls": 117,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "advising.college.harvard.edu": {
+  "in_scope_urls": 253,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "afvs.fas.harvard.edu": {
+  "in_scope_urls": 805,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "anthropology.fas.harvard.edu": {
+  "in_scope_urls": 832,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "archaeology.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "astronomy.fas.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "careerservices.fas.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 32,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "celtic.fas.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "ces.fas.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 4,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "classics.fas.harvard.edu": {
+  "in_scope_urls": 577,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "college.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 35,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "collegehousing.fas.harvard.edu": {
+  "in_scope_urls": 57,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "complit.fas.harvard.edu": {
+  "in_scope_urls": 848,
+  "status": 200,
+  "disallow_lines": 1,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "courses.my.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200
+ },
+ "csadvising.seas.harvard.edu": {
+  "in_scope_urls": 38,
+  "status": 404
+ },
+ "dao.fas.harvard.edu": {
+  "in_scope_urls": 50,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "daviscenter.fas.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 34,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "dso.college.harvard.edu": {
+  "in_scope_urls": 808,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "eas.fas.harvard.edu": {
+  "in_scope_urls": 94,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "edsecondary.fas.harvard.edu": {
+  "in_scope_urls": 390,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "emr.fas.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "engagedscholarship.fas.harvard.edu": {
+  "in_scope_urls": 77,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "english.fas.harvard.edu": {
+  "in_scope_urls": 1643,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "eps.harvard.edu": {
+  "in_scope_urls": 1006,
+  "status": 200,
+  "disallow_lines": 2,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "espp.fas.harvard.edu": {
+  "in_scope_urls": 458,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "firstyear.college.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "firstyearseminarprogram.college.harvard.edu": {
+  "in_scope_urls": 137,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "folkmyth.fas.harvard.edu": {
+  "in_scope_urls": 151,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "gened.college.harvard.edu": {
+  "in_scope_urls": 406,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "german.fas.harvard.edu": {
+  "in_scope_urls": 443,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "ghhp.fas.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "haa.fas.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "handbook.college.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "heb.fas.harvard.edu": {
+  "in_scope_urls": 456,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "histlit.fas.harvard.edu": {
+  "in_scope_urls": 832,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "history.fas.harvard.edu": {
+  "in_scope_urls": 5790,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "histsci.fas.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "hscrb.harvard.edu": {
+  "in_scope_urls": 5004,
+  "status": 200,
+  "disallow_lines": 1,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "iop.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 37,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "language.fas.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "library.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 35,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "linguistics.fas.harvard.edu": {
+  "in_scope_urls": 1863,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "lpce.college.harvard.edu": {
+  "in_scope_urls": 133,
+  "status": 200,
+  "disallow_lines": 4,
+  "crawl_delay": "10",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "mbb.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "medieval.fas.harvard.edu": {
+  "in_scope_urls": 2,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "msi.harvard.edu": {
+  "in_scope_urls": 1,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "music.fas.harvard.edu": {
+  "in_scope_urls": 10,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "nelc.fas.harvard.edu": {
+  "in_scope_urls": 1694,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "ofa.fas.harvard.edu": {
+  "in_scope_urls": 755,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "oue.fas.harvard.edu": {
+  "in_scope_urls": 185,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "philosophy.fas.harvard.edu": {
+  "in_scope_urls": 981,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "placement.college.harvard.edu": {
+  "in_scope_urls": 31,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "publicservice.fas.harvard.edu": {
+  "in_scope_urls": 939,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "qrd.college.harvard.edu": {
+  "in_scope_urls": 80,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "registrar.fas.harvard.edu": {
+  "in_scope_urls": 951,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "rll.fas.harvard.edu": {
+  "in_scope_urls": 456,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "sas.fas.harvard.edu": {
+  "in_scope_urls": 317,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "scienceeducation.fas.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "seas.harvard.edu": {
+  "in_scope_urls": 5946,
+  "status": 200,
+  "disallow_lines": 35,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 1,
+  "examples": [
+   "https://seas.harvard.edu/search"
+  ]
+ },
+ "secretary.college.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "seo.harvard.edu": {
+  "in_scope_urls": 182,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "sfsao.college.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "slavic.fas.harvard.edu": {
+  "in_scope_urls": 1085,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "socialstudies.fas.harvard.edu": {
+  "in_scope_urls": 269,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "sociology.fas.harvard.edu": {
+  "in_scope_urls": 2246,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "specialconcentrations.fas.harvard.edu": {
+  "in_scope_urls": 183,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "statistics.fas.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "studyabroad.college.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "studyofreligion.fas.harvard.edu": {
+  "in_scope_urls": 247,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "tdm.fas.harvard.edu": {
+  "in_scope_urls": 1336,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "undergrad.psychology.fas.harvard.edu": {
+  "in_scope_urls": 1630,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "uraf.harvard.edu": {
+  "in_scope_urls": 441,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "wgs.fas.harvard.edu": {
+  "in_scope_urls": 1043,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "writingcenter.fas.harvard.edu": {
+  "in_scope_urls": 95,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "writingprogram.college.harvard.edu": {
+  "in_scope_urls": 97,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.chemistry.harvard.edu": {
+  "in_scope_urls": 2895,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.economics.harvard.edu": {
+  "in_scope_urls": 6235,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.gov.harvard.edu": {
+  "in_scope_urls": 705,
+  "status": 200,
+  "disallow_lines": 25,
+  "crawl_delay": "30",
+  "blocks_everything": true,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.hio.harvard.edu": {
+  "in_scope_urls": 244,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.math.harvard.edu": {
+  "in_scope_urls": 0,
+  "status": 200,
+  "disallow_lines": 0,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.mcb.harvard.edu": {
+  "in_scope_urls": 182,
+  "status": 200,
+  "disallow_lines": 1,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ },
+ "www.physics.harvard.edu": {
+  "in_scope_urls": 848,
+  "status": 200,
+  "disallow_lines": 24,
+  "crawl_delay": null,
+  "blocks_everything": false,
+  "disallowed_in_scope": 0,
+  "examples": []
+ }
+}
