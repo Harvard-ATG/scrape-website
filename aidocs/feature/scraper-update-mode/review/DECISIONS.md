@@ -40,7 +40,7 @@ and they cost crawl time and manifest space.
 - Test: `tests/test_default_excludes.py` (all seven formats, a filtered address, and the publication pages that must stay).
 
 **NOT CHECKED.** Whether any of these files was ever ingested or returned in an answer. The database check (`web_content_files`) and the
-bot test were not completed; the bot test questions and files are in `review/samples/bibcite-qa/` and the review notes. If either shows
+bot test were not completed; the bot test questions and files were in `review/samples/bibcite-qa/` (one pair kept as the exemplar: `samples/bibcite-qa/sociology/`, the RIS export beside the page it was found on) and the review notes. If either shows
 that the exports were used, reverse this decision.
 
 **How to undo.** Remove the `/bibcite/export` line from `_DEFAULT_EXCLUDE_PATTERNS` and the three tests. If the data is wanted later,
@@ -51,6 +51,22 @@ publication page's "Publication information" block.
 their text); see `REVIEW_FINDINGS.md` O18.
 
 ## Open decisions from the same review
+
+### D2 evidence: what robots.txt asks for (read 2026-10-21, `samples/robots_scope.json`, `robots_scope_check.py`)
+
+83 hosts read. None blocks a URL that is in our scope. 17 ask for a crawl delay; all 17 are College or FAS office sites on the
+same platform, and each one's robots.txt also disallows everything for generic crawlers.
+
+| Crawl delay asked for | Hosts | Examples |
+| --- | ---: | --- |
+| none | 66 | aaas.fas, afvs.fas, anthropology.fas, and the other department sites |
+| 30 seconds | 16 | advising.college, gened.college, oue.fas, sas.fas, writingprogram.college, www.gov |
+| 10 seconds | 1 | lpce.college |
+
+At 30 seconds a page, a 250-page site takes about two hours, so the delay is not honored as written; the scraper paces by its
+own concurrency and delay flags instead. The 429s seen during the refresh came from the College WordPress platform, which limits
+per client address; see `../../scraper-refinements/review/OPEN_QUESTIONS.md` Q2 for whether that pause should be shared across hosts.
+
 
 | Id | Decision needed | Where |
 | --- | --- | --- |

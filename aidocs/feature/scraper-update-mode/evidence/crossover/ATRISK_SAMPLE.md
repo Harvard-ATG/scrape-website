@@ -1,3 +1,5 @@
+**Read `FINDINGS.md` section 2 first.** These turned out to be search-trap referrers, not orphans: the "100% true orphan" column below is what the sample looked like before the referrer pages were checked.
+
 # At-risk document canonicalization sample
 
 Resolves whether corpus 'at-risk' docs are real orphans or found_on artifacts (non-canonical /node//index.php referrers whose canonical IS in the sitemap). Sample fetches found_on, follows redirects.

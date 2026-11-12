@@ -2,6 +2,10 @@
 
 **Generated:** 2026-07-28  |  **Sites:** 83
 
+**What it fed:** the daily, weekly and monthly runs proposed in `../../review/SCHEDULES.md` (the 66 weekly hosts become the weekly update; the rest and the four no-sitemap hosts fall to the monthly full run).
+
+**Caveat:** the cadence here floors each `lastmod` timestamp to a date, so two edits on one day count once. See `../../review/SITEMAP_LLM_VS_XML.md` section 3.
+
 Per-site scrape frequency + mode grounded in live-sitemap `<lastmod>` cadence and the delta vs. QA's last-scraped `manifest.json`. Diff column is `+new / -gone / ~changed` (BASE-normalized page counts); Baseline column is QA's manifest `generated_at` (with age) and flags a baseline older than 180d as `⚠ stale`.
 
 ## Recommendations

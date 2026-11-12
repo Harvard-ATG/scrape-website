@@ -29,7 +29,7 @@ The "Part B" step covers `apo-mcp-server` as a content-only step (that repo is o
 | 21-23 | `tests/` | `10-test-modes` | tests |
 | 24 | none | none | what is not built |
 
-Other docs: [RULES.md](../RULES.md) (taxonomy, R1 to R20), [OVERVIEW.md](OVERVIEW.md) (Mermaid diagrams for GitHub), [PRESENTATION_NOTES.md](PRESENTATION_NOTES.md) (storyline), `scrape-update-explainer.standalone.html` (open in a browser).
+Other docs: [RULES.md](../RULES.md) (taxonomy, R1 to R20), [OVERVIEW.md](OVERVIEW.md) (Mermaid diagrams for GitHub), [PRESENTATION_NOTES.md](PRESENTATION_NOTES.md) (storyline), `scrape-update-explainer.html` (open in a browser).
 
 ## Images
 

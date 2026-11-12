@@ -1,3 +1,7 @@
+Nineteen `.md` page copies sampled by page type on 2026-10-21 (`page_card_date_check.py`). Summarized in `../SITEMAP_LLM_VS_XML.md` section 4c.
+
+| Page type | Host | Page | XML `lastmod` | Date on the card | Words | Status (html / md) | Scope |
+| --- | --- | --- | --- | --- | ---: | --- | --- |
 | news | english.fas | [/news/why-ai-hallucinations-can-be-good-thing](https://english.fas.harvard.edu/news/why-ai-hallucinations-can-be-good-thing) | 2024-04-03 | February 08, 2024 | 950 | 200 / 200 | in scope |
 | news | history.fas | [/news/kirin-gupta-and-jane-kamensky-awarded...](https://history.fas.harvard.edu/news/kirin-gupta-and-jane-kamensky-awarded-star-family-prize-advising) | 2022-04-25 | April 25, 2022 | 3897 | 404 / 200 | in scope |
 | news | sociology.fas | [/news/christina-ciocca-ellers-recent-paper-...](https://sociology.fas.harvard.edu/news/christina-ciocca-ellers-recent-paper-urges-college-ratings-focused-real-life-outcomes) | 2024-03-25 | February 14, 2024 | 886 | 200 / 200 | in scope |

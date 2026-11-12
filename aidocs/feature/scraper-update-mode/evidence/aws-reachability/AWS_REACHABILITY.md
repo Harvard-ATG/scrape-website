@@ -1,7 +1,7 @@
 # AWS sitemap-reachability test — results
 **Date**: 2026-07-23 | **Where**: ECS `atg-prod-default`, task def `atg-apo-mcp-qa-task-definition:12` (branch image w/ tiered fetch), private subnets, `assignPublicIp=DISABLED` → egress via the **Akamai-gated NAT IP**. Task `065e34b7bd3e463ab15737c245c11303`, exit 0.
 **Method**: for each sites.toml host, discover sitemap (robots.txt `Sitemap:` → `/sitemap.xml` → `/sitemap_index.xml` → `/wp-sitemap.xml`), then fetch two ways from the NAT IP — **Tier 1** (plain urllib, naive client) and **Tier 2** (curl_cffi `impersonate='chrome'`). Results written to `s3://atg-apo-mcp-qa-scrape/_sitemap_reachability/result.json` (container logs are Splunk-only).
-**Scripts/data (reproducible)**: `sitemap_reachability_probe.py`, `result.json`.
+**Scripts/data (reproducible)**: `sitemap_reachability_probe.py` writes `result.json`; `result.csv` (kept here) is the same 83 rows as a flat table. The raw `result.json` was dropped from the repo on 2026-11-12; rerun the probe to rebuild it (`analyze_cadence.py --stage discover` reads it as its seed).
 ## Headline
 - **Total hosts**: 83
 - **Reachable sitemap (200)**: 79
@@ -108,3 +108,16 @@
 - `www.hio.harvard.edu` — all candidates 404 (t1=404, t2=404)
 
 **Note on low `loc` counts**: hosts showing 2–5 locs (economics, history, sociology, statistics, seas, chemistry, haa, and the wp-sitemap WordPress hosts) are **sitemap indexes** (`index?=True`) — the `<loc>` entries point to child sitemaps holding the real URLs (e.g. economics's child sitemaps sum to ~5,946). Not thin sitemaps.
+
+## The /sitemap-llm probe
+
+Same day, same NAT IP, one more request per host for `/sitemap-llm`, the markdown sitemap the HarvardSites platform serves.
+Result file: `result_llm.json` (kept; it is read by `review/llm_scope_check.py` and `review/page_card_date_check.py`).
+
+| | Hosts |
+| --- | ---: |
+| Have a `/sitemap-llm` | 51 of 83 |
+| Pass as a plain client (Tier 1) | 0 |
+| Pass with the browser-like client (Tier 2) | 51 |
+
+So the markdown sitemap is behind the same gate as the XML one, and Tier 2 opens it on every host that has one.

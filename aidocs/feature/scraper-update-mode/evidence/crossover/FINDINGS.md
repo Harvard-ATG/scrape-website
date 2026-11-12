@@ -1,7 +1,7 @@
 # Corpus crossover — findings & honest interpretation
 
 **Date**: 2026-07-23 | **Scope**: 20 local hosts (old-schema `state.db`, Jun 2026 crawls)
-**Raw evidence**: `SUMMARY.md` / `summary.json` (crossover), `ATRISK_SAMPLE.md` / `atrisk_sample.json` (canonicalization)
+**Raw evidence**: `SUMMARY.md` (crossover table), `ATRISK_SAMPLE.md` (canonicalization sample). The scripts below rewrite `summary.json` and `atrisk_sample.json`, which are not kept in the repo.
 **Scripts (reproducible)**: `corpus_crossover.py`, `atrisk_canonicalize.py`
 
 **IP caveat (do not overclaim)**: all sitemaps were fetched from a LOCAL/non-AWS IP. Sitemap *existence*, contents, and redirect behavior are IP-independent facts and stand. Production *reachability from AWS ECS* (the Akamai-gated environment) is NOT proven here and remains an open item.

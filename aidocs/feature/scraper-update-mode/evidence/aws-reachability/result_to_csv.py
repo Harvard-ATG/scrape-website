@@ -1,4 +1,4 @@
-"""Convert the AWS sitemap-reachability probe output (result.json) to CSV.
+"""Convert the AWS sitemap-reachability probe output (result.json, written by sitemap_reachability_probe.py) to CSV.
 
 Pure transform of the raw probe artifact — no network. Emits one row per host
 with both tier statuses so the exact probe result is inspectable as a table.

@@ -318,7 +318,7 @@ Raw evidence and reproducible scripts live in `evidence/crossover/` next to this
 ## 9. Spun-out streams
 
 - **Remove `.md` frontmatter dependency (consolidate metadata into the
-  manifest)** → `aidocs/feature/frontmatter-removal/BRAINSTORM_metadata-consolidation.md`.
+  manifest)** → a separate brainstorm note, not part of this PR.
   Verified 2026-07-23: frontmatter is stripped before vector-store upload
   (`ingest.py:348`), so it is ingest-plumbing only. `url`/`title` are
   redundant with the manifest; `http_status` (the skip-non-200 gate) is the

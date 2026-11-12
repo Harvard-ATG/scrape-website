@@ -23,6 +23,8 @@ Today the only scrape is "full", and it is switched off in Terraform; refreshes 
 
 ## Proposed
 
+The weekly and monthly split comes from the per-site cadence study of 2026-07-28: `../evidence/cadence-analysis/RECOMMENDATIONS.md` (66 hosts weekly, 14 monthly, 2 quarterly, 1 semiannual; 4 hosts have no sitemap and get the monthly full run).
+
 ```mermaid
 gantt
   dateFormat  HH:mm

@@ -168,6 +168,6 @@ RECOMMENDATIONS.md            # stage 5 (human report — the deliverable)
 ## 9. Open items feeding this design
 
 - **Deep no-sitemap probe** (D6) — ✅ done 2026-07-28; confirmed 4 no-sitemap
-  hosts, folded into §6. Evidence: `aidocs/fix/sitemap-discovery-tiered/no-sitemap-deep-probe/result.json`.
+  hosts, folded into §6. Evidence: `aidocs/fix/sitemap-discovery-tiered/no-sitemap-deep-probe/README.md` and `result_v2.json`.
 - **QA baseline recency** — Stage 4 surfaces per-host `qa_last_scrape`; if broadly
   stale we note it as a confidence caveat on the diff signal.

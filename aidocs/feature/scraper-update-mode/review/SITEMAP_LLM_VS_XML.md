@@ -1,5 +1,7 @@
 # Sitemap-llm versus XML: dates, updates, content and scope
 
+The `samples/` folder was trimmed to exemplar pages and result files on 2026-11-12. `samples/README.md` says what each set showed and how to rebuild it.
+
 Run 2026-10-21. Offline parts use the 2026-07-28 and 2026-10-15 sitemap snapshots and the cached QA manifests (2026-07-22).
 Live part: 20 pages from 4 Drupal 10 hosts (english.fas, sociology.fas, www.physics, philosophy.fas), HTML and `.md` copy of each
 (40 requests, all 200), fetched from a local IP, two seconds apart. Scripts: `date_and_scope_analysis.py`, `sample20_fetch.py`,
@@ -140,7 +142,7 @@ What this says:
 
 Goal: check that no date source is being overlooked. Offline: the whole `/sitemap-llm` (2,785 lines, 405 KB) and the full HTML of one page
 (`/about`). Live, 8 requests on 2026-10-21: the sitemap-llm, the page, its `.md`, and five standard Drupal endpoints. Data:
-`samples/haa-date-hunt/` (bodies and all response headers), `samples/haa-about/`.
+`samples/haa-about/` (the page in every form, with all response headers). The other seven endpoint bodies (`haa-date-hunt/`) were dropped from the repo on 2026-11-12; the headers table below records what they returned.
 
 **The sitemap-llm file itself**
 - Every one of the 2,785 lines is a list item `- [title](url.md)`. No header, no front matter, no comments, no second column, no query
@@ -259,7 +261,7 @@ they disagree most are the ones to look at.
 ## 8b. What the platform says (HarvardSites documentation)
 
 Source: https://drupal.harvardsites.harvard.edu/resource/optimizing-your-site-search-engines-and-artificial-intelligence
-(read 2026-10-21; plain fetch returns 403, browser-impersonating fetch returns 200; copy in `samples/harvardsites-optimizing/`).
+(read 2026-10-21; plain fetch returns 403, browser-impersonating fetch returns 200; a copy was kept outside the repo).
 This is the HarvardSites platform's own guidance for site owners on search engines and AI. Relevant statements:
 
 - "HarvardSites Drupal pages now provide a markdown version of their content that can be accessed by appending `.md` to any page URL.

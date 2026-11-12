@@ -1,5 +1,5 @@
 """
-Deep no-sitemap probe v2 — exhaust the avenues deep_probe.py did NOT try, to
+Deep no-sitemap probe v2 — exhaust the avenues the first probe (3 standard paths) did NOT try, to
 either find a sitemap on the 4 holdout hosts or make "no sitemap" airtight.
 
 New vs v1:
